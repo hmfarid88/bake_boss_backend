@@ -26,4 +26,4 @@ jobs:
         run:  sudo mvn clean install
 
       - name: Complete
-        run: sudo java -jar /home/actions-runner/_work/bake_boss_backend/target/your-project-0.0.1-SNAPSHOT.jar &
+        run: sudo java -jar /home/actions-runner/_work/bake_boss_backend/target/bake_boss_backend-0.0.1-SNAPSHOT.jar &
