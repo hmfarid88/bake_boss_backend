@@ -24,4 +24,7 @@ public interface ProductStockrepository extends JpaRepository<ProductStock, Long
 
     @Query("SELECT ps FROM ProductStock ps WHERE ps.username=:username AND ps.status='sold'")
     List<ProductStock> findProductByStatus(String username);
+
+    @Query("SELECT ps FROM ProductStock ps WHERE ps.customer=:customer AND ps.invoiceNo NOT IN (SELECT ss.invoiceNo FROM SalesStock ss)")
+    List<ProductStock> findProductStockWithInvoiceNotInSalesStock(String customer);
 }

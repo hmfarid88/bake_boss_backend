@@ -2,8 +2,10 @@ package com.example.bake_boss_backend.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +22,7 @@ import com.example.bake_boss_backend.entity.CategoryName;
 import com.example.bake_boss_backend.entity.ItemMake;
 import com.example.bake_boss_backend.entity.MaterialName;
 import com.example.bake_boss_backend.entity.MaterialsStock;
+import com.example.bake_boss_backend.entity.ProductRate;
 import com.example.bake_boss_backend.entity.ProductStock;
 import com.example.bake_boss_backend.entity.SupplierName;
 import com.example.bake_boss_backend.repository.CategoryNameRepository;
@@ -28,6 +31,8 @@ import com.example.bake_boss_backend.repository.MaterialsNameRepository;
 import com.example.bake_boss_backend.repository.MaterialsRepository;
 import com.example.bake_boss_backend.repository.ProductStockrepository;
 import com.example.bake_boss_backend.repository.SupplierNameRepository;
+import com.example.bake_boss_backend.service.ProductStockService;
+import com.example.bake_boss_backend.service.SalesStockService;
 
 @RestController
 @RequestMapping("/api")
@@ -49,6 +54,12 @@ public class ProductController {
         this.categoryNameRepository = categoryNameRepository;
         this.productStockrepository = productStockrepository;
     }
+
+    @Autowired
+    private ProductStockService productStockService;
+
+    @Autowired
+    private SalesStockService salesStockService;
 
     @PostMapping("/addCategoryName")
     public ResponseEntity<?> addCategory(@RequestBody CategoryName categoryName) {
@@ -85,31 +96,33 @@ public class ProductController {
 
     @PostMapping("/itemMake")
     List<ItemMake> newProducts(@RequestBody List<ItemMake> allItems) {
-    return itemMakeRepository.saveAll(allItems);
+        return itemMakeRepository.saveAll(allItems);
     }
 
     // @PostMapping("/itemMake")
     // public ResponseEntity<?> newProducts(@RequestBody List<ItemMake> allItems) {
-    //     for (ItemMake item : allItems) {
-    //         List<ItemMake> existingItemByItemNo = itemMakeRepository.findByItemNo(item.getItemNo());
-    //         List<ItemMake> existingItemByItemName = itemMakeRepository.findByItemName(item.getItemName());
+    // for (ItemMake item : allItems) {
+    // List<ItemMake> existingItemByItemNo =
+    // itemMakeRepository.findByItemNo(item.getItemNo());
+    // List<ItemMake> existingItemByItemName =
+    // itemMakeRepository.findByItemName(item.getItemName());
 
-    //         boolean itemExistsByNo = !existingItemByItemNo.isEmpty();
-    //         boolean itemExistsByName = !existingItemByItemName.isEmpty();
+    // boolean itemExistsByNo = !existingItemByItemNo.isEmpty();
+    // boolean itemExistsByName = !existingItemByItemName.isEmpty();
 
-    //         if (itemExistsByName && itemExistsByNo) {
-    //             itemMakeRepository.save(item);
-    //         } else if (itemExistsByName) {
-    //             return ResponseEntity.status(HttpStatus.CONFLICT).body("Sorry, this item already exists!");
-    //         } else {
-    //             itemMakeRepository.save(item);
-    //         }
-    //     }
-
-    //     return ResponseEntity.ok(itemMakeRepository.findAll());
+    // if (itemExistsByName && itemExistsByNo) {
+    // itemMakeRepository.save(item);
+    // } else if (itemExistsByName) {
+    // return ResponseEntity.status(HttpStatus.CONFLICT).body("Sorry, this item
+    // already exists!");
+    // } else {
+    // itemMakeRepository.save(item);
+    // }
     // }
 
-  
+    // return ResponseEntity.ok(itemMakeRepository.findAll());
+    // }
+
     @PutMapping("/updateItemMaterials/{itemNo}")
     public ResponseEntity<List<ItemMake>> updateItemMake(
             @PathVariable String itemNo,
@@ -224,8 +237,8 @@ public class ProductController {
     }
 
     @GetMapping("/getMadeProducts")
-    public List<String> getMadeProductsByUsername(@RequestParam String username) {
-        return itemMakeRepository.findDistinctItems(username);
+    public List<String> getMadeProductsByUsername() {
+        return itemMakeRepository.findDistinctItems();
     }
 
     @GetMapping("/getItemList")
@@ -256,5 +269,30 @@ public class ProductController {
     @GetMapping("/getSingleProduct")
     public Optional<ProductStock> getSingleProduct(@RequestParam Long productId) {
         return productStockrepository.findByProductId(productId);
+    }
+
+    @GetMapping("/pendingSalesStock")
+    public List<ProductStock> getProductStockWithInvoiceNotInSalesStock(String customer) {
+        return productStockService.getProductStockWithInvoiceNotInSalesStock(customer);
+    }
+
+    @PostMapping("/addSalesStock")
+    public ResponseEntity<String> insertOrUpdateProductStockInSalesStock(
+            @RequestBody Map<String, String> customerData) {
+        String customer = customerData.get("customer");
+        if (customer == null || customer.isEmpty()) {
+            return ResponseEntity.badRequest().body("Customer is required");
+        }
+        salesStockService.insertOrUpdateProductStockInSalesStock(customer);
+        return ResponseEntity.ok("Products added or updated successfully");
+    }
+
+    @PutMapping("/productRateSetup")
+    public ResponseEntity<ProductRate> productrate(@RequestBody ProductRate productRate) {
+        ProductRate productRateSetup = productStockService.upsertProductRate(
+                productRate.getUsername(),
+                productRate.getProductName(),
+                productRate.getSaleRate());
+        return ResponseEntity.ok(productRateSetup);
     }
 }

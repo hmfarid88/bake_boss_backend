@@ -10,10 +10,12 @@ public class WebConfig implements WebMvcConfigurer {
     @Bean
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
+            @SuppressWarnings("null")
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("https://bake-boss.vercel.app")
+                        .allowedOrigins("http://localhost:3000")
+                        // .allowedOriginPatterns("*")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);

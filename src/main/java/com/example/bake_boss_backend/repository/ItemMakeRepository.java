@@ -8,8 +8,8 @@ import com.example.bake_boss_backend.dto.MadeItemDTO;
 import com.example.bake_boss_backend.entity.ItemMake;
 
 public interface ItemMakeRepository extends JpaRepository<ItemMake, Long> {
-    @Query("SELECT i.itemName FROM ItemMake i where i.username=:username GROUP BY i.itemName")
-    List<String> findDistinctItems(String username);
+    @Query("SELECT i.itemName FROM ItemMake i GROUP BY i.itemName")
+    List<String> findDistinctItems();
 
     @Query("SELECT new com.example.bake_boss_backend.dto.MadeItemDTO(i.itemName, i.materialsName, i.itemNo, i.qty, ms.averageRate, ms.remainingQty) "
             +
