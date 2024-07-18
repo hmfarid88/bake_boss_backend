@@ -17,6 +17,7 @@ public class MarginSetup {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private String username;
+    private String productName;
     private Double dpMargin;
     private Double rpMargin;
 }

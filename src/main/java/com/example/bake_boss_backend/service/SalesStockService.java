@@ -68,7 +68,6 @@ public class SalesStockService {
                     saleRate);
         }).collect(Collectors.toList());
     }
-    
 
     @Transactional
     public void insertOrUpdateProductStockInSalesStock(String customer) {
@@ -79,7 +78,7 @@ public class SalesStockService {
                     .findLatestSalesStockByProductNameAndUsername(productStock.getProductName(), customer);
 
             SalesStock newSalesStock = new SalesStock();
-            newSalesStock.setDate(LocalDate.now().toString());
+            newSalesStock.setDate(LocalDate.now());
             newSalesStock.setCategory(productStock.getCategory());
             newSalesStock.setProductName(productStock.getProductName());
 
@@ -102,5 +101,13 @@ public class SalesStockService {
 
             salesStockRepository.save(newSalesStock);
         }
+    }
+
+    public List<SalesStock> getCurrentMonthSoldStocks(String username) {
+        return salesStockRepository.findCurrentMonthSoldStocksByUsername(username);
+    }
+
+    public List<Object[]> findByUsernameAndDateAndStatus(String username, LocalDate date, String status) {
+        return salesStockRepository.findByUsernameAndDateAndStatus(username, date, status);
     }
 }

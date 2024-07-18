@@ -1,5 +1,7 @@
 package com.example.bake_boss_backend.service;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,19 +15,16 @@ public class MarginSetupService {
     @Autowired
     private MarginSetupRepository marginSetupRepository;
 
-    @Transactional
-    public MarginSetup upsertMarginSetup(String username, Double dpMargin, Double rpMargin) {
-        MarginSetup existingSetup = marginSetupRepository.findByUsername(username);
-        if (existingSetup != null) {
-            existingSetup.setDpMargin(dpMargin);
-            existingSetup.setRpMargin(rpMargin);
-            return marginSetupRepository.save(existingSetup);
+    public MarginSetup saveOrUpdateMarginSetup(MarginSetup marginSetup) {
+        Optional<MarginSetup> existingMarginSetup = marginSetupRepository.findByUsernameAndProductName(marginSetup.getUsername(), marginSetup.getProductName());
+
+        if (existingMarginSetup.isPresent()) {
+            MarginSetup existing = existingMarginSetup.get();
+            existing.setDpMargin(marginSetup.getDpMargin());
+            existing.setRpMargin(marginSetup.getRpMargin());
+            return marginSetupRepository.save(existing);
         } else {
-            MarginSetup newMarginSetup = new MarginSetup();
-            newMarginSetup.setUsername(username);
-            newMarginSetup.setDpMargin(dpMargin);
-            newMarginSetup.setRpMargin(rpMargin);
-            return marginSetupRepository.save(newMarginSetup);
+            return marginSetupRepository.save(marginSetup);
         }
     }
 

@@ -1,5 +1,7 @@
 package com.example.bake_boss_backend.dto;
 
+import java.time.LocalDate;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class SalesStockDTO {
     private Long productId;
-    private String date;
+    private LocalDate date;
     private String category;
     private String productName;
     private Double costPrice;
