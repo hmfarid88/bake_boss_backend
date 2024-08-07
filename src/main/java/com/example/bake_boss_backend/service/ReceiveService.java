@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.bake_boss_backend.dto.ReceiveDto;
+import com.example.bake_boss_backend.entity.OfficePayment;
+import com.example.bake_boss_backend.entity.OfficeReceive;
 import com.example.bake_boss_backend.repository.OfficeReceiveRepository;
 import com.example.bake_boss_backend.repository.RetailerPaymentRepository;
 
@@ -25,4 +27,12 @@ public class ReceiveService {
         receives.addAll(retailerPaymentRepository.findRetailerPaymentsForToday(username, date));
         return receives;
     }
+
+ public List<OfficeReceive> getReceivesForCurrentMonth(String username) {
+        LocalDate now = LocalDate.now();
+        int year = now.getYear();
+        int month = now.getMonthValue();
+        return officeReceiveRepository.findReceiveByMonth(year, month, username);
+    }
+
 }

@@ -1,13 +1,14 @@
 package com.example.bake_boss_backend.controller;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.bake_boss_backend.dto.MadeItemDTO;
+import com.example.bake_boss_backend.dto.MaterialGroupedDto;
 import com.example.bake_boss_backend.entity.CategoryName;
 import com.example.bake_boss_backend.entity.ItemMake;
 import com.example.bake_boss_backend.entity.MaterialName;
@@ -31,6 +33,7 @@ import com.example.bake_boss_backend.repository.MaterialsNameRepository;
 import com.example.bake_boss_backend.repository.MaterialsRepository;
 import com.example.bake_boss_backend.repository.ProductStockrepository;
 import com.example.bake_boss_backend.repository.SupplierNameRepository;
+import com.example.bake_boss_backend.service.ItemMakeService;
 import com.example.bake_boss_backend.service.ProductStockService;
 import com.example.bake_boss_backend.service.SalesStockService;
 
@@ -60,6 +63,9 @@ public class ProductController {
 
     @Autowired
     private SalesStockService salesStockService;
+
+    @Autowired
+    private ItemMakeService itemMakeService;
 
     @PostMapping("/addCategoryName")
     public ResponseEntity<?> addCategory(@RequestBody CategoryName categoryName) {
@@ -95,53 +101,63 @@ public class ProductController {
     }
 
     @PostMapping("/itemMake")
-    List<ItemMake> newProducts(@RequestBody List<ItemMake> allItems) {
-        return itemMakeRepository.saveAll(allItems);
-    }
+    public ResponseEntity<?> newProducts(@RequestBody List<ItemMake> allItems) {
+        for (ItemMake item : allItems) {
+            List<ItemMake> existingItemByItemNo = itemMakeRepository.findByItemNo(item.getItemNo());
+            List<ItemMake> existingItemByItemName = itemMakeRepository.findByItemName(item.getItemName());
 
-    // @PostMapping("/itemMake")
-    // public ResponseEntity<?> newProducts(@RequestBody List<ItemMake> allItems) {
-    // for (ItemMake item : allItems) {
-    // List<ItemMake> existingItemByItemNo =
-    // itemMakeRepository.findByItemNo(item.getItemNo());
-    // List<ItemMake> existingItemByItemName =
-    // itemMakeRepository.findByItemName(item.getItemName());
+            boolean itemExistsByNo = !existingItemByItemNo.isEmpty();
+            boolean itemExistsByName = !existingItemByItemName.isEmpty();
 
-    // boolean itemExistsByNo = !existingItemByItemNo.isEmpty();
-    // boolean itemExistsByName = !existingItemByItemName.isEmpty();
-
-    // if (itemExistsByName && itemExistsByNo) {
-    // itemMakeRepository.save(item);
-    // } else if (itemExistsByName) {
-    // return ResponseEntity.status(HttpStatus.CONFLICT).body("Sorry, this item
-    // already exists!");
-    // } else {
-    // itemMakeRepository.save(item);
-    // }
-    // }
-
-    // return ResponseEntity.ok(itemMakeRepository.findAll());
-    // }
-
-    @PutMapping("/updateItemMaterials/{itemNo}")
-    public ResponseEntity<List<ItemMake>> updateItemMake(
-            @PathVariable String itemNo,
-            @RequestBody List<ItemMake> itemMakeDetails) {
-        List<ItemMake> updatedItems = new ArrayList<>();
-        List<ItemMake> existingItems = itemMakeRepository.findByItemNo(itemNo);
-        for (ItemMake existingItem : existingItems) {
-            for (ItemMake details : itemMakeDetails) {
-                if (existingItem.getItemNo().equals(details.getItemNo())
-                        && existingItem.getMaterialsName().equals(details.getMaterialsName())) {
-                    existingItem.setQty(details.getQty());
-                    ItemMake updatedItem = itemMakeRepository.save(existingItem);
-                    updatedItems.add(updatedItem);
-                    break;
-                }
+            if (itemExistsByName && itemExistsByNo) {
+                itemMakeRepository.save(item);
+            } else if (itemExistsByName) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("Sorry, this item already exists!");
+            } else {
+                itemMakeRepository.save(item);
             }
         }
 
-        return ResponseEntity.ok(updatedItems);
+        return ResponseEntity.ok(itemMakeRepository.findAll());
+    }
+
+    @PostMapping("/itemMakeNewAdd")
+    public ResponseEntity<?> addProducts(@RequestBody List<ItemMake> allItems) {
+        for (ItemMake item : allItems) {
+            List<ItemMake> existingItemByItemNo = itemMakeRepository.findByItemNo(item.getItemNo());
+            List<ItemMake> existingItemByItemName = itemMakeRepository.findByItemName(item.getItemName());
+            List<ItemMake> existingItemByMaterialsName = itemMakeRepository
+                    .findByItemNoAndMaterialsName(item.getItemNo(), item.getMaterialsName());
+
+            boolean itemExistsByNo = !existingItemByItemNo.isEmpty();
+            boolean itemExistsByName = !existingItemByItemName.isEmpty();
+            boolean itemExistsByMaterialsName = !existingItemByMaterialsName.isEmpty();
+
+            if (itemExistsByMaterialsName) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("Sorry, this item already exists!");
+            } else if (itemExistsByName && itemExistsByNo) {
+                itemMakeRepository.save(item);
+            }
+        }
+        return ResponseEntity.ok(itemMakeRepository.findAll());
+    }
+
+    @DeleteMapping("/deleteMaterial/{itemId}")
+    public void getItem(@PathVariable Long itemId) {
+        itemMakeRepository.deleteById(itemId);
+    }
+
+    @PutMapping("/updateItemMaterials/{itemId}")
+    public ResponseEntity<ItemMake> updateItemMake(
+            @PathVariable Long itemId,
+            @RequestBody ItemMake itemMakeDetails) {
+
+        return itemMakeRepository.findById(itemId).map(existingItem -> {
+            existingItem.setMaterialsName(itemMakeDetails.getMaterialsName());
+            existingItem.setQty(itemMakeDetails.getQty());
+            ItemMake updatedItem = itemMakeRepository.save(existingItem);
+            return ResponseEntity.ok(updatedItem);
+        }).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
     }
 
     @PostMapping("/addAllMaterials")
@@ -251,6 +267,11 @@ public class ProductController {
         return productStockrepository.findLatestProductStockForEachProductName(username);
     }
 
+    @GetMapping("/getDamagedStock")
+    public List<ProductStock> getDamagedStock(String username) {
+        return productStockrepository.findDamagedProductByStatus(username);
+    }
+
     @GetMapping("/getMaterialsStock")
     public List<MaterialsStock> getMaterialsStock(String username) {
         return materialsRepository.findLatestMaterialsStockByUsername(username);
@@ -258,7 +279,12 @@ public class ProductController {
 
     @GetMapping("/getSoldProduct")
     public List<ProductStock> getSoldProduct(String username) {
-        return productStockrepository.findProductByStatus(username);
+        return productStockService.getProductDistForCurrentMonth(username);
+    }
+
+    @GetMapping("/getAllProduct")
+    public List<ProductStock> getAllProduct(String username) {
+        return productStockService.getAllProductStock(username);
     }
 
     @GetMapping("/getInvoiceData")
@@ -294,5 +320,14 @@ public class ProductController {
                 productRate.getProductName(),
                 productRate.getSaleRate());
         return ResponseEntity.ok(productRateSetup);
+    }
+
+    @GetMapping("/getMaterials/grouped")
+    public List<MaterialGroupedDto> getMaterialsGrouped(@RequestParam String username) {
+        List<Object[]> results = itemMakeService.getMaterialsAndQtyGroupedByItemName(username);
+        return results.stream()
+                .map(result -> new MaterialGroupedDto((String) result[0], (String) result[1], (Double) result[2],
+                        (Double) result[3]))
+                .collect(Collectors.toList());
     }
 }

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MadeItemDTO {
+    private Long itemId;
     private String itemName;
     private String materialsName;
     private String itemNo;

@@ -21,6 +21,9 @@ public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
     @Query("SELECT s FROM SalesStock s WHERE s.status = 'sold' AND s.username = :username AND FUNCTION('MONTH', s.date) = FUNCTION('MONTH', CURRENT_DATE) AND FUNCTION('YEAR', s.date) = FUNCTION('YEAR', CURRENT_DATE)")
     List<SalesStock> findCurrentMonthSoldStocksByUsername(@Param("username") String username);
 
+    // @Query("SELECT s FROM SalesStock s WHERE s.status = 'sold' AND s.username = :username AND  s.date between startDate AND endDate")
+    // List<SalesStock> findDatewiseSoldStocksByUsername(@Param("username") String username, @Param("starDate") String startDate, @Param("endDate") String endDate);
+
     List<SalesStock> findByProductIdAndUsername(Long productId, String username);
 
     List<SalesStock> findBySoldInvoice(String soldInvoice);

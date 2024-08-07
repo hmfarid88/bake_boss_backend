@@ -14,13 +14,13 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class OfficeReceive {
+public class OfficePayment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private LocalDate date;
-    private String receiveName;
-    private String receiveNote;
+    private String paymentName;
+    private String paymentNote;
     private Double amount;
     private String username;
 }

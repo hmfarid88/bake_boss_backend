@@ -14,13 +14,13 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PaymentRecord {
+public class Expense {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long payId;
+    private Long id;
     private LocalDate date;
-    private String paymentName;
-    private String paymentType;
+    private String expenseName;
+    private String expenseNote;
     private Double amount;
     private String username;
 }

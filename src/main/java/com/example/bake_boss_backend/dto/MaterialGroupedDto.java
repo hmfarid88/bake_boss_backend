@@ -1,16 +1,15 @@
 package com.example.bake_boss_backend.dto;
 
-import java.time.LocalDate;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PaymentDto {
-    private LocalDate date;
-    private String name;
-    private String note;
-    private Double amount;
+public class MaterialGroupedDto {
+    private String itemName;
+    private String materialsName;
+    private Double qty;
+    private Double averageRate;
 }

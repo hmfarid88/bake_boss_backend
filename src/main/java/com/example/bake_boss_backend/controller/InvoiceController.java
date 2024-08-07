@@ -26,6 +26,7 @@ import com.example.bake_boss_backend.service.ShopInfoService;
 public class InvoiceController {
     private final SalesStockRepository salesStockRepository;
     private final CustomerInfoRepository customerInfoRepository;
+    private final ShopInfoService shopInfoService;
     
 
     @Autowired
@@ -51,8 +52,7 @@ public class InvoiceController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    private final ShopInfoService shopInfoService;
-
+    
     @PutMapping("/addShopInfo")
     public ShopInfo saveOrUpdateShopInfo(@RequestBody ShopInfo shopInfo) {
         return shopInfoService.saveOrUpdateShopInfo(shopInfo);

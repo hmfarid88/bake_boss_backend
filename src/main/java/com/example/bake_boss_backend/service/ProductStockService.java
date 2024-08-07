@@ -1,5 +1,6 @@
 package com.example.bake_boss_backend.service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.example.bake_boss_backend.entity.ProductRate;
 import com.example.bake_boss_backend.entity.ProductStock;
+import com.example.bake_boss_backend.entity.RetailerPayment;
 import com.example.bake_boss_backend.repository.ProductRateRepository;
 import com.example.bake_boss_backend.repository.ProductStockrepository;
 
@@ -38,5 +40,19 @@ public class ProductStockService {
             newProductRate.setSaleRate(saleRate);
             return productRateRepository.save(newProductRate);
         }
+    }
+
+     public List<ProductStock> getProductDistForCurrentMonth(String username) {
+        LocalDate now = LocalDate.now();
+        int year = now.getYear();
+        int month = now.getMonthValue();
+        return productStockRepository.findProductByStatus(year, month, username);
+    }
+
+     public List<ProductStock> getAllProductStock(String username) {
+        LocalDate now = LocalDate.now();
+        int year = now.getYear();
+        int month = now.getMonthValue();
+        return productStockRepository.findProductByUsername(year, month, username);
     }
 }

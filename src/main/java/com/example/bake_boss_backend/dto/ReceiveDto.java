@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 public class ReceiveDto {
     private LocalDate date;
     private String name;
-    private String type;
+    private String note;
     private Double amount;
 }
