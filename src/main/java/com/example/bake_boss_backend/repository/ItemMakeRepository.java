@@ -20,7 +20,7 @@ public interface ItemMakeRepository extends JpaRepository<ItemMake, Long> {
                         "AND ms.materialsId = (SELECT MAX(ms2.materialsId) FROM MaterialsStock ms2 WHERE ms2.materialsName = ms.materialsName AND ms2.username = :username)")
         List<MadeItemDTO> findByUsernameGrouped(String username, String itemName);
 
-        @Query("SELECT im.itemName, im.materialsName, im.qty, ms.averageRate FROM ItemMake im JOIN MaterialsStock ms ON im.materialsName = ms.materialsName  WHERE im.username = :username GROUP BY im.itemName, im.materialsName")
+        @Query("SELECT im.itemName, im.materialsName, im.qty, ms.averageRate FROM ItemMake im JOIN MaterialsStock ms ON im.materialsName = ms.materialsName  WHERE im.username = :username GROUP BY im.itemName, im.materialsName, im.qty, ms.averageRate")
         List<Object[]> findMaterialsAndQtyGroupedByItemName(String username);
 
         List<ItemMake> findByItemNo(String itemNo);

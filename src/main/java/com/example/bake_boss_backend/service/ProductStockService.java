@@ -2,13 +2,15 @@ package com.example.bake_boss_backend.service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.bake_boss_backend.entity.MaterialsStock;
 import com.example.bake_boss_backend.entity.ProductRate;
 import com.example.bake_boss_backend.entity.ProductStock;
-import com.example.bake_boss_backend.entity.RetailerPayment;
+import com.example.bake_boss_backend.repository.MaterialsRepository;
 import com.example.bake_boss_backend.repository.ProductRateRepository;
 import com.example.bake_boss_backend.repository.ProductStockrepository;
 
@@ -22,17 +24,20 @@ public class ProductStockService {
     @Autowired
     private ProductRateRepository productRateRepository;
 
+    @Autowired
+    private MaterialsRepository materialsRepository;
+
     public List<ProductStock> getProductStockWithInvoiceNotInSalesStock(String customer) {
         return productStockRepository.findProductStockWithInvoiceNotInSalesStock(customer);
     }
 
     @Transactional
     public ProductRate upsertProductRate(String username, String productName, Integer saleRate) {
-        ProductRate existingSetup = productRateRepository.findByUsername(username);
-        if (existingSetup != null) {
-            existingSetup.setProductName(productName);
-            existingSetup.setSaleRate(saleRate);
-            return productRateRepository.save(existingSetup);
+        Optional<ProductRate> existingSetup = productRateRepository.findByProductNameAndUsername(productName, username);
+        if (existingSetup.isPresent()) {
+            ProductRate productRate = existingSetup.get();
+            productRate.setSaleRate(saleRate);
+            return productRateRepository.save(productRate);
         } else {
             ProductRate newProductRate = new ProductRate();
             newProductRate.setUsername(username);
@@ -42,17 +47,24 @@ public class ProductStockService {
         }
     }
 
-     public List<ProductStock> getProductDistForCurrentMonth(String username) {
+    public List<ProductStock> getProductDistForCurrentMonth(String username) {
         LocalDate now = LocalDate.now();
         int year = now.getYear();
         int month = now.getMonthValue();
         return productStockRepository.findProductByStatus(year, month, username);
     }
 
-     public List<ProductStock> getAllProductStock(String username) {
+    public List<ProductStock> getAllProductStock(String username) {
         LocalDate now = LocalDate.now();
         int year = now.getYear();
         int month = now.getMonthValue();
         return productStockRepository.findProductByUsername(year, month, username);
+    }
+
+    public List<MaterialsStock> getAllMaterialsStock(String username) {
+        LocalDate now = LocalDate.now();
+        int year = now.getYear();
+        int month = now.getMonthValue();
+        return materialsRepository.findMaterialsByUsername(year, month, username);
     }
 }

@@ -107,6 +107,14 @@ public class SalesStockService {
         return salesStockRepository.findCurrentMonthSoldStocksByUsername(username);
     }
 
+    public List<SalesStock> getCurrentMonthStockReturned(String username) {
+        return salesStockRepository.findCurrentMonthReturnedStocksByUsername(username);
+    }
+
+    public List<SalesStock> getDatewiseSoldStocks(String username, LocalDate startDate, LocalDate enDate) {
+        return salesStockRepository.findDatewiseSoldStocksByUsername(username, startDate, enDate);
+    }
+
     public List<Object[]> findByUsernameAndDateAndStatus(String username, LocalDate date, String status) {
         return salesStockRepository.findByUsernameAndDateAndStatus(username, date, status);
     }

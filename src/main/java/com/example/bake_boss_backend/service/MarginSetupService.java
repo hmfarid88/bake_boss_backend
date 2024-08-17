@@ -8,15 +8,14 @@ import org.springframework.stereotype.Service;
 import com.example.bake_boss_backend.entity.MarginSetup;
 import com.example.bake_boss_backend.repository.MarginSetupRepository;
 
-import jakarta.transaction.Transactional;
-
 @Service
 public class MarginSetupService {
     @Autowired
     private MarginSetupRepository marginSetupRepository;
 
     public MarginSetup saveOrUpdateMarginSetup(MarginSetup marginSetup) {
-        Optional<MarginSetup> existingMarginSetup = marginSetupRepository.findByUsernameAndProductName(marginSetup.getUsername(), marginSetup.getProductName());
+        Optional<MarginSetup> existingMarginSetup = marginSetupRepository
+                .findByUsernameAndProductName(marginSetup.getUsername(), marginSetup.getProductName());
 
         if (existingMarginSetup.isPresent()) {
             MarginSetup existing = existingMarginSetup.get();
@@ -28,7 +27,9 @@ public class MarginSetupService {
         }
     }
 
-    public MarginSetup getMarginSetupByUsername(String username) {
-        return marginSetupRepository.findByUsername(username);
+    public Optional<MarginSetup> getMarginByUserAndProduct(String username, String productName) {
+        return marginSetupRepository.findByUsernameAndProductName(username, productName);
     }
+
+   
 }

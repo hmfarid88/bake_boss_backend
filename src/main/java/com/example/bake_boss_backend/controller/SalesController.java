@@ -62,9 +62,26 @@ public class SalesController {
         }
     }
 
+    @PostMapping("/outletStockReturn")
+    public ResponseEntity<List<SalesStock>> addMultipleSalesStock(@RequestBody List<SalesStock> salesStockList) {
+        List<SalesStock> savedSalesStock = salesStockRepository.saveAll(salesStockList);
+        return ResponseEntity.ok(savedSalesStock);
+    }
+
     @GetMapping("/getOutletSale")
     public List<SalesStock> getCurrentMonthSoldStocks(@RequestParam String username) {
         return salesStockService.getCurrentMonthSoldStocks(username);
+    }
+
+    @GetMapping("/getOutletReturned")
+    public List<SalesStock> getCurrentMonthStockReturned(@RequestParam String username) {
+        return salesStockService.getCurrentMonthStockReturned(username);
+    }
+
+    @GetMapping("/getDatewiseOutletSale")
+    public List<SalesStock> getDatewiseSale(@RequestParam String username, @RequestParam LocalDate startDate,
+            @RequestParam LocalDate endDate) {
+        return salesStockService.getDatewiseSoldStocks(username, startDate, endDate);
     }
 
     @GetMapping("/cashbook/dateWiseSale")

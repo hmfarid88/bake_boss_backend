@@ -14,7 +14,7 @@ public class MadeItemDTO {
     private String itemNo;
     private Double qty;
     private Double averageRate;
-    private Integer remainingQty;
+    private Double remainingQty;
     
 
 }

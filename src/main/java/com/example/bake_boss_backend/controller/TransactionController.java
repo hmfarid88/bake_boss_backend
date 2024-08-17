@@ -2,6 +2,7 @@ package com.example.bake_boss_backend.controller;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -105,13 +106,8 @@ public class TransactionController {
     }
 
     @GetMapping("/getMargin")
-    public ResponseEntity<MarginSetup> getMarginSetup(@RequestParam String username) {
-        MarginSetup marginSetup = marginSetupService.getMarginSetupByUsername(username);
-        if (marginSetup != null) {
-            return ResponseEntity.ok(marginSetup);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public Optional<MarginSetup> getMarginSetup(@RequestParam String username, @RequestParam String productName) {
+        return marginSetupService.getMarginByUserAndProduct(username, productName);
     }
 
     @GetMapping("/net-sum-before-today")

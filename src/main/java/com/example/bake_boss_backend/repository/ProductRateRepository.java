@@ -7,7 +7,5 @@ import com.example.bake_boss_backend.entity.ProductRate;
 
 public interface ProductRateRepository extends JpaRepository<ProductRate, Long> {
 
-    ProductRate findByUsername(String username);
-
     Optional<ProductRate> findByProductNameAndUsername(String productName, String username);
 }

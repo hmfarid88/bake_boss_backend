@@ -26,12 +26,14 @@ import com.example.bake_boss_backend.entity.MaterialName;
 import com.example.bake_boss_backend.entity.MaterialsStock;
 import com.example.bake_boss_backend.entity.ProductRate;
 import com.example.bake_boss_backend.entity.ProductStock;
+import com.example.bake_boss_backend.entity.SalesStock;
 import com.example.bake_boss_backend.entity.SupplierName;
 import com.example.bake_boss_backend.repository.CategoryNameRepository;
 import com.example.bake_boss_backend.repository.ItemMakeRepository;
 import com.example.bake_boss_backend.repository.MaterialsNameRepository;
 import com.example.bake_boss_backend.repository.MaterialsRepository;
 import com.example.bake_boss_backend.repository.ProductStockrepository;
+import com.example.bake_boss_backend.repository.SalesStockRepository;
 import com.example.bake_boss_backend.repository.SupplierNameRepository;
 import com.example.bake_boss_backend.service.ItemMakeService;
 import com.example.bake_boss_backend.service.ProductStockService;
@@ -46,16 +48,18 @@ public class ProductController {
     private final MaterialsRepository materialsRepository;
     private final CategoryNameRepository categoryNameRepository;
     private final ProductStockrepository productStockrepository;
+    private final SalesStockRepository salesStockRepository;
 
     ProductController(MaterialsNameRepository materialsNameRepository, ItemMakeRepository itemMakeRepository,
             SupplierNameRepository supplierNameRepository, MaterialsRepository materialsRepository,
-            CategoryNameRepository categoryNameRepository, ProductStockrepository productStockrepository) {
+            CategoryNameRepository categoryNameRepository, ProductStockrepository productStockrepository, SalesStockRepository salesStockRepository) {
         this.materialsNameRepository = materialsNameRepository;
         this.itemMakeRepository = itemMakeRepository;
         this.supplierNameRepository = supplierNameRepository;
         this.materialsRepository = materialsRepository;
         this.categoryNameRepository = categoryNameRepository;
         this.productStockrepository = productStockrepository;
+        this.salesStockRepository=salesStockRepository;
     }
 
     @Autowired
@@ -167,7 +171,7 @@ public class ProductController {
                     .findLatestByMaterialsNameAndUsername(newItem.getMaterialsName(), newItem.getUsername());
             if (existingMaterialOpt.isPresent()) {
                 MaterialsStock existingMaterial = existingMaterialOpt.get();
-                int newTotalQty = existingMaterial.getRemainingQty() + newItem.getMaterialsQty();
+                Double newTotalQty = existingMaterial.getRemainingQty() + newItem.getMaterialsQty();
                 Double newTotalValue = (existingMaterial.getRemainingQty() * existingMaterial.getAverageRate())
                         + (newItem.getMaterialsQty() * newItem.getMaterialsRate());
                 Double newAverageRate = newTotalValue / newTotalQty;
@@ -209,6 +213,29 @@ public class ProductController {
         return allItems;
     }
 
+    @PostMapping("/addAdditionalSalesItemStock")
+    public List<SalesStock> saveSalesStock(@RequestBody List<SalesStock> allItems) {
+        for (SalesStock newItem : allItems) {
+            Optional<SalesStock> latestProductStockOpt = salesStockRepository
+                    .findLatestProductStockByProductNameAndUsername(newItem.getProductName(), newItem.getUsername());
+
+            if (latestProductStockOpt.isPresent()) {
+                SalesStock latestProductStock = latestProductStockOpt.get();
+                int newTotalQty = latestProductStock.getRemainingQty() + newItem.getProductQty();
+                Double totalValue = (latestProductStock.getRemainingQty() * latestProductStock.getCostPrice()) +
+                        (newItem.getProductQty() * newItem.getCostPrice());
+                Double newCostPrice = totalValue / newTotalQty;
+                newItem.setRemainingQty(latestProductStock.getRemainingQty() + newItem.getProductQty());
+                newItem.setCostPrice(newCostPrice);
+
+            } else {
+                newItem.setRemainingQty(newItem.getProductQty());
+                newItem.setCostPrice(newItem.getCostPrice());
+            }
+            salesStockRepository.save(newItem);
+        }
+        return allItems;
+    }
     @PostMapping("/productDistribution")
     public List<ProductStock> saveDistribution(@RequestBody List<ProductStock> allItems) {
         for (ProductStock newItem : allItems) {
@@ -272,6 +299,11 @@ public class ProductController {
         return productStockrepository.findDamagedProductByStatus(username);
     }
 
+    @GetMapping("/getDamagedMaterial")
+    public List<MaterialsStock> getDamagedMaterial(String username) {
+        return materialsRepository.findDamagedMaterialsByStatus(username);
+    }
+
     @GetMapping("/getMaterialsStock")
     public List<MaterialsStock> getMaterialsStock(String username) {
         return materialsRepository.findLatestMaterialsStockByUsername(username);
@@ -287,6 +319,11 @@ public class ProductController {
         return productStockService.getAllProductStock(username);
     }
 
+    @GetMapping("/getAllMaterials")
+    public List<MaterialsStock> getAllMaterials(String username) {
+        return productStockService.getAllMaterialsStock(username);
+    }
+
     @GetMapping("/getInvoiceData")
     public List<ProductStock> getInvoiceData(String username, String invoiceNo) {
         return productStockrepository.findByUsernameAndInvoiceNo(username, invoiceNo);
@@ -295,6 +332,11 @@ public class ProductController {
     @GetMapping("/getSingleProduct")
     public Optional<ProductStock> getSingleProduct(@RequestParam Long productId) {
         return productStockrepository.findByProductId(productId);
+    }
+
+    @GetMapping("/getSingleMaterial")
+    public Optional<MaterialsStock> getSingleMaterial(@RequestParam Long materialsId) {
+        return materialsRepository.findByMaterialsId(materialsId);
     }
 
     @GetMapping("/pendingSalesStock")
@@ -310,7 +352,7 @@ public class ProductController {
             return ResponseEntity.badRequest().body("Customer is required");
         }
         salesStockService.insertOrUpdateProductStockInSalesStock(customer);
-        return ResponseEntity.ok("Products added or updated successfully");
+        return ResponseEntity.ok("Products added successfully");
     }
 
     @PutMapping("/productRateSetup")

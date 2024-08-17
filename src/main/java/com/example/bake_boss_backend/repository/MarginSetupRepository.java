@@ -9,5 +9,4 @@ public interface MarginSetupRepository extends JpaRepository<MarginSetup, Intege
    
     Optional<MarginSetup> findByUsernameAndProductName(String username, String productName);
 
-    MarginSetup findByUsername(String username);
 }
