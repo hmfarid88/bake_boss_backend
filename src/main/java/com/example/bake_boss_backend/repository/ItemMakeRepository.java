@@ -29,4 +29,8 @@ public interface ItemMakeRepository extends JpaRepository<ItemMake, Long> {
 
         List<ItemMake> findByItemNoAndMaterialsName(String itemNo, String materialsName);
 
+        List<ItemMake> findByUsernameAndMaterialsName(String username, String materialsName);
+
+        List<ItemMake> findByUsernameAndItemName(String username, String itemName);
+
 }

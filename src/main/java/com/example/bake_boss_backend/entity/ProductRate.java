@@ -17,6 +17,6 @@ public class ProductRate {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String productName;
-    private int saleRate;
+    private Double saleRate;
     private String username;
 }

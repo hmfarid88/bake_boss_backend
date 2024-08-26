@@ -6,10 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.example.bake_boss_backend.entity.MaterialName;
 
-public interface MaterialsNameRepository extends JpaRepository<MaterialName, Long>{
+public interface MaterialsNameRepository extends JpaRepository<MaterialName, Long> {
 
     boolean existsByUsernameAndMaterialsName(String username, String materialsName);
 
     List<MaterialName> getMaterialsNameByUsername(String username);
-    
+
+    List<MaterialName> findByUsernameAndMaterialsName(String username, String materialsName);
 }

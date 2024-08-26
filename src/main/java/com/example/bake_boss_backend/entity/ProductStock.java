@@ -24,8 +24,8 @@ public class ProductStock {
     private Double costPrice;
     private Double dpRate;
     private Double rpRate;
-    private int productQty;
-    private int remainingQty;
+    private Double productQty;
+    private Double remainingQty;
     private String status;
     private String customer;
     private String username;

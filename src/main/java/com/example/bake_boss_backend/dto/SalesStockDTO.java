@@ -15,7 +15,7 @@ public class SalesStockDTO {
     private String category;
     private String productName;
     private Double costPrice;
-    private int remainingQty;
+    private Double remainingQty;
     private String invoiceNo;
-    private int saleRate;
+    private Double saleRate;
 }

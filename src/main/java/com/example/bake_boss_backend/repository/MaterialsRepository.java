@@ -41,4 +41,6 @@ public interface MaterialsRepository extends JpaRepository<MaterialsStock, Long>
 
     @Query("SELECT ms FROM MaterialsStock ms WHERE ms.username=:username AND ms.status='damaged'")
     List<MaterialsStock> findDamagedMaterialsByStatus(String username);
+
+   List<MaterialsStock> findByUsernameAndMaterialsName(String username, String oldMaterialsName);
 }

@@ -23,7 +23,7 @@ public interface ProductStockrepository extends JpaRepository<ProductStock, Long
     List<ProductStock> findByUsernameAndInvoiceNo(String username, String invoiceNo);
 
     @Query("SELECT ps FROM ProductStock ps WHERE ps.status='sold' AND YEAR(ps.date) = :year AND MONTH(ps.date) = :month AND ps.username=:username")
-    List<ProductStock> findProductByStatus(@Param("month") int month, @Param("year") int year, @Param("username") String username);
+    List<ProductStock> findProductByStatus(@Param("year") int year, @Param("month") int month,  @Param("username") String username);
 
     @Query("SELECT ps FROM ProductStock ps WHERE ps.customer=:customer AND ps.invoiceNo NOT IN (SELECT ss.invoiceNo FROM SalesStock ss WHERE status='stored')")
     List<ProductStock> findProductStockWithInvoiceNotInSalesStock(String customer);
@@ -32,6 +32,8 @@ public interface ProductStockrepository extends JpaRepository<ProductStock, Long
     List<ProductStock> findDamagedProductByStatus(String username);
 
     @Query("SELECT ps FROM ProductStock ps WHERE  YEAR(ps.date) = :year AND MONTH(ps.date) = :month AND ps.username=:username")
-    List<ProductStock> findProductByUsername(@Param("month") int month, @Param("year") int year, @Param("username") String username);
+    List<ProductStock> findProductByUsername(@Param("year") int year, @Param("month") int month, @Param("username") String username);
+
+    List<ProductStock> findByUsernameAndProductName(String username, String oldItemName);
 
 }

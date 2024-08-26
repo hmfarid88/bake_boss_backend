@@ -7,12 +7,15 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.bake_boss_backend.dto.RequisitionSummaryDTO;
 import com.example.bake_boss_backend.entity.MaterialsStock;
 import com.example.bake_boss_backend.entity.ProductRate;
 import com.example.bake_boss_backend.entity.ProductStock;
+import com.example.bake_boss_backend.entity.Requisition;
 import com.example.bake_boss_backend.repository.MaterialsRepository;
 import com.example.bake_boss_backend.repository.ProductRateRepository;
 import com.example.bake_boss_backend.repository.ProductStockrepository;
+import com.example.bake_boss_backend.repository.RequisitionRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -27,12 +30,15 @@ public class ProductStockService {
     @Autowired
     private MaterialsRepository materialsRepository;
 
+    @Autowired
+    private RequisitionRepository requisitionRepository;
+
     public List<ProductStock> getProductStockWithInvoiceNotInSalesStock(String customer) {
         return productStockRepository.findProductStockWithInvoiceNotInSalesStock(customer);
     }
 
     @Transactional
-    public ProductRate upsertProductRate(String username, String productName, Integer saleRate) {
+    public ProductRate upsertProductRate(String username, String productName, Double saleRate) {
         Optional<ProductRate> existingSetup = productRateRepository.findByProductNameAndUsername(productName, username);
         if (existingSetup.isPresent()) {
             ProductRate productRate = existingSetup.get();
@@ -66,5 +72,14 @@ public class ProductStockService {
         int year = now.getYear();
         int month = now.getMonthValue();
         return materialsRepository.findMaterialsByUsername(year, month, username);
+    }
+
+   
+    public List<Requisition> saveAllRequisitions(List<Requisition> requisitions) {
+        return requisitionRepository.saveAll(requisitions);
+    }
+
+    public List<RequisitionSummaryDTO> getSumOfProductQtyGroupedByUsername() {
+        return requisitionRepository.findSumOfProductQtyGroupedByUsername();
     }
 }

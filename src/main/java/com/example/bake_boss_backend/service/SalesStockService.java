@@ -38,7 +38,7 @@ public class SalesStockService {
         return salesStocks.stream().map(salesStock -> {
             Optional<ProductRate> productRateOpt = productRateRepository
                     .findByProductNameAndUsername(salesStock.getProductName(), salesStock.getUsername());
-            int saleRate = productRateOpt.map(ProductRate::getSaleRate).orElse(0); // Default to 0 if not found
+            Double saleRate = productRateOpt.map(ProductRate::getSaleRate).orElse((double) 0); // Default to 0 if not found
             return new SalesStockDTO(
                     salesStock.getProductId(),
                     salesStock.getDate(),
@@ -56,7 +56,7 @@ public class SalesStockService {
         return salesStocks.stream().map(salesStock -> {
             Optional<ProductRate> productRateOpt = productRateRepository
                     .findByProductNameAndUsername(salesStock.getProductName(), salesStock.getUsername());
-            int saleRate = productRateOpt.map(ProductRate::getSaleRate).orElse(0); // Default to 0 if not found
+            Double saleRate = productRateOpt.map(ProductRate::getSaleRate).orElse((double) 0); // Default to 0 if not found
             return new SalesStockDTO(
                     salesStock.getProductId(),
                     salesStock.getDate(),
@@ -111,11 +111,27 @@ public class SalesStockService {
         return salesStockRepository.findCurrentMonthReturnedStocksByUsername(username);
     }
 
+    public List<SalesStock> getCurrentMonthAllStockReturned() {
+        return salesStockRepository.findCurrentMonthAllReturnedStocks();
+    }
+
     public List<SalesStock> getDatewiseSoldStocks(String username, LocalDate startDate, LocalDate enDate) {
         return salesStockRepository.findDatewiseSoldStocksByUsername(username, startDate, enDate);
     }
 
     public List<Object[]> findByUsernameAndDateAndStatus(String username, LocalDate date, String status) {
         return salesStockRepository.findByUsernameAndDateAndStatus(username, date, status);
+    }
+
+    public List<SalesStock> getCurrentMonthDataByUsername(String username) {
+        LocalDate currentDate = LocalDate.now();
+        int year = currentDate.getYear();
+        int month = currentDate.getMonthValue();
+        
+        return salesStockRepository.findCurrentMonthDataByUsername(username, year, month);
+    }
+
+    public Double getTotalSaleRateByUsernameAndDate(String username, LocalDate date) {
+        return salesStockRepository.findTotalSaleRateByUsernameAndDateBefore(username, date);
     }
 }

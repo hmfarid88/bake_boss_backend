@@ -20,19 +20,23 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.bake_boss_backend.dto.MadeItemDTO;
 import com.example.bake_boss_backend.dto.MaterialGroupedDto;
+import com.example.bake_boss_backend.dto.RequisitionSummaryDTO;
 import com.example.bake_boss_backend.entity.CategoryName;
 import com.example.bake_boss_backend.entity.ItemMake;
 import com.example.bake_boss_backend.entity.MaterialName;
 import com.example.bake_boss_backend.entity.MaterialsStock;
 import com.example.bake_boss_backend.entity.ProductRate;
 import com.example.bake_boss_backend.entity.ProductStock;
+import com.example.bake_boss_backend.entity.Requisition;
 import com.example.bake_boss_backend.entity.SalesStock;
 import com.example.bake_boss_backend.entity.SupplierName;
 import com.example.bake_boss_backend.repository.CategoryNameRepository;
 import com.example.bake_boss_backend.repository.ItemMakeRepository;
 import com.example.bake_boss_backend.repository.MaterialsNameRepository;
 import com.example.bake_boss_backend.repository.MaterialsRepository;
+import com.example.bake_boss_backend.repository.ProductRateRepository;
 import com.example.bake_boss_backend.repository.ProductStockrepository;
+import com.example.bake_boss_backend.repository.RequisitionRepository;
 import com.example.bake_boss_backend.repository.SalesStockRepository;
 import com.example.bake_boss_backend.repository.SupplierNameRepository;
 import com.example.bake_boss_backend.service.ItemMakeService;
@@ -52,14 +56,15 @@ public class ProductController {
 
     ProductController(MaterialsNameRepository materialsNameRepository, ItemMakeRepository itemMakeRepository,
             SupplierNameRepository supplierNameRepository, MaterialsRepository materialsRepository,
-            CategoryNameRepository categoryNameRepository, ProductStockrepository productStockrepository, SalesStockRepository salesStockRepository) {
+            CategoryNameRepository categoryNameRepository, ProductStockrepository productStockrepository,
+            SalesStockRepository salesStockRepository) {
         this.materialsNameRepository = materialsNameRepository;
         this.itemMakeRepository = itemMakeRepository;
         this.supplierNameRepository = supplierNameRepository;
         this.materialsRepository = materialsRepository;
         this.categoryNameRepository = categoryNameRepository;
         this.productStockrepository = productStockrepository;
-        this.salesStockRepository=salesStockRepository;
+        this.salesStockRepository = salesStockRepository;
     }
 
     @Autowired
@@ -70,6 +75,12 @@ public class ProductController {
 
     @Autowired
     private ItemMakeService itemMakeService;
+
+    @Autowired
+    private ProductRateRepository productRateRepository;
+
+    @Autowired
+    private RequisitionRepository requisitionRepository;
 
     @PostMapping("/addCategoryName")
     public ResponseEntity<?> addCategory(@RequestBody CategoryName categoryName) {
@@ -196,16 +207,16 @@ public class ProductController {
                     .findLatestProductStockByProductNameAndUsername(newItem.getProductName(), newItem.getUsername());
 
             if (latestProductStockOpt.isPresent()) {
-                ProductStock latestProductStock = latestProductStockOpt.get();
-                int newTotalQty = latestProductStock.getRemainingQty() + newItem.getProductQty();
-                Double totalValue = (latestProductStock.getRemainingQty() * latestProductStock.getCostPrice()) +
-                        (newItem.getProductQty() * newItem.getCostPrice());
-                Double newCostPrice = totalValue / newTotalQty;
-                newItem.setRemainingQty(latestProductStock.getRemainingQty() + newItem.getProductQty());
-                newItem.setCostPrice(newCostPrice);
+                // ProductStock latestProductStock = latestProductStockOpt.get();
+                // Double newTotalQty = latestProductStock.getRemainingQty() + newItem.getProductQty();
+                // Double totalValue = (latestProductStock.getRemainingQty() * latestProductStock.getCostPrice()) +
+                //         (newItem.getProductQty() * newItem.getCostPrice());
+                // Double newCostPrice = totalValue / newTotalQty;
+                newItem.setRemainingQty(0.0);
+                // newItem.setCostPrice(newCostPrice);
 
             } else {
-                newItem.setRemainingQty(newItem.getProductQty());
+                newItem.setRemainingQty(0.0);
                 newItem.setCostPrice(newItem.getCostPrice());
             }
             productStockrepository.save(newItem);
@@ -221,7 +232,7 @@ public class ProductController {
 
             if (latestProductStockOpt.isPresent()) {
                 SalesStock latestProductStock = latestProductStockOpt.get();
-                int newTotalQty = latestProductStock.getRemainingQty() + newItem.getProductQty();
+                Double newTotalQty = latestProductStock.getRemainingQty() + newItem.getProductQty();
                 Double totalValue = (latestProductStock.getRemainingQty() * latestProductStock.getCostPrice()) +
                         (newItem.getProductQty() * newItem.getCostPrice());
                 Double newCostPrice = totalValue / newTotalQty;
@@ -231,11 +242,20 @@ public class ProductController {
             } else {
                 newItem.setRemainingQty(newItem.getProductQty());
                 newItem.setCostPrice(newItem.getCostPrice());
+
+                ProductRate productRate = new ProductRate();
+                productRate.setProductName(newItem.getProductName());
+                productRate.setSaleRate(newItem.getSaleRate());
+                productRate.setUsername(newItem.getUsername());
+
+                // Save the new ProductRate entry
+                productRateRepository.save(productRate);
             }
             salesStockRepository.save(newItem);
         }
         return allItems;
     }
+
     @PostMapping("/productDistribution")
     public List<ProductStock> saveDistribution(@RequestBody List<ProductStock> allItems) {
         for (ProductStock newItem : allItems) {
@@ -244,11 +264,11 @@ public class ProductController {
 
             if (latestProductStockOpt.isPresent()) {
                 ProductStock latestProductStock = latestProductStockOpt.get();
-                int newTotalQty = latestProductStock.getRemainingQty() + newItem.getProductQty();
+                Double newTotalQty = latestProductStock.getRemainingQty() + newItem.getProductQty();
                 Double totalValue = (latestProductStock.getRemainingQty() * latestProductStock.getCostPrice()) +
                         (newItem.getProductQty() * newItem.getCostPrice());
                 Double newCostPrice = totalValue / newTotalQty;
-                newItem.setRemainingQty(latestProductStock.getRemainingQty() - newItem.getProductQty());
+                newItem.setRemainingQty(latestProductStock.getRemainingQty());
                 newItem.setCostPrice(newCostPrice);
             } else {
                 newItem.setRemainingQty(newItem.getProductQty());
@@ -371,5 +391,35 @@ public class ProductController {
                 .map(result -> new MaterialGroupedDto((String) result[0], (String) result[1], (Double) result[2],
                         (Double) result[3]))
                 .collect(Collectors.toList());
+    }
+
+    @PutMapping("/updateMaterialsName")
+    public void updateMaterialsName(@RequestParam String username,
+            @RequestParam String oldMaterialsName,
+            @RequestParam String newMaterialsName) {
+        itemMakeService.updateMaterialsName(username, oldMaterialsName, newMaterialsName);
+    }
+
+    @PutMapping("/updateItemName")
+    public void updateItemName(@RequestParam String username,
+            @RequestParam String oldItemName,
+            @RequestParam String newItemName) {
+        itemMakeService.updateItemName(username, oldItemName, newItemName);
+    }
+
+    @PostMapping("/addRequisition")
+    public ResponseEntity<List<Requisition>> saveAllRequisitions(@RequestBody List<Requisition> requisitions) {
+        List<Requisition> savedRequisitions = productStockService.saveAllRequisitions(requisitions);
+        return ResponseEntity.ok(savedRequisitions);
+    }
+
+    @GetMapping("/getRequisition")
+    public List<Requisition> getAllRequisition(String username) {
+        return requisitionRepository.getAllRequisitionsByUsername(username);
+    }
+
+    @GetMapping("/sum-requisition-qty")
+    public List<RequisitionSummaryDTO> getSumOfProductQtyGroupedByUsername() {
+        return productStockService.getSumOfProductQtyGroupedByUsername();
     }
 }

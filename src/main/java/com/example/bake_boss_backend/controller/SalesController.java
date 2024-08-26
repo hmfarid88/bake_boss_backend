@@ -78,6 +78,11 @@ public class SalesController {
         return salesStockService.getCurrentMonthStockReturned(username);
     }
 
+    @GetMapping("/getOutletAllReturned")
+    public List<SalesStock> getCurrentMonthAllStockReturned() {
+        return salesStockService.getCurrentMonthAllStockReturned();
+    }
+
     @GetMapping("/getDatewiseOutletSale")
     public List<SalesStock> getDatewiseSale(@RequestParam String username, @RequestParam LocalDate startDate,
             @RequestParam LocalDate endDate) {
@@ -92,5 +97,19 @@ public class SalesController {
         LocalDate localDate = LocalDate.parse(date);
         List<Object[]> salesStocks = salesStockService.findByUsernameAndDateAndStatus(username, localDate, status);
         return ResponseEntity.ok(salesStocks);
+    }
+
+    @GetMapping("/salesStock/current-month")
+    public List<SalesStock> getCurrentMonthSales(@RequestParam String username) {
+        return salesStockService.getCurrentMonthDataByUsername(username);
+    }
+
+    @GetMapping("/cashbook/salesTotal")
+    public Double getTotalSaleRate(
+            @RequestParam String username,
+            @RequestParam String date
+    ) {
+        LocalDate parsedDate = LocalDate.parse(date);
+        return salesStockService.getTotalSaleRateByUsernameAndDate(username, parsedDate);
     }
 }
