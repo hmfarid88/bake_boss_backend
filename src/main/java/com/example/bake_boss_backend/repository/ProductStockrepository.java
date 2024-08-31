@@ -36,4 +36,6 @@ public interface ProductStockrepository extends JpaRepository<ProductStock, Long
 
     List<ProductStock> findByUsernameAndProductName(String username, String oldItemName);
 
+//     @Query("SELECT p.category FROM ProductStock p WHERE p.productName = :productName GROUP BY p.category")
+//     String findCategoryByProductName(String productName);
 }

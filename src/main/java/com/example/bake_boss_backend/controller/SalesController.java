@@ -112,4 +112,9 @@ public class SalesController {
         LocalDate parsedDate = LocalDate.parse(date);
         return salesStockService.getTotalSaleRateByUsernameAndDate(username, parsedDate);
     }
+
+    @GetMapping("/sales/today")
+    public List<SalesStock> getTodaysSales(@RequestParam String username) {
+        return salesStockService.getTodaysSalesByUsername(username);
+    }
 }

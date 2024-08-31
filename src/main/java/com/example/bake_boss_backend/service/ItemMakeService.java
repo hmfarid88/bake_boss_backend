@@ -1,18 +1,23 @@
 package com.example.bake_boss_backend.service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.bake_boss_backend.dto.ItemDetailsDTO;
 import com.example.bake_boss_backend.entity.ItemMake;
 import com.example.bake_boss_backend.entity.MaterialName;
 import com.example.bake_boss_backend.entity.MaterialsStock;
+import com.example.bake_boss_backend.entity.ProductRate;
 import com.example.bake_boss_backend.entity.ProductStock;
 import com.example.bake_boss_backend.entity.SalesStock;
 import com.example.bake_boss_backend.repository.ItemMakeRepository;
 import com.example.bake_boss_backend.repository.MaterialsNameRepository;
 import com.example.bake_boss_backend.repository.MaterialsRepository;
+import com.example.bake_boss_backend.repository.ProductRateRepository;
 import com.example.bake_boss_backend.repository.ProductStockrepository;
 import com.example.bake_boss_backend.repository.SalesStockRepository;
 
@@ -34,6 +39,9 @@ public class ItemMakeService {
 
     @Autowired
     private SalesStockRepository salesStockrepository;
+
+    @Autowired
+    private ProductRateRepository productRateRepository;
 
     public List<Object[]> getMaterialsAndQtyGroupedByItemName(String username) {
         return itemMakeRepository.findMaterialsAndQtyGroupedByItemName(username);
@@ -59,7 +67,8 @@ public class ItemMakeService {
             }
         }
         // Update MaterialsStock entity
-        List<MaterialsStock> materialsStocks = materialsRepository.findByUsernameAndMaterialsName(username, oldMaterialsName);
+        List<MaterialsStock> materialsStocks = materialsRepository.findByUsernameAndMaterialsName(username,
+                oldMaterialsName);
         if (materialsStocks != null) {
             for (MaterialsStock materialsStock : materialsStocks) {
                 materialsStock.setMaterialsName(newMaterialsName);
@@ -94,5 +103,37 @@ public class ItemMakeService {
             }
         }
 
+        List<ProductRate> productRates = productRateRepository.findByProductName(oldItemName);
+        if (productRates != null) {
+            for (ProductRate productRate : productRates) {
+                productRate.setProductName(newItemName);
+                productRateRepository.save(productRate);
+            }
+        }
+
     }
+    public List<ItemDetailsDTO> findCategoryAndMaterialsByProductName(String productName) {
+        return itemMakeRepository.findMaterialsNameAndQtyByItemName(productName);
+        
+    }
+    // public Map<String, Object> findCategoryAndMaterialsByProductName(String productName) {
+    //     String category = productStockrepository.findCategoryByProductName(productName);
+    //     List<ItemDetailsDTO> itemDetailsList = itemMakeRepository.findMaterialsNameAndQtyByItemName(productName);
+
+    //     Map<String, Object> result = new HashMap<>();
+    //     result.put("category", category);
+    //     result.put("materials", itemDetailsList);
+
+    //     return result;
+    // }
+
+    // public Map<String, Object> findCategoryAndMaterialsByProductName(String productName) {
+    //     String category = productStockrepository.findCategoryByProductName(productName);
+    //     ItemDetailsDTO itemDetails = itemMakeRepository.findMaterialsNameAndQtyByItemName(productName);
+    //     Map<String, Object> result = new HashMap<>();
+    //     result.put("category", category);
+    //     result.put("materialsName", itemDetails.getMaterialsName());
+    //     result.put("qty", itemDetails.getQty());
+    //     return result;
+    // }
 }

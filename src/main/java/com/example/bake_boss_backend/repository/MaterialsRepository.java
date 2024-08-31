@@ -20,7 +20,7 @@ public interface MaterialsRepository extends JpaRepository<MaterialsStock, Long>
             "(SELECT MAX(ms2.materialsId) FROM MaterialsStock ms2 GROUP BY ms2.materialsName)")
     List<MaterialsStock> findLatestMaterialsStockByUsername(@Param("username") String username);
 
-    @Query("SELECT ms FROM MaterialsStock ms WHERE status='stored' AND YEAR(ms.date) = :year AND MONTH(ms.date) = :month AND ms.username=:username")
+    @Query("SELECT ms FROM MaterialsStock ms WHERE YEAR(ms.date) = :year AND MONTH(ms.date) = :month AND ms.username=:username")
     List<MaterialsStock> findMaterialsByUsername(@Param("year") int year, @Param("month") int month,
             @Param("username") String username);
 

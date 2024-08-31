@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.bake_boss_backend.dto.ItemDetailsDTO;
 import com.example.bake_boss_backend.dto.MadeItemDTO;
 import com.example.bake_boss_backend.dto.MaterialGroupedDto;
 import com.example.bake_boss_backend.dto.RequisitionSummaryDTO;
@@ -422,4 +423,16 @@ public class ProductController {
     public List<RequisitionSummaryDTO> getSumOfProductQtyGroupedByUsername() {
         return productStockService.getSumOfProductQtyGroupedByUsername();
     }
+
+    @GetMapping("/categoryAndProduct-details")
+    public List<ItemDetailsDTO> getProductDetails(@RequestParam String productName) {
+        return itemMakeService.findCategoryAndMaterialsByProductName(productName);
+    }
+
+    @PutMapping("/accept")
+    public ResponseEntity<Void> acceptRequisition(@RequestParam Long reqId) {
+        productStockService.acceptRequisition(reqId);
+        return ResponseEntity.ok().build();
+    }
 }
+

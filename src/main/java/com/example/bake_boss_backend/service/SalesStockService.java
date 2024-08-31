@@ -134,4 +134,9 @@ public class SalesStockService {
     public Double getTotalSaleRateByUsernameAndDate(String username, LocalDate date) {
         return salesStockRepository.findTotalSaleRateByUsernameAndDateBefore(username, date);
     }
+
+    public List<SalesStock> getTodaysSalesByUsername(String username) {
+        LocalDate today = LocalDate.now();
+        return salesStockRepository.findByUsernameAndDate(username, today);
+    }
 }

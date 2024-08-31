@@ -82,4 +82,10 @@ public class ProductStockService {
     public List<RequisitionSummaryDTO> getSumOfProductQtyGroupedByUsername() {
         return requisitionRepository.findSumOfProductQtyGroupedByUsername();
     }
+    
+    @Transactional
+    public void acceptRequisition(Long reqId) {
+        requisitionRepository.updateStatusByReqId(reqId, "accepted");
+    }
 }
+
