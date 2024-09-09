@@ -24,11 +24,9 @@ public interface ItemMakeRepository extends JpaRepository<ItemMake, Long> {
         @Query("SELECT im.itemName, im.materialsName, im.qty, ms.averageRate FROM ItemMake im JOIN MaterialsStock ms ON im.materialsName = ms.materialsName  WHERE im.username = :username GROUP BY im.itemName, im.materialsName, im.qty, ms.averageRate")
         List<Object[]> findMaterialsAndQtyGroupedByItemName(String username);
 
-        @Query("SELECT new com.example.bake_boss_backend.dto.ItemDetailsDTO(ps.category, ps.productName, im.materialsName, im.qty) FROM ProductStock ps "  +
-                "JOIN ItemMake im ON ps.productName = im.itemName WHERE ps.productName = :productName GROUP BY ps.category, ps.productName, im.materialsName, im.qty")
-        // @Query("SELECT new
-        // com.example.bake_boss_backend.dto.ItemDetailsDTO(i.itemName, i.materialsName,
-        // i.qty) FROM ItemMake i WHERE i.itemName = :itemName")
+        @Query("SELECT new com.example.bake_boss_backend.dto.ItemDetailsDTO(ps.category, ps.productName, im.materialsName, im.qty) FROM ProductStock ps "
+                        +
+                        "JOIN ItemMake im ON ps.productName = im.itemName WHERE ps.productName = :productName GROUP BY ps.category, ps.productName, im.materialsName, im.qty")
         List<ItemDetailsDTO> findMaterialsNameAndQtyByItemName(String productName);
 
         List<ItemMake> findByItemNo(String itemNo);

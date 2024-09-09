@@ -8,12 +8,12 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.bake_boss_backend.dto.PendingVendorDto;
 import com.example.bake_boss_backend.dto.SalesStockDTO;
 import com.example.bake_boss_backend.entity.ProductRate;
 import com.example.bake_boss_backend.entity.ProductStock;
 import com.example.bake_boss_backend.entity.SalesStock;
 import com.example.bake_boss_backend.repository.ProductRateRepository;
-import com.example.bake_boss_backend.repository.ProductStockrepository;
 import com.example.bake_boss_backend.repository.SalesStockRepository;
 
 import jakarta.transaction.Transactional;
@@ -21,17 +21,13 @@ import jakarta.transaction.Transactional;
 @Service
 public class SalesStockService {
     @Autowired
-    private ProductStockrepository productStockRepository;
+    private ProductStockService productStockService;
 
     @Autowired
     private SalesStockRepository salesStockRepository;
 
     @Autowired
     private ProductRateRepository productRateRepository;
-
-    public List<ProductStock> getProductStockWithInvoiceNotInSalesStock(String customer) {
-        return productStockRepository.findProductStockWithInvoiceNotInSalesStock(customer);
-    }
 
     public List<SalesStockDTO> getAllSalesStockWithRate(String username) {
         List<SalesStock> salesStocks = salesStockRepository.findLastByProductNameAndUsername(username);
@@ -70,18 +66,19 @@ public class SalesStockService {
     }
 
     @Transactional
-    public void insertOrUpdateProductStockInSalesStock(String customer) {
-        List<ProductStock> productStocks = getProductStockWithInvoiceNotInSalesStock(customer);
-
+    public void insertOrUpdateProductStockInSalesStock(String customer, String invoiceNo) {
+        // Fetch ProductStock entries for the specific customer and invoice number
+        List<ProductStock> productStocks = productStockService.getProductStockByUsernameAndInvoiceNo(customer, invoiceNo);
+    
         for (ProductStock productStock : productStocks) {
             Optional<SalesStock> existingSalesStock = salesStockRepository
                     .findLatestSalesStockByProductNameAndUsername(productStock.getProductName(), customer);
-
+    
             SalesStock newSalesStock = new SalesStock();
             newSalesStock.setDate(LocalDate.now());
             newSalesStock.setCategory(productStock.getCategory());
             newSalesStock.setProductName(productStock.getProductName());
-
+    
             if (existingSalesStock.isPresent()) {
                 SalesStock latestSalesStock = existingSalesStock.get();
                 double newCostPrice = (latestSalesStock.getCostPrice() * latestSalesStock.getProductQty()
@@ -93,18 +90,57 @@ public class SalesStockService {
                 newSalesStock.setCostPrice(productStock.getDpRate());
                 newSalesStock.setRemainingQty(productStock.getProductQty());
             }
-
+    
             newSalesStock.setProductQty(productStock.getProductQty());
             newSalesStock.setStatus("stored");
             newSalesStock.setUsername(productStock.getCustomer());
             newSalesStock.setInvoiceNo(productStock.getInvoiceNo());
-
+    
+            salesStockRepository.save(newSalesStock);
+        }
+    }
+    
+    @Transactional
+    public void insertOrUpdateSalesStockInSalesStock(String username, String soldInvoice) {
+        // Fetch ProductStock entries for the specific customer and invoice number
+        List<SalesStock> salesStocks = salesStockRepository.findBySoldInvoice(soldInvoice);
+    
+        for (SalesStock salesStock : salesStocks) {
+            Optional<SalesStock> existingSalesStock = salesStockRepository
+                    .findLatestSalesStockByProductNameAndUsername(salesStock.getProductName(), username);
+    
+            SalesStock newSalesStock = new SalesStock();
+            newSalesStock.setDate(LocalDate.now());
+            newSalesStock.setCategory(salesStock.getCategory());
+            newSalesStock.setProductName(salesStock.getProductName());
+    
+            if (existingSalesStock.isPresent()) {
+                SalesStock latestSalesStock = existingSalesStock.get();
+                double newCostPrice = (latestSalesStock.getCostPrice() * latestSalesStock.getProductQty()
+                        + salesStock.getCostPrice() * salesStock.getProductQty()) /
+                        (latestSalesStock.getProductQty() + salesStock.getProductQty());
+                newSalesStock.setCostPrice(newCostPrice);
+                newSalesStock.setRemainingQty(latestSalesStock.getRemainingQty() + salesStock.getProductQty());
+            } else {
+                newSalesStock.setCostPrice(salesStock.getCostPrice());
+                newSalesStock.setRemainingQty(salesStock.getProductQty());
+            }
+    
+            newSalesStock.setProductQty(salesStock.getProductQty());
+            newSalesStock.setStatus("stored");
+            newSalesStock.setUsername(username);
+            newSalesStock.setInvoiceNo(soldInvoice);
+    
             salesStockRepository.save(newSalesStock);
         }
     }
 
     public List<SalesStock> getCurrentMonthSoldStocks(String username) {
         return salesStockRepository.findCurrentMonthSoldStocksByUsername(username);
+    }
+
+    public List<SalesStock> getCurrentMonthVendorsale(String username) {
+        return salesStockRepository.findCurrentMonthVendorSaleByUsername(username);
     }
 
     public List<SalesStock> getCurrentMonthStockReturned(String username) {
@@ -131,6 +167,10 @@ public class SalesStockService {
         return salesStockRepository.findCurrentMonthDataByUsername(username, year, month);
     }
 
+    public List<SalesStock> getCurrentMonthEntryByUsername(String username) {
+           return salesStockRepository.findCurrentMonthEntryByUsername(username);
+    }
+
     public Double getTotalSaleRateByUsernameAndDate(String username, LocalDate date) {
         return salesStockRepository.findTotalSaleRateByUsernameAndDateBefore(username, date);
     }
@@ -138,5 +178,13 @@ public class SalesStockService {
     public List<SalesStock> getTodaysSalesByUsername(String username) {
         LocalDate today = LocalDate.now();
         return salesStockRepository.findByUsernameAndDate(username, today);
+    }
+
+    public List<PendingVendorDto> getVendorStockByUsernameAndInvoiceNo( String username) {
+        return salesStockRepository.findPendingVendorData( username);
+    }
+
+    public List<SalesStock> getDetailsvendorSalesStock(String soldInvoice) {
+        return salesStockRepository.findBySoldInvoiceNotInStock(soldInvoice);
     }
 }

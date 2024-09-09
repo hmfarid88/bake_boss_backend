@@ -7,11 +7,13 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.bake_boss_backend.dto.PendingStockDto;
 import com.example.bake_boss_backend.dto.RequisitionSummaryDTO;
 import com.example.bake_boss_backend.entity.MaterialsStock;
 import com.example.bake_boss_backend.entity.ProductRate;
 import com.example.bake_boss_backend.entity.ProductStock;
 import com.example.bake_boss_backend.entity.Requisition;
+import com.example.bake_boss_backend.entity.SalesStock;
 import com.example.bake_boss_backend.repository.MaterialsRepository;
 import com.example.bake_boss_backend.repository.ProductRateRepository;
 import com.example.bake_boss_backend.repository.ProductStockrepository;
@@ -33,7 +35,7 @@ public class ProductStockService {
     @Autowired
     private RequisitionRepository requisitionRepository;
 
-    public List<ProductStock> getProductStockWithInvoiceNotInSalesStock(String customer) {
+    public List<PendingStockDto> getProductStockWithInvoiceNotInSalesStock(String customer) {
         return productStockRepository.findProductStockWithInvoiceNotInSalesStock(customer);
     }
 
@@ -86,6 +88,19 @@ public class ProductStockService {
     @Transactional
     public void acceptRequisition(Long reqId) {
         requisitionRepository.updateStatusByReqId(reqId, "accepted");
+    }
+
+    public List<ProductStock> getProductStockByUsernameAndInvoiceNo(String customer, String invoiceNo) {
+        return productStockRepository.findByCustomerAndInvoiceNo(customer, invoiceNo);
+    }
+
+    public List<Object[]> getTotalMaterialsQtyForUsedStatusInCurrentMonth(String username) {
+        LocalDate currentDate = LocalDate.now();
+        return materialsRepository.findTotalMaterialsQtyForUsedStatusInCurrentMonth(currentDate, username);
+    }
+
+    public List<Object[]> getDatewiseUsedMaterials(String username, LocalDate startDate, LocalDate enDate) {
+        return materialsRepository.findDatewiseUsedMaterialsByUsername(username, startDate, enDate);
     }
 }
 

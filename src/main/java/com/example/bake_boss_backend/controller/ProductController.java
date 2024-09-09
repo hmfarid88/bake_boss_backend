@@ -1,5 +1,6 @@
 package com.example.bake_boss_backend.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.bake_boss_backend.dto.ItemDetailsDTO;
 import com.example.bake_boss_backend.dto.MadeItemDTO;
 import com.example.bake_boss_backend.dto.MaterialGroupedDto;
+import com.example.bake_boss_backend.dto.PendingStockDto;
 import com.example.bake_boss_backend.dto.RequisitionSummaryDTO;
 import com.example.bake_boss_backend.entity.CategoryName;
 import com.example.bake_boss_backend.entity.ItemMake;
@@ -208,13 +210,7 @@ public class ProductController {
                     .findLatestProductStockByProductNameAndUsername(newItem.getProductName(), newItem.getUsername());
 
             if (latestProductStockOpt.isPresent()) {
-                // ProductStock latestProductStock = latestProductStockOpt.get();
-                // Double newTotalQty = latestProductStock.getRemainingQty() + newItem.getProductQty();
-                // Double totalValue = (latestProductStock.getRemainingQty() * latestProductStock.getCostPrice()) +
-                //         (newItem.getProductQty() * newItem.getCostPrice());
-                // Double newCostPrice = totalValue / newTotalQty;
                 newItem.setRemainingQty(0.0);
-                // newItem.setCostPrice(newCostPrice);
 
             } else {
                 newItem.setRemainingQty(0.0);
@@ -361,7 +357,7 @@ public class ProductController {
     }
 
     @GetMapping("/pendingSalesStock")
-    public List<ProductStock> getProductStockWithInvoiceNotInSalesStock(String customer) {
+    public List<PendingStockDto> getProductStockWithInvoiceNotInSalesStock(String customer) {
         return productStockService.getProductStockWithInvoiceNotInSalesStock(customer);
     }
 
@@ -369,10 +365,17 @@ public class ProductController {
     public ResponseEntity<String> insertOrUpdateProductStockInSalesStock(
             @RequestBody Map<String, String> customerData) {
         String customer = customerData.get("customer");
+        String invoiceNo = customerData.get("invoiceNo");
+
         if (customer == null || customer.isEmpty()) {
             return ResponseEntity.badRequest().body("Customer is required");
         }
-        salesStockService.insertOrUpdateProductStockInSalesStock(customer);
+
+        if (invoiceNo == null || invoiceNo.isEmpty()) {
+            return ResponseEntity.badRequest().body("Invoice number is required");
+        }
+
+        salesStockService.insertOrUpdateProductStockInSalesStock(customer, invoiceNo);
         return ResponseEntity.ok("Products added successfully");
     }
 
@@ -415,7 +418,7 @@ public class ProductController {
     }
 
     @GetMapping("/getRequisition")
-    public List<Requisition> getAllRequisition(String username) {
+    public List<Requisition> getAllRequisition(@RequestParam String username) {
         return requisitionRepository.getAllRequisitionsByUsername(username);
     }
 
@@ -434,5 +437,20 @@ public class ProductController {
         productStockService.acceptRequisition(reqId);
         return ResponseEntity.ok().build();
     }
-}
 
+    @GetMapping("/pendingDetailsStock")
+    public List<ProductStock> getProductStockByUsernameAndInvoiceNo(@RequestParam String customer, @RequestParam String invoiceNo) {
+        return productStockService.getProductStockByUsernameAndInvoiceNo(customer, invoiceNo);
+    }
+
+    @GetMapping("/materials/used-quantity")
+    public List<Object[]> getTotalUsedMaterialsQtyForCurrentMonth(String username) {
+        return productStockService.getTotalMaterialsQtyForUsedStatusInCurrentMonth(username);
+    }
+
+     @GetMapping("/materials/datewise-used-quantity")
+    public List<Object[]> getDatewiseUsed(@RequestParam String username, @RequestParam LocalDate startDate,
+            @RequestParam LocalDate endDate) {
+        return productStockService.getDatewiseUsedMaterials(username, startDate, endDate);
+    }
+}

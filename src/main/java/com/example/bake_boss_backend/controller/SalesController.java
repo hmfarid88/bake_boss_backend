@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.bake_boss_backend.dto.PendingVendorDto;
 import com.example.bake_boss_backend.dto.SalesRequest;
 import com.example.bake_boss_backend.dto.SalesStockDTO;
 import com.example.bake_boss_backend.entity.CustomerInfo;
@@ -45,6 +46,24 @@ public class SalesController {
         return salesStockService.getSingleSalesStockWithRate(productId, username);
     }
 
+    @PostMapping("/addSalesStock")
+    public ResponseEntity<String> insertOrUpdateSalesStockInSalesStock(
+            @RequestBody Map<String, String> customerData) {
+        String username = customerData.get("username");
+        String soldInvoice = customerData.get("soldInvoice");
+
+        if (username == null || username.isEmpty()) {
+            return ResponseEntity.badRequest().body("Username is required");
+        }
+
+        if (soldInvoice == null || soldInvoice.isEmpty()) {
+            return ResponseEntity.badRequest().body("Invoice number is required");
+        }
+
+        salesStockService.insertOrUpdateSalesStockInSalesStock(username, soldInvoice);
+        return ResponseEntity.ok("Products added successfully");
+    }
+
     @PostMapping("/outletSale")
     public ResponseEntity<?> handleSale(@RequestBody SalesRequest saleRequest) {
         try {
@@ -71,6 +90,11 @@ public class SalesController {
     @GetMapping("/getOutletSale")
     public List<SalesStock> getCurrentMonthSoldStocks(@RequestParam String username) {
         return salesStockService.getCurrentMonthSoldStocks(username);
+    }
+
+    @GetMapping("/getVendorSale")
+    public List<SalesStock> getCurrentMonthVendorSale(@RequestParam String username) {
+        return salesStockService.getCurrentMonthVendorsale(username);
     }
 
     @GetMapping("/getOutletReturned")
@@ -104,6 +128,11 @@ public class SalesController {
         return salesStockService.getCurrentMonthDataByUsername(username);
     }
 
+    @GetMapping("/salesStock/thismonth-entry")
+    public List<SalesStock> getCurrentMonthEntry(@RequestParam String username) {
+        return salesStockService.getCurrentMonthEntryByUsername(username);
+    }
+
     @GetMapping("/cashbook/salesTotal")
     public Double getTotalSaleRate(
             @RequestParam String username,
@@ -116,5 +145,16 @@ public class SalesController {
     @GetMapping("/sales/today")
     public List<SalesStock> getTodaysSales(@RequestParam String username) {
         return salesStockService.getTodaysSalesByUsername(username);
+    }
+
+     @GetMapping("/pendingVendorStock")
+    public List<PendingVendorDto> getProductStockByUsernameAndInvoiceNo(
+            @RequestParam String username) {
+        return salesStockService.getVendorStockByUsernameAndInvoiceNo( username);
+    }
+
+     @GetMapping("/pendingDetailsVendor")
+    public List<SalesStock> getDetailsVendorStock(@RequestParam String soldInvoice) {
+        return salesStockService.getDetailsvendorSalesStock(soldInvoice);
     }
 }
