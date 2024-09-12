@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PendingVendorDto {
+    private String username;
     private String soldInvoice;
     private Double productQty;
 }

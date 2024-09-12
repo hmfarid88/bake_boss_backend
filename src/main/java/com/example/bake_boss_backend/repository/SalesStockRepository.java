@@ -59,11 +59,11 @@ public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
         @Query("SELECT s FROM SalesStock s WHERE s.status = 'sold' AND s.username = :username AND s.date = :date")
         List<SalesStock> findByUsernameAndDate(String username, LocalDate date);
 
-        @Query("SELECT new com.example.bake_boss_backend.dto.PendingVendorDto(s.soldInvoice, SUM(s.productQty)) " +
+        @Query("SELECT new com.example.bake_boss_backend.dto.PendingVendorDto(s.username, s.soldInvoice, SUM(s.productQty)) " +
        "FROM SalesStock s JOIN CustomerInfo c ON s.soldInvoice = c.soldInvoice " +
        "LEFT JOIN SalesStock ss ON c.soldInvoice = ss.invoiceNo " +
        "WHERE s.status = 'vendor' AND c.customerName = :customerName AND ss.invoiceNo IS NULL " +
-       "GROUP BY s.soldInvoice")
+       "GROUP BY s.username, s.soldInvoice")
        List<PendingVendorDto> findPendingVendorData(@Param("customerName") String customerName);
 
         @Query("SELECT ss FROM SalesStock ss WHERE ss.soldInvoice=:soldInvoice AND ss.soldInvoice NOT IN (SELECT s.invoiceNo FROM SalesStock s WHERE s.status='stored')")

@@ -1,5 +1,6 @@
 package com.example.bake_boss_backend.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,6 +40,9 @@ public interface ProductStockrepository extends JpaRepository<ProductStock, Long
 
         @Query("SELECT ps FROM ProductStock ps WHERE  YEAR(ps.date) = :year AND MONTH(ps.date) = :month AND ps.username=:username")
         List<ProductStock> findProductByUsername(@Param("year") int year, @Param("month") int month, @Param("username") String username);
+
+        @Query("SELECT ps FROM ProductStock ps WHERE  ps.username=:username AND ps.date BETWEEN :startDate AND :endDate")
+        List<ProductStock> findDatewiseProductByUsername(String username, LocalDate startDate, LocalDate endDate);
 
         List<ProductStock> findByUsernameAndProductName(String username, String oldItemName);
 

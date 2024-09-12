@@ -20,7 +20,7 @@ public interface RequisitionRepository extends JpaRepository<Requisition, Long> 
        "FROM Requisition r WHERE r.username = :username AND r.status='pending'")
     List<Requisition> getAllRequisitionsByUsername(@Param("username") String username);
 
-    @Query("SELECT new com.example.bake_boss_backend.dto.RequisitionSummaryDTO(r.username, SUM(r.productQty)) " +
+    @Query("SELECT new com.example.bake_boss_backend.dto.RequisitionSummaryDTO(r.username, SUM(r.productQty) as totalQuantity) " +
             "FROM Requisition r WHERE r.status = 'pending' GROUP BY r.username")
     List<RequisitionSummaryDTO> findSumOfProductQtyGroupedByUsername();
 

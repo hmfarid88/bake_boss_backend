@@ -30,6 +30,7 @@ import com.example.bake_boss_backend.entity.MaterialName;
 import com.example.bake_boss_backend.entity.MaterialsStock;
 import com.example.bake_boss_backend.entity.ProductRate;
 import com.example.bake_boss_backend.entity.ProductStock;
+import com.example.bake_boss_backend.entity.ProductionStock;
 import com.example.bake_boss_backend.entity.Requisition;
 import com.example.bake_boss_backend.entity.SalesStock;
 import com.example.bake_boss_backend.entity.SupplierName;
@@ -39,6 +40,7 @@ import com.example.bake_boss_backend.repository.MaterialsNameRepository;
 import com.example.bake_boss_backend.repository.MaterialsRepository;
 import com.example.bake_boss_backend.repository.ProductRateRepository;
 import com.example.bake_boss_backend.repository.ProductStockrepository;
+import com.example.bake_boss_backend.repository.ProductionStockRepository;
 import com.example.bake_boss_backend.repository.RequisitionRepository;
 import com.example.bake_boss_backend.repository.SalesStockRepository;
 import com.example.bake_boss_backend.repository.SupplierNameRepository;
@@ -84,6 +86,9 @@ public class ProductController {
 
     @Autowired
     private RequisitionRepository requisitionRepository;
+
+    @Autowired
+    private ProductionStockRepository productionStockRepository;
 
     @PostMapping("/addCategoryName")
     public ResponseEntity<?> addCategory(@RequestBody CategoryName categoryName) {
@@ -276,9 +281,33 @@ public class ProductController {
         return allItems;
     }
 
-    @PostMapping("/updateMaterialsStock")
+   @PostMapping("/updateMaterialsStock")
     List<MaterialsStock> updateMaterials(@RequestBody List<MaterialsStock> allItems) {
-        return materialsRepository.saveAll(allItems);
+        List<MaterialsStock> savedMaterialsStock = materialsRepository.saveAll(allItems);
+
+        for (MaterialsStock newItem : allItems) {
+            Optional<ProductionStock> latestProductionStockOpt = productionStockRepository
+                    .findLatestByMaterialsNameAndUsername(newItem.getMaterialsName(), newItem.getUsername());
+
+            ProductionStock productionStock = new ProductionStock();
+            productionStock.setDate(newItem.getDate());
+            productionStock.setMaterialsName(newItem.getMaterialsName());
+            productionStock.setUsername(newItem.getUsername());
+            productionStock.setStatus("used");
+            productionStock.setMadeItem(newItem.getMadeItem());
+            productionStock.setMaterialsQty(newItem.getMaterialsQty());
+
+            if (latestProductionStockOpt.isPresent()) {
+                ProductionStock latestProductionStock = latestProductionStockOpt.get();
+                productionStock.setRemainingQty(latestProductionStock.getRemainingQty() - newItem.getMaterialsQty());
+            } else {
+                productionStock.setRemainingQty(newItem.getMaterialsQty());
+            }
+
+            productionStockRepository.save(productionStock);
+        }
+
+        return savedMaterialsStock;
     }
 
     @GetMapping("/getCategoryName")
@@ -336,9 +365,29 @@ public class ProductController {
         return productStockService.getAllProductStock(username);
     }
 
+    @GetMapping("/datewise-stock-ledger")
+    public List<ProductStock> getDatewiseAllProduct(String username, LocalDate startDate, LocalDate endDate) {
+        return productStockService.getDatewiseProductStock(username, startDate, endDate);
+    }
+
     @GetMapping("/getAllMaterials")
     public List<MaterialsStock> getAllMaterials(String username) {
         return productStockService.getAllMaterialsStock(username);
+    }
+
+    @GetMapping("/getAllStoredMaterials")
+    public List<MaterialsStock> getAllStoredMaterials(String username) {
+        return productStockService.getAllStoredMaterialsStock(username);
+    }
+
+    @GetMapping("/datewiseMaterialsLedger")
+    public List<MaterialsStock> getDatewiseMaterials(String username, LocalDate startDate, LocalDate endDate) {
+        return productStockService.getDatewiseMaterialsStock(username, startDate, endDate);
+    }
+
+    @GetMapping("/datewiseStoredMaterialsLedger")
+    public List<MaterialsStock> getDatewiseStoredMaterials(String username, LocalDate startDate, LocalDate endDate) {
+        return productStockService.getDatewiseStoredMaterialsStock(username, startDate, endDate);
     }
 
     @GetMapping("/getInvoiceData")
@@ -384,7 +433,8 @@ public class ProductController {
         ProductRate productRateSetup = productStockService.upsertProductRate(
                 productRate.getUsername(),
                 productRate.getProductName(),
-                productRate.getSaleRate());
+                productRate.getSaleRate(),
+                productRate.getQty());
         return ResponseEntity.ok(productRateSetup);
     }
 
@@ -439,7 +489,8 @@ public class ProductController {
     }
 
     @GetMapping("/pendingDetailsStock")
-    public List<ProductStock> getProductStockByUsernameAndInvoiceNo(@RequestParam String customer, @RequestParam String invoiceNo) {
+    public List<ProductStock> getProductStockByUsernameAndInvoiceNo(@RequestParam String customer,
+            @RequestParam String invoiceNo) {
         return productStockService.getProductStockByUsernameAndInvoiceNo(customer, invoiceNo);
     }
 
@@ -448,7 +499,7 @@ public class ProductController {
         return productStockService.getTotalMaterialsQtyForUsedStatusInCurrentMonth(username);
     }
 
-     @GetMapping("/materials/datewise-used-quantity")
+    @GetMapping("/materials/datewise-used-quantity")
     public List<Object[]> getDatewiseUsed(@RequestParam String username, @RequestParam LocalDate startDate,
             @RequestParam LocalDate endDate) {
         return productStockService.getDatewiseUsedMaterials(username, startDate, endDate);

@@ -21,8 +21,17 @@ public interface MaterialsRepository extends JpaRepository<MaterialsStock, Long>
         List<MaterialsStock> findLatestMaterialsStockByUsername(@Param("username") String username);
 
         @Query("SELECT ms FROM MaterialsStock ms WHERE YEAR(ms.date) = :year AND MONTH(ms.date) = :month AND ms.username=:username")
-        List<MaterialsStock> findMaterialsByUsername(@Param("year") int year, @Param("month") int month,
-                        @Param("username") String username);
+        List<MaterialsStock> findMaterialsByUsername(@Param("year") int year, @Param("month") int month, @Param("username") String username);
+
+        @Query("SELECT ms FROM MaterialsStock ms WHERE ms.username=:username AND ms.date BETWEEN :startDate AND :endDate")
+        List<MaterialsStock> findDatewiseMaterialsByUsername(String username, LocalDate startDate, LocalDate endDate);
+
+        @Query("SELECT ms FROM MaterialsStock ms WHERE status='stored' AND YEAR(ms.date) = :year AND MONTH(ms.date) = :month AND ms.username=:username")
+        List<MaterialsStock> findStoredMaterialsByUsername(@Param("year") int year, @Param("month") int month, @Param("username") String username);
+
+        @Query("SELECT ms FROM MaterialsStock ms WHERE status='stored' AND ms.username=:username AND ms.date BETWEEN :startDate AND :endDate")
+        List<MaterialsStock> findDatewiseStoredMaterialsByUsername(String username, LocalDate startDate, LocalDate endDate);
+            
 
         @Query("SELECT m.materialsName, SUM(m.materialsQty) " +
                         "FROM MaterialsStock m " +
@@ -43,14 +52,14 @@ public interface MaterialsRepository extends JpaRepository<MaterialsStock, Long>
                         "FROM MaterialsStock ms WHERE ms.username = :username AND ms.status='stored' GROUP BY ms.supplierName")
         List<Object[]> findTotalMaterialCostGroupedBySupplierAndUsername(String username);
 
-        @Query("SELECT new com.example.bake_boss_backend.dto.DetailsSupplierDTO(m.date, m.materialsName, SUM(m.materialsQty), SUM(m.materialsRate * m.materialsQty)) "
+        @Query("SELECT new com.example.bake_boss_backend.dto.DetailsSupplierDTO(m.date, m.supplierInvoice, m.materialsName, SUM(m.materialsQty), SUM(m.materialsRate * m.materialsQty)) "
                         +
                         "FROM MaterialsStock m " +
                         "WHERE m.username = :username AND m.supplierName = :supplierName AND m.date BETWEEN :startDate AND :endDate"
                         +
-                        " GROUP BY m.date, m.materialsName")
-        List<DetailsSupplierDTO> findMaterialsValueBySupplierAndUsername(String username, String supplierName,
-                        LocalDate startDate, LocalDate endDate);
+                        " GROUP BY m.date, m.supplierInvoice, m.materialsName")
+        List<DetailsSupplierDTO> findMaterialsValueBySupplierAndUsername(String username, String supplierName, LocalDate startDate, LocalDate endDate);
+                     
 
         Optional<MaterialsStock> findByMaterialsId(Long materialsId);
 

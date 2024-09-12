@@ -148,9 +148,8 @@ public class SalesController {
     }
 
      @GetMapping("/pendingVendorStock")
-    public List<PendingVendorDto> getProductStockByUsernameAndInvoiceNo(
-            @RequestParam String username) {
-        return salesStockService.getVendorStockByUsernameAndInvoiceNo( username);
+    public List<PendingVendorDto> getProductStockByUsernameAndInvoiceNo(@RequestParam String username) {
+         return salesStockService.getVendorStockByUsernameAndInvoiceNo(username);
     }
 
      @GetMapping("/pendingDetailsVendor")

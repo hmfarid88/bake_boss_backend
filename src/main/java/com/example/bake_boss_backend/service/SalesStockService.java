@@ -34,7 +34,8 @@ public class SalesStockService {
         return salesStocks.stream().map(salesStock -> {
             Optional<ProductRate> productRateOpt = productRateRepository
                     .findByProductNameAndUsername(salesStock.getProductName(), salesStock.getUsername());
-            Double saleRate = productRateOpt.map(ProductRate::getSaleRate).orElse((double) 0); // Default to 0 if not found
+            Double saleRate = productRateOpt.map(ProductRate::getSaleRate).orElse((double) 0);
+            Double qty = productRateOpt.map(ProductRate::getQty).orElse((double) 0);
             return new SalesStockDTO(
                     salesStock.getProductId(),
                     salesStock.getDate(),
@@ -43,7 +44,8 @@ public class SalesStockService {
                     salesStock.getCostPrice(),
                     salesStock.getRemainingQty(),
                     salesStock.getInvoiceNo(),
-                    saleRate);
+                    saleRate,
+                    qty);
         }).collect(Collectors.toList());
     }
 
@@ -52,7 +54,8 @@ public class SalesStockService {
         return salesStocks.stream().map(salesStock -> {
             Optional<ProductRate> productRateOpt = productRateRepository
                     .findByProductNameAndUsername(salesStock.getProductName(), salesStock.getUsername());
-            Double saleRate = productRateOpt.map(ProductRate::getSaleRate).orElse((double) 0); // Default to 0 if not found
+            Double saleRate = productRateOpt.map(ProductRate::getSaleRate).orElse((double) 0);
+            Double qty = productRateOpt.map(ProductRate::getQty).orElse((double) 0);
             return new SalesStockDTO(
                     salesStock.getProductId(),
                     salesStock.getDate(),
@@ -61,7 +64,8 @@ public class SalesStockService {
                     salesStock.getCostPrice(),
                     salesStock.getRemainingQty(),
                     salesStock.getInvoiceNo(),
-                    saleRate);
+                    saleRate,
+                    qty);
         }).collect(Collectors.toList());
     }
 
@@ -180,8 +184,8 @@ public class SalesStockService {
         return salesStockRepository.findByUsernameAndDate(username, today);
     }
 
-    public List<PendingVendorDto> getVendorStockByUsernameAndInvoiceNo( String username) {
-        return salesStockRepository.findPendingVendorData( username);
+    public List<PendingVendorDto> getVendorStockByUsernameAndInvoiceNo(String username) {
+        return salesStockRepository.findPendingVendorData(username);
     }
 
     public List<SalesStock> getDetailsvendorSalesStock(String soldInvoice) {

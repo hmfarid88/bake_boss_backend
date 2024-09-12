@@ -18,4 +18,5 @@ public class SalesStockDTO {
     private Double remainingQty;
     private String invoiceNo;
     private Double saleRate;
+    private Double qty;
 }

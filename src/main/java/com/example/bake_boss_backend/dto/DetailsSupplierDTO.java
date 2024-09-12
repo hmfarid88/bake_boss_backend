@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DetailsSupplierDTO {
     private LocalDate date;
+    private String supplierInvoice;
     private String productName;
     private Double totalQty;
     private Double totalValue;

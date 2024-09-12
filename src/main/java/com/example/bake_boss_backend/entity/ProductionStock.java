@@ -1,5 +1,7 @@
 package com.example.bake_boss_backend.entity;
 
+import java.time.LocalDate;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -12,12 +14,17 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductRate {
+public class ProductionStock {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private String productName;
-    private Double saleRate;
-    private Double qty;
+    private Long materialsId;
+    private LocalDate date;
+    private String category;
+    private String invoiceNo;
+    private String materialsName;
     private String username;
+    private String status;
+    private String madeItem;
+    private Double materialsQty;
+    private Double remainingQty;
 }

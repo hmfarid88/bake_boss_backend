@@ -13,7 +13,6 @@ import com.example.bake_boss_backend.entity.MaterialsStock;
 import com.example.bake_boss_backend.entity.ProductRate;
 import com.example.bake_boss_backend.entity.ProductStock;
 import com.example.bake_boss_backend.entity.Requisition;
-import com.example.bake_boss_backend.entity.SalesStock;
 import com.example.bake_boss_backend.repository.MaterialsRepository;
 import com.example.bake_boss_backend.repository.ProductRateRepository;
 import com.example.bake_boss_backend.repository.ProductStockrepository;
@@ -40,17 +39,19 @@ public class ProductStockService {
     }
 
     @Transactional
-    public ProductRate upsertProductRate(String username, String productName, Double saleRate) {
+    public ProductRate upsertProductRate(String username, String productName, Double saleRate, Double qty) {
         Optional<ProductRate> existingSetup = productRateRepository.findByProductNameAndUsername(productName, username);
         if (existingSetup.isPresent()) {
             ProductRate productRate = existingSetup.get();
             productRate.setSaleRate(saleRate);
+            productRate.setQty(qty);
             return productRateRepository.save(productRate);
         } else {
             ProductRate newProductRate = new ProductRate();
             newProductRate.setUsername(username);
             newProductRate.setProductName(productName);
             newProductRate.setSaleRate(saleRate);
+            newProductRate.setQty(qty);
             return productRateRepository.save(newProductRate);
         }
     }
@@ -69,11 +70,30 @@ public class ProductStockService {
         return productStockRepository.findProductByUsername(year, month, username);
     }
 
+    public List<ProductStock> getDatewiseProductStock(String username, LocalDate startDate, LocalDate endDate) {
+       return productStockRepository.findDatewiseProductByUsername(username, startDate, endDate);
+    }
+
     public List<MaterialsStock> getAllMaterialsStock(String username) {
         LocalDate now = LocalDate.now();
         int year = now.getYear();
         int month = now.getMonthValue();
         return materialsRepository.findMaterialsByUsername(year, month, username);
+    }
+
+    public List<MaterialsStock> getAllStoredMaterialsStock(String username) {
+        LocalDate now = LocalDate.now();
+        int year = now.getYear();
+        int month = now.getMonthValue();
+        return materialsRepository.findStoredMaterialsByUsername(year, month, username);
+    }
+
+    public List<MaterialsStock> getDatewiseMaterialsStock(String username, LocalDate startDate, LocalDate endDate) {
+                return materialsRepository.findDatewiseMaterialsByUsername(username, startDate, endDate);
+    }
+
+    public List<MaterialsStock> getDatewiseStoredMaterialsStock(String username, LocalDate startDate, LocalDate endDate) {
+                return materialsRepository.findDatewiseStoredMaterialsByUsername(username, startDate, endDate);
     }
 
    
