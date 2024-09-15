@@ -9,6 +9,8 @@ import com.example.bake_boss_backend.dto.ItemDetailsDTO;
 import com.example.bake_boss_backend.dto.MadeItemDTO;
 import com.example.bake_boss_backend.entity.ItemMake;
 
+import jakarta.transaction.Transactional;
+
 public interface ItemMakeRepository extends JpaRepository<ItemMake, Long> {
         @Query("SELECT i.itemName FROM ItemMake i GROUP BY i.itemName")
         List<String> findDistinctItems();
@@ -38,5 +40,8 @@ public interface ItemMakeRepository extends JpaRepository<ItemMake, Long> {
         List<ItemMake> findByUsernameAndMaterialsName(String username, String materialsName);
 
         List<ItemMake> findByUsernameAndItemName(String username, String itemName);
+
+        @Transactional
+        void deleteByUsernameAndItemName(String username, String itemName);
 
 }

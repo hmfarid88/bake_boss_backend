@@ -11,11 +11,14 @@ import com.example.bake_boss_backend.dto.PaymentDto;
 import com.example.bake_boss_backend.entity.Expense;
 
 public interface ExpenseRepository extends JpaRepository<Expense, Long>{
+
      @Query("SELECT new com.example.bake_boss_backend.dto.PaymentDto(e.date, e.expenseName, e.expenseNote, e.amount) "
             + "FROM Expense e WHERE e.username = :username AND e.date = :date")
-
     List<PaymentDto> findExpenseForToday(@Param("username") String username, @Param("date") LocalDate date);
 
     @Query("SELECT e FROM Expense e WHERE MONTH(e.date) = :month AND YEAR(e.date) = :year AND e.username = :username")
     List<Expense> findByMonthYearAndUsername(@Param("month") int month, @Param("year") int year, @Param("username") String username);
+
+    @Query("SELECT e FROM Expense e WHERE e.username = :username AND  e.date BETWEEN :startDate AND :endDate")
+    List<Expense> findDatewiseExpense(String username, LocalDate startDate, LocalDate endDate);
 }

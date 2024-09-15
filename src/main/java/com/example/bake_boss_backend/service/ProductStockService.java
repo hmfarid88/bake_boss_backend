@@ -13,6 +13,7 @@ import com.example.bake_boss_backend.entity.MaterialsStock;
 import com.example.bake_boss_backend.entity.ProductRate;
 import com.example.bake_boss_backend.entity.ProductStock;
 import com.example.bake_boss_backend.entity.Requisition;
+import com.example.bake_boss_backend.repository.MaterialsNameRepository;
 import com.example.bake_boss_backend.repository.MaterialsRepository;
 import com.example.bake_boss_backend.repository.ProductRateRepository;
 import com.example.bake_boss_backend.repository.ProductStockrepository;
@@ -33,6 +34,9 @@ public class ProductStockService {
 
     @Autowired
     private RequisitionRepository requisitionRepository;
+
+    @Autowired
+    private MaterialsNameRepository materialsNameRepository;
 
     public List<PendingStockDto> getProductStockWithInvoiceNotInSalesStock(String customer) {
         return productStockRepository.findProductStockWithInvoiceNotInSalesStock(customer);
@@ -71,7 +75,7 @@ public class ProductStockService {
     }
 
     public List<ProductStock> getDatewiseProductStock(String username, LocalDate startDate, LocalDate endDate) {
-       return productStockRepository.findDatewiseProductByUsername(username, startDate, endDate);
+        return productStockRepository.findDatewiseProductByUsername(username, startDate, endDate);
     }
 
     public List<MaterialsStock> getAllMaterialsStock(String username) {
@@ -89,14 +93,14 @@ public class ProductStockService {
     }
 
     public List<MaterialsStock> getDatewiseMaterialsStock(String username, LocalDate startDate, LocalDate endDate) {
-                return materialsRepository.findDatewiseMaterialsByUsername(username, startDate, endDate);
+        return materialsRepository.findDatewiseMaterialsByUsername(username, startDate, endDate);
     }
 
-    public List<MaterialsStock> getDatewiseStoredMaterialsStock(String username, LocalDate startDate, LocalDate endDate) {
-                return materialsRepository.findDatewiseStoredMaterialsByUsername(username, startDate, endDate);
+    public List<MaterialsStock> getDatewiseStoredMaterialsStock(String username, LocalDate startDate,
+            LocalDate endDate) {
+        return materialsRepository.findDatewiseStoredMaterialsByUsername(username, startDate, endDate);
     }
 
-   
     public List<Requisition> saveAllRequisitions(List<Requisition> requisitions) {
         return requisitionRepository.saveAll(requisitions);
     }
@@ -104,7 +108,7 @@ public class ProductStockService {
     public List<RequisitionSummaryDTO> getSumOfProductQtyGroupedByUsername() {
         return requisitionRepository.findSumOfProductQtyGroupedByUsername();
     }
-    
+
     @Transactional
     public void acceptRequisition(Long reqId) {
         requisitionRepository.updateStatusByReqId(reqId, "accepted");
@@ -122,5 +126,8 @@ public class ProductStockService {
     public List<Object[]> getDatewiseUsedMaterials(String username, LocalDate startDate, LocalDate enDate) {
         return materialsRepository.findDatewiseUsedMaterialsByUsername(username, startDate, enDate);
     }
-}
 
+    public void deleteByUsernameAndMaterialsName(String username, String materialsName) {
+        materialsNameRepository.deleteByUsernameAndMaterialsName(username, materialsName);
+    }
+}

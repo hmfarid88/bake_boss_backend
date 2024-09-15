@@ -20,4 +20,8 @@ public class ExpenseService {
         int currentYear = currentDate.getYear();
         return expenseRepository.findByMonthYearAndUsername(currentMonth, currentYear, username);
     }
+
+    public List<Expense> getDatewiseExpenses(String username, LocalDate startDate, LocalDate endDate) {
+        return expenseRepository.findDatewiseExpense(username, startDate, endDate);
+    }
 }

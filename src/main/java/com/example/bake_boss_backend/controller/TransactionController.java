@@ -130,9 +130,19 @@ public class TransactionController {
         return expenseService.getCurrentMonthExpenses(username);
     }
 
+    @GetMapping("/getDatewiseExpense")
+    public List<Expense> getDatewiseExpenses(@RequestParam String username, LocalDate startDate, LocalDate endDate) {
+        return expenseService.getDatewiseExpenses(username, startDate, endDate);
+    }
+
     @GetMapping("/getOfficePay")
     public List<OfficePayment> getPaymentsForCurrentMonth(@RequestParam String username) {
         return officePaymentService.getPaymentsForCurrentMonth(username);
+    }
+
+    @GetMapping("/getDatewiseOfficePay")
+    public List<OfficePayment> getDatewiseOfficePay(@RequestParam String username, LocalDate startDate, LocalDate endDate) {
+        return officePaymentService.getDatewiseOfficePay(username, startDate, endDate);
     }
 
     @GetMapping("/getSupplierPay")

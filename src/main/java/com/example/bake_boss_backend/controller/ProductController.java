@@ -281,7 +281,7 @@ public class ProductController {
         return allItems;
     }
 
-   @PostMapping("/updateMaterialsStock")
+    @PostMapping("/updateMaterialsStock")
     List<MaterialsStock> updateMaterials(@RequestBody List<MaterialsStock> allItems) {
         List<MaterialsStock> savedMaterialsStock = materialsRepository.saveAll(allItems);
 
@@ -503,5 +503,15 @@ public class ProductController {
     public List<Object[]> getDatewiseUsed(@RequestParam String username, @RequestParam LocalDate startDate,
             @RequestParam LocalDate endDate) {
         return productStockService.getDatewiseUsedMaterials(username, startDate, endDate);
+    }
+
+    @DeleteMapping("/deleteItemName")
+    public void deleteItemMake(@RequestParam String username, @RequestParam String itemName) {
+        itemMakeService.deleteByUsernameAndItemName(username, itemName);
+    }
+
+    @DeleteMapping("/deleteMaterialsName")
+    public void deleteMaterials(@RequestParam String username, @RequestParam String materialsName) {
+        productStockService.deleteByUsernameAndMaterialsName(username, materialsName);
     }
 }

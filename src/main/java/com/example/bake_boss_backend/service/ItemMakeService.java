@@ -116,6 +116,10 @@ public class ItemMakeService {
         return itemMakeRepository.findMaterialsNameAndQtyByItemName(productName);
         
     }
+
+    public void deleteByUsernameAndItemName(String username, String itemName) {
+        itemMakeRepository.deleteByUsernameAndItemName(username, itemName);
+    }
     // public Map<String, Object> findCategoryAndMaterialsByProductName(String productName) {
     //     String category = productStockrepository.findCategoryByProductName(productName);
     //     List<ItemDetailsDTO> itemDetailsList = itemMakeRepository.findMaterialsNameAndQtyByItemName(productName);

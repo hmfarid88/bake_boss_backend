@@ -51,4 +51,8 @@ public class OfficePaymentService {
         int month = now.getMonthValue();
         return officePaymentRepository.findPaymentsByMonth(year, month, username);
     }
+
+     public List<OfficePayment> getDatewiseOfficePay(String username, LocalDate startDate, LocalDate endDate) {
+                return officePaymentRepository.findPaymentsByDate(username, startDate, endDate);
+    }
 }

@@ -29,6 +29,7 @@ public class SalesStock {
     private String productName;
     private Double costPrice;
     private Double saleRate;
+    private Double discount;
     private Double productQty;
     private Double remainingQty;
     private String status;
