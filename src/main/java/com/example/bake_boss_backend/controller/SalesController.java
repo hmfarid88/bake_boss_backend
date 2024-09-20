@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.bake_boss_backend.dto.PendingVendorDto;
+import com.example.bake_boss_backend.dto.SalesProfitDto;
 import com.example.bake_boss_backend.dto.SalesRequest;
 import com.example.bake_boss_backend.dto.SalesStockDTO;
 import com.example.bake_boss_backend.entity.CustomerInfo;
@@ -105,6 +106,21 @@ public class SalesController {
         return salesStockService.getCurrentMonthStockReturned(username);
     }
 
+    @GetMapping("/getDatewiseOutletReturned")
+    public List<SalesStock> getDatewiseStockReturned(@RequestParam String username, LocalDate startDate, LocalDate endDate) {
+        return salesStockService.getDatewiseStockReturned(username, startDate, endDate);
+    }
+
+    @GetMapping("/getMonthlySalesProfit")
+    public List<SalesProfitDto> getCurrentMonthSalesProfit(@RequestParam String username) {
+        return salesStockService.getCurrentMonthProfitByUsername(username);
+    }
+
+    @GetMapping("/getDatewiseSalesProfit")
+    public List<SalesProfitDto> getDatewiseSalesProfit(@RequestParam String username, LocalDate startDate, LocalDate endDate) {
+        return salesStockService.getDatewiseProfitByUsername(username, startDate, endDate);
+    }
+
     @GetMapping("/getOutletAllReturned")
     public List<SalesStock> getCurrentMonthAllStockReturned() {
         return salesStockService.getCurrentMonthAllStockReturned();
@@ -130,9 +146,14 @@ public class SalesController {
         return ResponseEntity.ok(salesStocks);
     }
 
-    @GetMapping("/salesStock/current-month")
+    @GetMapping("/monthlyStockLedger")
     public List<SalesStock> getCurrentMonthSales(@RequestParam String username) {
         return salesStockService.getCurrentMonthDataByUsername(username);
+    }
+
+    @GetMapping("/datewiseStockLedger")
+    public List<SalesStock> getDatewiseStockLedger(@RequestParam String username, LocalDate startDate, LocalDate endDate) {
+        return salesStockService.getDatewiseStockLedger(username, startDate, endDate);
     }
 
     @GetMapping("/salesStock/thismonth-entry")
@@ -140,7 +161,12 @@ public class SalesController {
         return salesStockService.getCurrentMonthEntryByUsername(username);
     }
 
-    @GetMapping("/cashbook/salesTotal")
+    @GetMapping("/datewiseEntryLedger")
+    public List<SalesStock> getDatewiseEntry(@RequestParam String username, LocalDate startDate, LocalDate endDate) {
+        return salesStockService.getDatewiseEntryByUsername(username, startDate, endDate);
+    }
+
+    @GetMapping("/cashbook/previousSalesTotal")
     public Double getTotalSaleRate(
             @RequestParam String username,
             @RequestParam String date

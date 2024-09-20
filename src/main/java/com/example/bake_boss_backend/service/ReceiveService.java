@@ -28,11 +28,15 @@ public class ReceiveService {
         return receives;
     }
 
- public List<OfficeReceive> getReceivesForCurrentMonth(String username) {
+    public List<OfficeReceive> getReceivesForCurrentMonth(String username) {
         LocalDate now = LocalDate.now();
         int year = now.getYear();
         int month = now.getMonthValue();
         return officeReceiveRepository.findReceiveByMonth(year, month, username);
+    }
+
+    public List<OfficeReceive> getDatewiseOfficeReceive(String username, LocalDate startDate, LocalDate endDate) {
+        return officeReceiveRepository.findReceiveByDate(username, startDate, endDate);
     }
 
 }

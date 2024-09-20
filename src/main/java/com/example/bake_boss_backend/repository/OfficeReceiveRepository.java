@@ -18,4 +18,7 @@ List<ReceiveDto> findOfficeReceivesForToday(@Param("username") String username, 
 
  @Query("SELECT o FROM OfficeReceive o WHERE YEAR(o.date) = :year AND MONTH(o.date) = :month AND o.username = :username")
     List<OfficeReceive> findReceiveByMonth(@Param("year") int year, @Param("month") int month, @Param("username") String username);
+
+ @Query("SELECT o FROM OfficeReceive o WHERE o.username = :username AND  o.date BETWEEN :startDate AND :endDate")
+    List<OfficeReceive> findReceiveByDate(String username, LocalDate startDate, LocalDate endDate);
 }

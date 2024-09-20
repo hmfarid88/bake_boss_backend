@@ -11,13 +11,17 @@ import com.example.bake_boss_backend.repository.SupplierPaymentRepository;
 
 @Service
 public class SupplierPaymentService {
-     @Autowired
-    private SupplierPaymentRepository supplierPaymentRepository; 
+    @Autowired
+    private SupplierPaymentRepository supplierPaymentRepository;
 
-     public List<SupplierPayment> getSupplierForCurrentMonth(String username) {
+    public List<SupplierPayment> getSupplierForCurrentMonth(String username) {
         LocalDate now = LocalDate.now();
         int year = now.getYear();
         int month = now.getMonthValue();
         return supplierPaymentRepository.findPaymentsByMonth(year, month, username);
+    }
+
+    public List<SupplierPayment> getDatewiseSupplierPayment(String username, LocalDate startDate, LocalDate endDate) {
+        return supplierPaymentRepository.findPaymentsByDate(username, startDate, endDate);
     }
 }

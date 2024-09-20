@@ -18,8 +18,10 @@ public interface SupplierPaymentRepository extends JpaRepository<SupplierPayment
   List<PaymentDto> findSupplierPaymentsForToday(@Param("username") String username, @Param("date") LocalDate date);
 
   @Query("SELECT o FROM SupplierPayment o WHERE YEAR(o.date) = :year AND MONTH(o.date) = :month AND o.username = :username")
-  List<SupplierPayment> findPaymentsByMonth(@Param("year") int year, @Param("month") int month,
-      @Param("username") String username);
+  List<SupplierPayment> findPaymentsByMonth(@Param("year") int year, @Param("month") int month, @Param("username") String username);
+
+  @Query("SELECT o FROM SupplierPayment o WHERE o.username = :username AND  o.date BETWEEN :startDate AND :endDate")
+  List<SupplierPayment> findPaymentsByDate(String username, LocalDate startDate, LocalDate endDate);
 
   @Query("SELECT sp.supplierName, SUM(sp.amount) " +
       "FROM SupplierPayment sp WHERE sp.username = :username GROUP BY sp.supplierName")

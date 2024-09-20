@@ -24,6 +24,7 @@ import com.example.bake_boss_backend.dto.MadeItemDTO;
 import com.example.bake_boss_backend.dto.MaterialGroupedDto;
 import com.example.bake_boss_backend.dto.PendingStockDto;
 import com.example.bake_boss_backend.dto.RequisitionSummaryDTO;
+import com.example.bake_boss_backend.entity.AdditionalName;
 import com.example.bake_boss_backend.entity.CategoryName;
 import com.example.bake_boss_backend.entity.ItemMake;
 import com.example.bake_boss_backend.entity.MaterialName;
@@ -34,6 +35,7 @@ import com.example.bake_boss_backend.entity.ProductionStock;
 import com.example.bake_boss_backend.entity.Requisition;
 import com.example.bake_boss_backend.entity.SalesStock;
 import com.example.bake_boss_backend.entity.SupplierName;
+import com.example.bake_boss_backend.repository.AdditionalNameRepository;
 import com.example.bake_boss_backend.repository.CategoryNameRepository;
 import com.example.bake_boss_backend.repository.ItemMakeRepository;
 import com.example.bake_boss_backend.repository.MaterialsNameRepository;
@@ -90,6 +92,9 @@ public class ProductController {
     @Autowired
     private ProductionStockRepository productionStockRepository;
 
+    @Autowired
+    private AdditionalNameRepository additionalNameRepository;
+
     @PostMapping("/addCategoryName")
     public ResponseEntity<?> addCategory(@RequestBody CategoryName categoryName) {
         if (categoryNameRepository.existsByUsernameAndCategoryName(categoryName.getUsername(),
@@ -99,6 +104,16 @@ public class ProductController {
         }
         CategoryName savedCategory = categoryNameRepository.save(categoryName);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedCategory);
+    }
+
+    @PostMapping("/addAdditionalName")
+    public ResponseEntity<?> addAdditional(@RequestBody AdditionalName additionalName) {
+        if (additionalNameRepository.existsByAdditionalName(additionalName.getAdditionalName())){
+           return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("Name " + additionalName.getAdditionalName() + " is already exists!");
+        }
+        AdditionalName savedAdditional = additionalNameRepository.save(additionalName);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedAdditional);
     }
 
     @PostMapping("/addMaterialsName")
@@ -313,6 +328,11 @@ public class ProductController {
     @GetMapping("/getCategoryName")
     public List<CategoryName> getCategoryNameByUsername(@RequestParam String username) {
         return categoryNameRepository.getCategoryNameByUsername(username);
+    }
+
+    @GetMapping("/getAdditionalName")
+    public List<AdditionalName> getAdditionalName() {
+        return additionalNameRepository.findAll();
     }
 
     @GetMapping("/getMaterialsName")

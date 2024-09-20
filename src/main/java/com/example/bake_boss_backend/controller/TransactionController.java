@@ -150,9 +150,19 @@ public class TransactionController {
         return supplierPaymentService.getSupplierForCurrentMonth(username);
     }
 
+    @GetMapping("/getDatewiseSupplierPayment")
+    public List<SupplierPayment> getDatewiseSupplierPayment(@RequestParam String username, LocalDate startDate, LocalDate endDate) {
+        return supplierPaymentService.getDatewiseSupplierPayment(username, startDate, endDate);
+    }
+
     @GetMapping("/getOfficeReceive")
     public List<OfficeReceive> getReceiveForCurrentMonth(@RequestParam String username) {
         return receiveService.getReceivesForCurrentMonth(username);
+    }
+
+    @GetMapping("/getDatewiseOfficeReceive")
+    public List<OfficeReceive> getDatewiseReceive(@RequestParam String username, LocalDate startDate, LocalDate endDate) {
+        return receiveService.getDatewiseOfficeReceive(username, startDate, endDate);
     }
 
     @GetMapping("/getRetailerPayment")

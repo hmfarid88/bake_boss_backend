@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.example.bake_boss_backend.dto.PendingVendorDto;
+import com.example.bake_boss_backend.dto.SalesProfitDto;
 import com.example.bake_boss_backend.dto.SalesStockDTO;
 import com.example.bake_boss_backend.entity.ProductRate;
 import com.example.bake_boss_backend.entity.ProductStock;
@@ -153,12 +154,20 @@ public class SalesStockService {
         return salesStockRepository.findCurrentMonthReturnedStocksByUsername(username);
     }
 
+    public List<SalesStock> getDatewiseStockReturned(String username, LocalDate startDate, LocalDate endDate) {
+        return salesStockRepository.findDatewiseReturnedStocksByUsername(username, startDate, endDate);
+    }
+
     public List<SalesStock> getCurrentMonthAllStockReturned() {
         return salesStockRepository.findCurrentMonthAllReturnedStocks();
     }
 
-    public List<SalesStock> getDatewiseSoldStocks(String username, LocalDate startDate, LocalDate enDate) {
-        return salesStockRepository.findDatewiseSoldStocksByUsername(username, startDate, enDate);
+    public List<SalesStock> getDatewiseSoldStocks(String username, LocalDate startDate, LocalDate endDate) {
+        return salesStockRepository.findDatewiseSoldStocksByUsername(username, startDate, endDate);
+    }
+
+    public List<SalesStock> getDatewiseStockLedger(String username, LocalDate startDate, LocalDate endDate) {
+        return salesStockRepository.findDatewiseStockLedgerUsername(username, startDate, endDate);
     }
 
     public List<SalesStock> getDatewiseVendorSale(String username, LocalDate startDate, LocalDate enDate) {
@@ -179,6 +188,18 @@ public class SalesStockService {
 
     public List<SalesStock> getCurrentMonthEntryByUsername(String username) {
         return salesStockRepository.findCurrentMonthEntryByUsername(username);
+    }
+
+    public List<SalesStock> getDatewiseEntryByUsername(String username, LocalDate startDate, LocalDate endDate) {
+        return salesStockRepository.findDatewiseEntryByUsername(username, startDate, endDate);
+    }
+
+    public List<SalesProfitDto> getCurrentMonthProfitByUsername(String username) {
+        return salesStockRepository.findMonthlyProfit(username);
+    }
+
+    public List<SalesProfitDto> getDatewiseProfitByUsername(String username, LocalDate startDate, LocalDate endDate) {
+        return salesStockRepository.findDatewiseProfit(username, startDate, endDate);
     }
 
     public Double getTotalSaleRateByUsernameAndDate(String username, LocalDate date) {
