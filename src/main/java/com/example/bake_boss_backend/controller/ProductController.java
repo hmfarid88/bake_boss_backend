@@ -454,6 +454,7 @@ public class ProductController {
                 productRate.getUsername(),
                 productRate.getProductName(),
                 productRate.getSaleRate(),
+                productRate.getUnitRate(),
                 productRate.getQty());
         return ResponseEntity.ok(productRateSetup);
     }

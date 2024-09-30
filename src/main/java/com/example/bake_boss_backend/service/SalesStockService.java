@@ -37,6 +37,7 @@ public class SalesStockService {
             Optional<ProductRate> productRateOpt = productRateRepository
                     .findByProductNameAndUsername(salesStock.getProductName(), salesStock.getUsername());
             Double saleRate = productRateOpt.map(ProductRate::getSaleRate).orElse((double) 0);
+            Double unitRate = productRateOpt.map(ProductRate::getUnitRate).orElse((double) 0);
             Double qty = productRateOpt.map(ProductRate::getQty).orElse((double) 0);
             return new SalesStockDTO(
                     salesStock.getProductId(),
@@ -47,6 +48,7 @@ public class SalesStockService {
                     salesStock.getRemainingQty(),
                     salesStock.getInvoiceNo(),
                     saleRate,
+                    unitRate,
                     qty);
         }).collect(Collectors.toList());
     }
@@ -57,6 +59,7 @@ public class SalesStockService {
             Optional<ProductRate> productRateOpt = productRateRepository
                     .findByProductNameAndUsername(salesStock.getProductName(), salesStock.getUsername());
             Double saleRate = productRateOpt.map(ProductRate::getSaleRate).orElse((double) 0);
+            Double unitRate = productRateOpt.map(ProductRate::getUnitRate).orElse((double) 0);
             Double qty = productRateOpt.map(ProductRate::getQty).orElse((double) 0);
             return new SalesStockDTO(
                     salesStock.getProductId(),
@@ -67,6 +70,7 @@ public class SalesStockService {
                     salesStock.getRemainingQty(),
                     salesStock.getInvoiceNo(),
                     saleRate,
+                    unitRate,
                     qty);
         }).collect(Collectors.toList());
     }
@@ -79,7 +83,7 @@ public class SalesStockService {
 
         for (ProductStock productStock : productStocks) {
             Optional<SalesStock> existingSalesStock = salesStockRepository
-                    .findLatestSalesStockByProductNameAndUsername(productStock.getProductName(), customer);
+                    .findTopByProductNameAndUsernameOrderByProductIdDesc(productStock.getProductName(), customer);
 
             SalesStock newSalesStock = new SalesStock();
             newSalesStock.setDate(LocalDate.now());
@@ -114,7 +118,7 @@ public class SalesStockService {
 
         for (SalesStock salesStock : salesStocks) {
             Optional<SalesStock> existingSalesStock = salesStockRepository
-                    .findLatestSalesStockByProductNameAndUsername(salesStock.getProductName(), username);
+                    .findTopByProductNameAndUsernameOrderByProductIdDesc(salesStock.getProductName(), username);
 
             SalesStock newSalesStock = new SalesStock();
             newSalesStock.setDate(LocalDate.now());

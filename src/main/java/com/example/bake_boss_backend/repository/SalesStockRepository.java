@@ -14,11 +14,12 @@ import com.example.bake_boss_backend.dto.SalesProfitDto;
 import com.example.bake_boss_backend.entity.SalesStock;
 
 public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
-        @Query("SELECT ss FROM SalesStock ss WHERE ss.productName = :productName AND ss.username = :username  ORDER BY ss.productId DESC LIMIT 1")
-        Optional<SalesStock> findLatestSalesStockByProductNameAndUsername(@Param("productName") String productName,
-                        @Param("username") String username);
-
-        @Query("SELECT s FROM SalesStock s WHERE s.username = :username AND s.productId IN (SELECT MAX(ss.productId) FROM SalesStock ss WHERE ss.username = :username GROUP BY ss.productName)")
+        // @Query("SELECT ss FROM SalesStock ss WHERE ss.productName = :productName AND ss.username = :username  ORDER BY ss.productId DESC LIMIT 1")
+        // Optional<SalesStock> findLatestSalesStockByProductNameAndUsername(@Param("productName") String productName, @Param("username") String username);
+       
+        Optional<SalesStock> findTopByProductNameAndUsernameOrderByProductIdDesc(String productName, String username);
+       
+        @Query("SELECT s FROM SalesStock s WHERE s.username = :username AND s.productId IN (SELECT MAX(ss.productId) FROM SalesStock ss WHERE ss.username = :username GROUP BY ss.productName) ORDER BY s.productName ASC")
         List<SalesStock> findLastByProductNameAndUsername(@Param("username") String username);
 
         @Query("SELECT s FROM SalesStock s WHERE s.status = 'sold' AND s.username = :username AND FUNCTION('MONTH', s.date) = FUNCTION('MONTH', CURRENT_DATE) AND FUNCTION('YEAR', s.date) = FUNCTION('YEAR', CURRENT_DATE)")

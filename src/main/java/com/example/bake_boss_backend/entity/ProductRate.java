@@ -18,6 +18,7 @@ public class ProductRate {
     private Long id;
     private String productName;
     private Double saleRate;
+    private Double unitRate;
     private Double qty;
     private String username;
 }

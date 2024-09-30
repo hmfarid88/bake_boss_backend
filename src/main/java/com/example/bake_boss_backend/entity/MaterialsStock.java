@@ -6,6 +6,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,6 +16,14 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "materials_stock", indexes = {
+        @Index(name = "idx_supplier_name", columnList = "supplierName"),
+        @Index(name = "idx_supplier_invoice", columnList = "supplierInvoice"),
+        @Index(name = "idx_materials_name", columnList = "materialsName"),
+        @Index(name = "idx_username", columnList = "username"),
+        @Index(name = "idx_status", columnList = "status"),
+        @Index(name = "idx_made_item", columnList = "madeItem")
+})
 public class MaterialsStock {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

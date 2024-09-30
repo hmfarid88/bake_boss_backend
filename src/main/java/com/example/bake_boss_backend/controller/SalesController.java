@@ -1,10 +1,13 @@
 package com.example.bake_boss_backend.controller;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -68,22 +71,56 @@ public class SalesController {
         return ResponseEntity.ok("Products added successfully");
     }
 
-    @PostMapping("/outletSale")
-    public ResponseEntity<?> handleSale(@RequestBody SalesRequest saleRequest) {
-        try {
-            CustomerInfo savedCustomer = customerInfoRepository.save(saleRequest.getCustomer());
-            List<SalesStock> savedSalesItems = salesStockRepository.saveAll(saleRequest.getSalesItems());
+    // @PostMapping("/outletSale")
+    // public ResponseEntity<?> handleSale(@RequestBody SalesRequest saleRequest) {
+    //     try {
+    //         CustomerInfo savedCustomer = customerInfoRepository.save(saleRequest.getCustomer());
+    //         List<SalesStock> savedSalesItems = salesStockRepository.saveAll(saleRequest.getSalesItems());
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("customer", savedCustomer);
-            response.put("salesItems", savedSalesItems);
+    //         Map<String, Object> response = new HashMap<>();
+    //         response.put("customer", savedCustomer);
+    //         response.put("salesItems", savedSalesItems);
 
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Collections.singletonMap("message", "An error occurred while processing the sale"));
+    //         return ResponseEntity.ok(response);
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //                 .body(Collections.singletonMap("message", "An error occurred while processing the sale"));
+    //     }
+    // }
+
+@PostMapping("/outletSale")
+public ResponseEntity<?> handleSale(@RequestBody SalesRequest saleRequest) {
+    try {
+        CustomerInfo savedCustomer = customerInfoRepository.save(saleRequest.getCustomer());
+        List<SalesStock> savedSalesItems = new ArrayList<>();
+
+        for (SalesStock salesItem : saleRequest.getSalesItems()) {
+            // Find the last SalesStock by productName and username
+            Optional<SalesStock> lastSalesStock = salesStockRepository
+                .findTopByProductNameAndUsernameOrderByProductIdDesc(salesItem.getProductName(), salesItem.getUsername());
+
+            if (lastSalesStock.isPresent()) {
+                // Update remainingQty by subtracting the new productQty
+                SalesStock lastStock = lastSalesStock.get();
+                salesItem.setRemainingQty(lastStock.getRemainingQty() - salesItem.getProductQty());
+                salesStockRepository.save(salesItem);
+            }
+
+            // Save the new sales item
+            savedSalesItems.add(salesStockRepository.save(salesItem));
         }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("customer", savedCustomer);
+        response.put("salesItems", savedSalesItems);
+
+        return ResponseEntity.ok(response);
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Collections.singletonMap("message", "An error occurred while processing the sale"));
     }
+}
+
 
     @PostMapping("/outletStockReturn")
     public ResponseEntity<List<SalesStock>> addMultipleSalesStock(@RequestBody List<SalesStock> salesStockList) {

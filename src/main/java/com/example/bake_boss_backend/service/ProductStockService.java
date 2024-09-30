@@ -43,11 +43,12 @@ public class ProductStockService {
     }
 
     @Transactional
-    public ProductRate upsertProductRate(String username, String productName, Double saleRate, Double qty) {
+    public ProductRate upsertProductRate(String username, String productName, Double saleRate, Double unitRate, Double qty) {
         Optional<ProductRate> existingSetup = productRateRepository.findByProductNameAndUsername(productName, username);
         if (existingSetup.isPresent()) {
             ProductRate productRate = existingSetup.get();
             productRate.setSaleRate(saleRate);
+            productRate.setUnitRate(unitRate);
             productRate.setQty(qty);
             return productRateRepository.save(productRate);
         } else {
@@ -55,6 +56,7 @@ public class ProductStockService {
             newProductRate.setUsername(username);
             newProductRate.setProductName(productName);
             newProductRate.setSaleRate(saleRate);
+            newProductRate.setUnitRate(unitRate);
             newProductRate.setQty(qty);
             return productRateRepository.save(newProductRate);
         }
