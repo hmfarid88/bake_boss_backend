@@ -1,6 +1,7 @@
 package com.example.bake_boss_backend.entity;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -19,6 +20,7 @@ public class OfficeReceive {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private LocalDate date;
+    private LocalTime time;
     private String receiveName;
     private String receiveNote;
     private Double amount;

@@ -13,14 +13,13 @@ import com.example.bake_boss_backend.entity.SupplierPayment;
 
 public interface SupplierPaymentRepository extends JpaRepository<SupplierPayment, Long> {
   @Query("SELECT new com.example.bake_boss_backend.dto.PaymentDto(s.date, s.supplierName, s.note, s.amount) "
-      + "FROM SupplierPayment s WHERE s.username = :username AND s.date = :date")
-
+      + "FROM SupplierPayment s WHERE s.username = :username AND s.date = :date order by s.date asc")
   List<PaymentDto> findSupplierPaymentsForToday(@Param("username") String username, @Param("date") LocalDate date);
 
-  @Query("SELECT o FROM SupplierPayment o WHERE YEAR(o.date) = :year AND MONTH(o.date) = :month AND o.username = :username")
+  @Query("SELECT o FROM SupplierPayment o WHERE YEAR(o.date) = :year AND MONTH(o.date) = :month AND o.username = :username order by o.date asc")
   List<SupplierPayment> findPaymentsByMonth(@Param("year") int year, @Param("month") int month, @Param("username") String username);
 
-  @Query("SELECT o FROM SupplierPayment o WHERE o.username = :username AND  o.date BETWEEN :startDate AND :endDate")
+  @Query("SELECT o FROM SupplierPayment o WHERE o.username = :username AND  o.date BETWEEN :startDate AND :endDate order by o.date asc")
   List<SupplierPayment> findPaymentsByDate(String username, LocalDate startDate, LocalDate endDate);
 
   @Query("SELECT sp.supplierName, SUM(sp.amount) " +
@@ -30,7 +29,7 @@ public interface SupplierPaymentRepository extends JpaRepository<SupplierPayment
   @Query("SELECT new com.example.bake_boss_backend.dto.DetailsSupplierPayDTO(sp.date, sp.note, SUM(sp.amount)) " +
       "FROM SupplierPayment sp " +
       "WHERE sp.username = :username AND sp.supplierName = :supplierName AND sp.date BETWEEN :startDate AND :endDate " +
-      "GROUP BY sp.date, sp.note")
+      "GROUP BY sp.date, sp.note order by sp.date asc")
   List<DetailsSupplierPayDTO> findPaymentValueBySupplierAndUsername(String username, String supplierName,
       LocalDate startDate, LocalDate endDate);
 

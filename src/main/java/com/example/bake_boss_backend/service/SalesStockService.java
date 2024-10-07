@@ -1,6 +1,8 @@
 package com.example.bake_boss_backend.service;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 import com.example.bake_boss_backend.dto.PendingVendorDto;
 import com.example.bake_boss_backend.dto.SalesProfitDto;
 import com.example.bake_boss_backend.dto.SalesStockDTO;
+import com.example.bake_boss_backend.dto.TopSalesDTO;
 import com.example.bake_boss_backend.entity.ProductRate;
 import com.example.bake_boss_backend.entity.ProductStock;
 import com.example.bake_boss_backend.entity.SalesStock;
@@ -78,8 +81,7 @@ public class SalesStockService {
     @Transactional
     public void insertOrUpdateProductStockInSalesStock(String customer, String invoiceNo) {
         // Fetch ProductStock entries for the specific customer and invoice number
-        List<ProductStock> productStocks = productStockService.getProductStockByUsernameAndInvoiceNo(customer,
-                invoiceNo);
+        List<ProductStock> productStocks = productStockService.getProductStockByUsernameAndInvoiceNo(customer, invoiceNo);
 
         for (ProductStock productStock : productStocks) {
             Optional<SalesStock> existingSalesStock = salesStockRepository
@@ -122,6 +124,7 @@ public class SalesStockService {
 
             SalesStock newSalesStock = new SalesStock();
             newSalesStock.setDate(LocalDate.now());
+            newSalesStock.setTime(LocalTime.now());
             newSalesStock.setCategory(salesStock.getCategory());
             newSalesStock.setProductName(salesStock.getProductName());
 
@@ -247,21 +250,22 @@ public class SalesStockService {
 
     @Transactional
     public void updateDiscount(Long productId, Double newDiscount) {
-             Optional<SalesStock> existingStockOptional = salesStockRepository.findById(productId);
+        Optional<SalesStock> existingStockOptional = salesStockRepository.findById(productId);
         if (!existingStockOptional.isPresent()) {
-            return; 
+            return;
         }
 
         SalesStock existingStock = existingStockOptional.get();
         existingStock.setDiscount(newDiscount);
         salesStockRepository.save(existingStock);
     }
+
     @Transactional
     public void deleteProductById(Long productId) {
-            Optional<SalesStock> existingStockOptional = salesStockRepository.findById(productId);
+        Optional<SalesStock> existingStockOptional = salesStockRepository.findById(productId);
 
         if (!existingStockOptional.isPresent()) {
-            return; 
+            return;
         }
 
         SalesStock existingStock = existingStockOptional.get();
@@ -269,11 +273,28 @@ public class SalesStockService {
         String productName = existingStock.getProductName();
 
         salesStockRepository.deleteById(productId);
-        List<SalesStock> affectedStocks = salesStockRepository.findByProductNameAndProductIdGreaterThan(productName, productId);
+        List<SalesStock> affectedStocks = salesStockRepository.findByProductNameAndProductIdGreaterThan(productName,
+                productId);
 
         for (SalesStock stock : affectedStocks) {
             stock.setRemainingQty(stock.getRemainingQty() + productQty);
-            salesStockRepository.save(stock); 
+            salesStockRepository.save(stock);
         }
     }
+
+    public List<TopSalesDTO> getTop10SoldProducts(String username) {
+        List<TopSalesDTO> soldProducts = salesStockRepository.findTop10SoldProductsByUsernameAndStatusSold(username);
+        return soldProducts.stream().limit(10).toList();
+    }
+
+    public List<Object[]> getLastSixMonthsSalesByCategory(String username) {
+        LocalDate sixMonthsAgo = LocalDate.now().minus(6, ChronoUnit.MONTHS);
+        return salesStockRepository.findLastSixMonthsSalesByCategory(username, sixMonthsAgo);
+    }
+
+    public List<Object[]> getLastTwelveMonthsProfitLoss(String username) {
+        LocalDate twelveMonthsAgo = LocalDate.now().minus(12, ChronoUnit.MONTHS);
+        return salesStockRepository.findLastTwelveMonthsProfitLoss(username, twelveMonthsAgo);
+    }
+    
 }

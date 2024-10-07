@@ -1,6 +1,7 @@
 package com.example.bake_boss_backend.entity;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -25,10 +26,12 @@ public class SalesStock {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long productId;
     private LocalDate date;
+    private LocalTime time;
     private String category;
     private String productName;
     private Double costPrice;
     private Double saleRate;
+    private Double stockRate;
     private Double discount;
     private Double productQty;
     private Double remainingQty;

@@ -1,6 +1,7 @@
 package com.example.bake_boss_backend.controller;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -287,9 +288,11 @@ public class ProductController {
                 Double newCostPrice = totalValue / newTotalQty;
                 newItem.setRemainingQty(latestProductStock.getRemainingQty());
                 newItem.setCostPrice(newCostPrice);
+                newItem.setTime(LocalTime.now());
             } else {
                 newItem.setRemainingQty(newItem.getProductQty());
                 newItem.setCostPrice(newItem.getCostPrice());
+                newItem.setTime(LocalTime.now());
             }
             productStockrepository.save(newItem);
         }

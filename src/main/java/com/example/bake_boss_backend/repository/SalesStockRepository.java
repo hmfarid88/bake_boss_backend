@@ -9,16 +9,20 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.example.bake_boss_backend.dto.TopSalesDTO;
 import com.example.bake_boss_backend.dto.PendingVendorDto;
 import com.example.bake_boss_backend.dto.SalesProfitDto;
 import com.example.bake_boss_backend.entity.SalesStock;
 
 public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
-        // @Query("SELECT ss FROM SalesStock ss WHERE ss.productName = :productName AND ss.username = :username  ORDER BY ss.productId DESC LIMIT 1")
-        // Optional<SalesStock> findLatestSalesStockByProductNameAndUsername(@Param("productName") String productName, @Param("username") String username);
-       
+        // @Query("SELECT ss FROM SalesStock ss WHERE ss.productName = :productName AND
+        // ss.username = :username ORDER BY ss.productId DESC LIMIT 1")
+        // Optional<SalesStock>
+        // findLatestSalesStockByProductNameAndUsername(@Param("productName") String
+        // productName, @Param("username") String username);
+
         Optional<SalesStock> findTopByProductNameAndUsernameOrderByProductIdDesc(String productName, String username);
-       
+
         @Query("SELECT s FROM SalesStock s WHERE s.username = :username AND s.productId IN (SELECT MAX(ss.productId) FROM SalesStock ss WHERE ss.username = :username GROUP BY ss.productName) ORDER BY s.productName ASC")
         List<SalesStock> findLastByProductNameAndUsername(@Param("username") String username);
 
@@ -110,9 +114,40 @@ public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
                         "GROUP BY s.date, s.category, s.productName")
         List<SalesProfitDto> findMonthlyProfit(@Param("username") String username);
 
-        @Query("SELECT new com.example.bake_boss_backend.dto.SalesProfitDto(s.date, s.category, s.productName, SUM(s.costPrice), SUM(s.saleRate), SUM(s.productQty), SUM(s.discount)) " +
-       "FROM SalesStock s WHERE s.status = 'sold' AND s.username = :username AND s.date BETWEEN :startDate AND :endDate " +
-       "GROUP BY s.date, s.category, s.productName")
+        @Query("SELECT new com.example.bake_boss_backend.dto.SalesProfitDto(s.date, s.category, s.productName, SUM(s.costPrice), SUM(s.saleRate), SUM(s.productQty), SUM(s.discount)) "
+                        +
+                        "FROM SalesStock s WHERE s.status = 'sold' AND s.username = :username AND s.date BETWEEN :startDate AND :endDate "
+                        +
+                        "GROUP BY s.date, s.category, s.productName")
         List<SalesProfitDto> findDatewiseProfit(String username, LocalDate startDate, LocalDate endDate);
+
+        @Query("SELECT new com.example.bake_boss_backend.dto.TopSalesDTO(ss.productName, SUM(ss.saleRate * ss.productQty)) "
+                        +
+                        "FROM SalesStock ss " +
+                        "WHERE ss.username = :username " +
+                        "AND ss.status = 'sold' " +
+                        "AND MONTH(ss.date) = MONTH(CURRENT_DATE) " +
+                        "AND YEAR(ss.date) = YEAR(CURRENT_DATE) " +
+                        "GROUP BY ss.productName " +
+                        "ORDER BY SUM(ss.saleRate * ss.productQty) DESC")
+        List<TopSalesDTO> findTop10SoldProductsByUsernameAndStatusSold(@Param("username") String username);
+
+        @Query("SELECT MONTHNAME(s.date) as month, s.category as category, SUM(s.productQty * s.saleRate) as totalSale " +
+       "FROM SalesStock s " +
+       "WHERE s.username = :username AND s.status = 'sold' " +
+       "AND s.date >= :startDate " +
+       "GROUP BY MONTH(s.date), s.category " +
+       "ORDER BY MONTH(s.date) DESC")
+List<Object[]> findLastSixMonthsSalesByCategory(@Param("username") String username, @Param("startDate") LocalDate startDate);
+
+@Query("SELECT MONTHNAME(s.date) as month, " +
+       "SUM(CASE WHEN (s.saleRate > s.costPrice) THEN (s.productQty * (s.saleRate - s.costPrice)) ELSE 0 END) as profit, " +
+       "SUM(CASE WHEN (s.saleRate < s.costPrice) THEN (s.productQty * (s.costPrice - s.saleRate)) ELSE 0 END) as loss " +
+       "FROM SalesStock s " +
+       "WHERE s.username = :username AND s.status = 'sold' " +
+       "AND s.date >= :startDate " +
+       "GROUP BY MONTH(s.date) " +
+       "ORDER BY MONTH(s.date) DESC")
+List<Object[]> findLastTwelveMonthsProfitLoss(@Param("username") String username, @Param("startDate") LocalDate startDate);
 
 }
