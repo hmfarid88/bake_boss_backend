@@ -1,7 +1,8 @@
 package com.example.bake_boss_backend.controller;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -232,10 +233,13 @@ public class ProductController {
 
             if (latestProductStockOpt.isPresent()) {
                 newItem.setRemainingQty(0.0);
-
+                ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+                newItem.setTime(dhakaTime.toLocalTime());
             } else {
                 newItem.setRemainingQty(0.0);
                 newItem.setCostPrice(newItem.getCostPrice());
+                ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+                newItem.setTime(dhakaTime.toLocalTime());
             }
             productStockrepository.save(newItem);
         }
@@ -256,10 +260,13 @@ public class ProductController {
                 Double newCostPrice = totalValue / newTotalQty;
                 newItem.setRemainingQty(latestProductStock.getRemainingQty() + newItem.getProductQty());
                 newItem.setCostPrice(newCostPrice);
-
+                ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+                newItem.setTime(dhakaTime.toLocalTime());
             } else {
                 newItem.setRemainingQty(newItem.getProductQty());
                 newItem.setCostPrice(newItem.getCostPrice());
+                ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+                newItem.setTime(dhakaTime.toLocalTime());
 
                 ProductRate productRate = new ProductRate();
                 productRate.setProductName(newItem.getProductName());
@@ -288,11 +295,13 @@ public class ProductController {
                 Double newCostPrice = totalValue / newTotalQty;
                 newItem.setRemainingQty(latestProductStock.getRemainingQty());
                 newItem.setCostPrice(newCostPrice);
-                newItem.setTime(LocalTime.now());
+                ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+                newItem.setTime(dhakaTime.toLocalTime());
             } else {
                 newItem.setRemainingQty(newItem.getProductQty());
                 newItem.setCostPrice(newItem.getCostPrice());
-                newItem.setTime(LocalTime.now());
+                ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+                newItem.setTime(dhakaTime.toLocalTime());
             }
             productStockrepository.save(newItem);
         }

@@ -1,7 +1,8 @@
 package com.example.bake_boss_backend.service;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
@@ -11,9 +12,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.example.bake_boss_backend.dto.LossProfitAnalysis;
 import com.example.bake_boss_backend.dto.PendingVendorDto;
 import com.example.bake_boss_backend.dto.SalesProfitDto;
 import com.example.bake_boss_backend.dto.SalesStockDTO;
+import com.example.bake_boss_backend.dto.SixMonthSaleDTO;
 import com.example.bake_boss_backend.dto.TopSalesDTO;
 import com.example.bake_boss_backend.entity.ProductRate;
 import com.example.bake_boss_backend.entity.ProductStock;
@@ -89,6 +92,8 @@ public class SalesStockService {
 
             SalesStock newSalesStock = new SalesStock();
             newSalesStock.setDate(LocalDate.now());
+            ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+            newSalesStock.setTime(dhakaTime.toLocalTime());
             newSalesStock.setCategory(productStock.getCategory());
             newSalesStock.setProductName(productStock.getProductName());
 
@@ -124,7 +129,8 @@ public class SalesStockService {
 
             SalesStock newSalesStock = new SalesStock();
             newSalesStock.setDate(LocalDate.now());
-            newSalesStock.setTime(LocalTime.now());
+            ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+            newSalesStock.setTime(dhakaTime.toLocalTime());
             newSalesStock.setCategory(salesStock.getCategory());
             newSalesStock.setProductName(salesStock.getProductName());
 
@@ -287,12 +293,12 @@ public class SalesStockService {
         return soldProducts.stream().limit(10).toList();
     }
 
-    public List<Object[]> getLastSixMonthsSalesByCategory(String username) {
+    public List<SixMonthSaleDTO> getLastSixMonthsSalesByCategory(String username) {
         LocalDate sixMonthsAgo = LocalDate.now().minus(6, ChronoUnit.MONTHS);
         return salesStockRepository.findLastSixMonthsSalesByCategory(username, sixMonthsAgo);
     }
 
-    public List<Object[]> getLastTwelveMonthsProfitLoss(String username) {
+    public List<LossProfitAnalysis> getLastTwelveMonthsProfitLoss(String username) {
         LocalDate twelveMonthsAgo = LocalDate.now().minus(12, ChronoUnit.MONTHS);
         return salesStockRepository.findLastTwelveMonthsProfitLoss(username, twelveMonthsAgo);
     }

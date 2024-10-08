@@ -1,7 +1,8 @@
 package com.example.bake_boss_backend.controller;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -23,10 +24,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.bake_boss_backend.dto.TopSalesDTO;
+import com.example.bake_boss_backend.dto.LossProfitAnalysis;
 import com.example.bake_boss_backend.dto.PendingVendorDto;
 import com.example.bake_boss_backend.dto.SalesProfitDto;
 import com.example.bake_boss_backend.dto.SalesRequest;
 import com.example.bake_boss_backend.dto.SalesStockDTO;
+import com.example.bake_boss_backend.dto.SixMonthSaleDTO;
 import com.example.bake_boss_backend.entity.CustomerInfo;
 import com.example.bake_boss_backend.entity.SalesStock;
 import com.example.bake_boss_backend.repository.CustomerInfoRepository;
@@ -73,7 +76,6 @@ public class SalesController {
         return ResponseEntity.ok("Products added successfully");
     }
 
-   
     @PostMapping("/outletSale")
     public ResponseEntity<?> handleSale(@RequestBody SalesRequest saleRequest) {
         try {
@@ -89,7 +91,8 @@ public class SalesController {
                     // Update remainingQty by subtracting the new productQty
                     SalesStock lastStock = lastSalesStock.get();
                     salesItem.setRemainingQty(lastStock.getRemainingQty() - salesItem.getProductQty());
-                    salesItem.setTime(LocalTime.now());
+                    ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+                    salesItem.setTime(dhakaTime.toLocalTime());
                     salesStockRepository.save(salesItem);
                 }
 
@@ -108,33 +111,35 @@ public class SalesController {
         }
     }
 
-       @PostMapping("/outletStockReturn")
+    @PostMapping("/outletStockReturn")
     public ResponseEntity<List<SalesStock>> addMultipleSalesStock(@RequestBody List<SalesStock> salesStockList) {
         List<SalesStock> savedSalesStockList = new ArrayList<>();
-    
+
         for (SalesStock salesItem : salesStockList) {
             // Find the last SalesStock by productName and username
             Optional<SalesStock> lastSalesStock = salesStockRepository
-                    .findTopByProductNameAndUsernameOrderByProductIdDesc(salesItem.getProductName(), salesItem.getUsername());
-    
+                    .findTopByProductNameAndUsernameOrderByProductIdDesc(salesItem.getProductName(),
+                            salesItem.getUsername());
+
             if (lastSalesStock.isPresent()) {
                 // Update remainingQty by subtracting the new productQty
                 SalesStock lastStock = lastSalesStock.get();
                 salesItem.setRemainingQty(lastStock.getRemainingQty() - salesItem.getProductQty());
-                salesItem.setTime(LocalTime.now());
+                ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+                salesItem.setTime(dhakaTime.toLocalTime());
             } else {
                 // If no previous stock exists, set remainingQty to a default value
                 salesItem.setRemainingQty(salesItem.getProductQty());
-                salesItem.setTime(LocalTime.now());
+                ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+                salesItem.setTime(dhakaTime.toLocalTime());
             }
-    
+
             // Save the new sales item and add to savedSalesStockList
             savedSalesStockList.add(salesStockRepository.save(salesItem));
         }
-    
+
         return ResponseEntity.ok(savedSalesStockList);
     }
-    
 
     @GetMapping("/getOutletSale")
     public List<SalesStock> getCurrentMonthSoldStocks(@RequestParam String username) {
@@ -268,25 +273,24 @@ public class SalesController {
     }
 
     @GetMapping("/lastsixmonth/saleprogress")
-public ResponseEntity<List<Map<String, Object>>> getSixMonthSalesData(@RequestParam String username) {
-    List<Object[]> salesData = salesStockService.getLastSixMonthsSalesByCategory(username);
+    public ResponseEntity<List<Map<String, Object>>> getSixMonthSalesData(@RequestParam String username) {
+        List<SixMonthSaleDTO> salesData = salesStockService.getLastSixMonthsSalesByCategory(username);
 
-      List<Map<String, Object>> formattedSalesData = new ArrayList<>();
-    for (Object[] row : salesData) {
-        Map<String, Object> dataMap = new HashMap<>();
-        dataMap.put("month", row[0]);  // Month number
-        dataMap.put("category", row[1]);  // Category name
-        dataMap.put("totalSale", row[2]);  // Total sale value
-        formattedSalesData.add(dataMap);
+        List<Map<String, Object>> formattedSalesData = new ArrayList<>();
+        for (SixMonthSaleDTO row : salesData) {
+            Map<String, Object> dataMap = new HashMap<>();
+            dataMap.put("monthname", row.getMonthname()); // Month number
+            dataMap.put("category", row.getCategory()); // Category name
+            dataMap.put("totalSale", row.getTotalSale()); // Total sale value
+            formattedSalesData.add(dataMap);
+        }
+        return ResponseEntity.ok(formattedSalesData);
     }
-    return ResponseEntity.ok(formattedSalesData);
-}
 
-@GetMapping("/lasttwelvemonth/profitloss")
-public ResponseEntity<List<Object[]>> getLastTwelveMonthsProfitLoss(@RequestParam String username) {
-    List<Object[]> profitLossData = salesStockService.getLastTwelveMonthsProfitLoss(username);
-    return ResponseEntity.ok(profitLossData);
-}
-
+    @GetMapping("/lasttwelvemonth/profitloss")
+    public ResponseEntity<List<LossProfitAnalysis>> getLastTwelveMonthsProfitLoss(@RequestParam String username) {
+        List<LossProfitAnalysis> profitLossData = salesStockService.getLastTwelveMonthsProfitLoss(username);
+        return ResponseEntity.ok(profitLossData);
+    }
 
 }

@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -36,6 +37,26 @@ public class UserController {
         userInfo.setPassword(passwordEncoder.encode(userInfo.getPassword()));
         UserInfo savedUser = userInfoRepository.save(userInfo);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+    }
+
+    @PutMapping("/updatePassword")
+    public ResponseEntity<?> updatePassword(@RequestParam String username,
+            @RequestParam String currentPassword,
+            @RequestParam String newPassword) {
+        UserInfo user = userInfoRepository.findByUsername(username);
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Current password is incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userInfoRepository.save(user);
+
+        return ResponseEntity.ok("Password updated successfully.");
     }
 
     @GetMapping("/userLogin")

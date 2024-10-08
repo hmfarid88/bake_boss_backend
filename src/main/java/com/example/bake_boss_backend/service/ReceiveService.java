@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.bake_boss_backend.dto.ReceiveDto;
-import com.example.bake_boss_backend.entity.OfficePayment;
 import com.example.bake_boss_backend.entity.OfficeReceive;
 import com.example.bake_boss_backend.repository.OfficeReceiveRepository;
 import com.example.bake_boss_backend.repository.RetailerPaymentRepository;
