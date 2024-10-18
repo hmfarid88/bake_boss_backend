@@ -272,6 +272,12 @@ public class SalesController {
         return ResponseEntity.ok(salesData);
     }
 
+    @GetMapping("/todays/saleprogress")
+    public ResponseEntity<List<TopSalesDTO>> getTodaysSaleProgress(@RequestParam String username) {
+        List<TopSalesDTO> salesData = salesStockService.getTop10SoldProductsToday(username);
+        return ResponseEntity.ok(salesData);
+    }
+
     @GetMapping("/lastsixmonth/saleprogress")
     public ResponseEntity<List<Map<String, Object>>> getSixMonthSalesData(@RequestParam String username) {
         List<SixMonthSaleDTO> salesData = salesStockService.getLastSixMonthsSalesByCategory(username);

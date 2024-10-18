@@ -293,6 +293,11 @@ public class SalesStockService {
         return soldProducts.stream().limit(10).toList();
     }
 
+    public List<TopSalesDTO> getTop10SoldProductsToday(String username) {
+        List<TopSalesDTO> soldProducts = salesStockRepository.findTop10SoldProductsByUsernameAndStatusSoldForToday(username);
+        return soldProducts.stream().limit(10).toList();
+    }
+
     public List<SixMonthSaleDTO> getLastSixMonthsSalesByCategory(String username) {
         LocalDate sixMonthsAgo = LocalDate.now().minus(6, ChronoUnit.MONTHS);
         return salesStockRepository.findLastSixMonthsSalesByCategory(username, sixMonthsAgo);

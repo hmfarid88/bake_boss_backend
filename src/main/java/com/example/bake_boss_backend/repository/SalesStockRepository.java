@@ -134,6 +134,16 @@ public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
                         "ORDER BY SUM(ss.saleRate * ss.productQty) DESC")
         List<TopSalesDTO> findTop10SoldProductsByUsernameAndStatusSold(@Param("username") String username);
 
+        @Query("SELECT new com.example.bake_boss_backend.dto.TopSalesDTO(ss.productName, SUM(ss.saleRate * ss.productQty)) " +
+       "FROM SalesStock ss " +
+       "WHERE ss.username = :username " +
+       "AND ss.status = 'sold' " +
+       "AND DATE(ss.date) = CURRENT_DATE " +
+       "GROUP BY ss.productName " +
+       "ORDER BY SUM(ss.saleRate * ss.productQty) DESC")
+     List<TopSalesDTO> findTop10SoldProductsByUsernameAndStatusSoldForToday(@Param("username") String username);
+
+
         @Query("SELECT new com.example.bake_boss_backend.dto.SixMonthSaleDTO(MONTHNAME(s.date) as monthname, s.category as category, SUM(s.productQty * s.saleRate) as totalSale) " +
        "FROM SalesStock s " +
        "WHERE s.username = :username AND s.status = 'sold' " +
@@ -141,6 +151,8 @@ public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
        "GROUP BY MONTH(s.date), s.category " +
        "ORDER BY MONTH(s.date) DESC")
 List<SixMonthSaleDTO> findLastSixMonthsSalesByCategory(@Param("username") String username, @Param("startDate") LocalDate startDate);
+
+
 
 @Query("SELECT new com.example.bake_boss_backend.dto.LossProfitAnalysis(MONTHNAME(s.date) as month, " +
        "SUM(CASE WHEN (s.saleRate > s.costPrice) THEN (s.productQty * (s.saleRate - s.costPrice)) ELSE 0 END) as profit, " +
@@ -151,5 +163,6 @@ List<SixMonthSaleDTO> findLastSixMonthsSalesByCategory(@Param("username") String
        "GROUP BY MONTH(s.date) " +
        "ORDER BY MONTH(s.date) DESC")
 List<LossProfitAnalysis> findLastTwelveMonthsProfitLoss(@Param("username") String username, @Param("startDate") LocalDate startDate);
+
 
 }
