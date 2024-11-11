@@ -148,10 +148,8 @@ public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
        "FROM SalesStock s " +
        "WHERE s.username = :username AND s.status = 'sold' " +
        "AND s.date >= :startDate " +
-       "GROUP BY MONTH(s.date), s.category " +
-       "ORDER BY MONTH(s.date) DESC")
-List<SixMonthSaleDTO> findLastSixMonthsSalesByCategory(@Param("username") String username, @Param("startDate") LocalDate startDate);
-
+       "GROUP BY MONTHNAME(s.date), s.category ")
+   List<SixMonthSaleDTO> findLastSixMonthsSalesByCategory(@Param("username") String username, @Param("startDate") LocalDate startDate);
 
 
 @Query("SELECT new com.example.bake_boss_backend.dto.LossProfitAnalysis(MONTHNAME(s.date) as month, " +
@@ -160,9 +158,8 @@ List<SixMonthSaleDTO> findLastSixMonthsSalesByCategory(@Param("username") String
        "FROM SalesStock s " +
        "WHERE s.username = :username AND s.status = 'sold' " +
        "AND s.date >= :startDate " +
-       "GROUP BY MONTH(s.date) " +
-       "ORDER BY MONTH(s.date) DESC")
-List<LossProfitAnalysis> findLastTwelveMonthsProfitLoss(@Param("username") String username, @Param("startDate") LocalDate startDate);
+       "GROUP BY MONTHNAME(s.date) ")
+    List<LossProfitAnalysis> findLastTwelveMonthsProfitLoss(@Param("username") String username, @Param("startDate") LocalDate startDate);
 
 
 }

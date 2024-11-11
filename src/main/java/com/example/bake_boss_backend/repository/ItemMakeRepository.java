@@ -15,13 +15,23 @@ public interface ItemMakeRepository extends JpaRepository<ItemMake, Long> {
         @Query("SELECT i.itemName FROM ItemMake i GROUP BY i.itemName")
         List<String> findDistinctItems();
 
-        @Query("SELECT new com.example.bake_boss_backend.dto.MadeItemDTO(i.itemId, i.itemName, i.materialsName, i.itemNo, i.qty, ms.averageRate, ms.remainingQty) "
-                        +
-                        "FROM ItemMake i " +
-                        "JOIN MaterialsStock ms ON i.materialsName = ms.materialsName " +
-                        "WHERE i.username = :username AND i.itemName = :itemName " +
-                        "AND ms.materialsId = (SELECT MAX(ms2.materialsId) FROM MaterialsStock ms2 WHERE ms2.materialsName = ms.materialsName AND ms2.username = :username)")
-        List<MadeItemDTO> findByUsernameGrouped(String username, String itemName);
+        // @Query("SELECT new com.example.bake_boss_backend.dto.MadeItemDTO(i.itemId, i.itemName, i.materialsName, i.itemNo, i.qty, ms.averageRate, ms.remainingQty) "
+        //                 +
+        //                 "FROM ItemMake i " +
+        //                 "JOIN MaterialsStock ms ON i.materialsName = ms.materialsName " +
+        //                 "WHERE i.username = :username AND i.itemName = :itemName " +
+        //                 "AND ms.materialsId = (SELECT MAX(ms2.materialsId) FROM MaterialsStock ms2 WHERE ms2.materialsName = ms.materialsName AND ms2.username = :username)")
+        // List<MadeItemDTO> findByUsernameGrouped(String username, String itemName);
+
+        @Query("SELECT new com.example.bake_boss_backend.dto.MadeItemDTO(i.itemId, i.itemName, i.materialsName, i.itemNo, i.qty, ms.averageRate, ms.remainingQty) " +
+       "FROM ItemMake i " +
+       "JOIN MaterialsStock ms ON i.materialsName = ms.materialsName AND ms.materialsId = (" +
+       "   SELECT MAX(ms2.materialsId) " +
+       "   FROM MaterialsStock ms2 " +
+       "   WHERE ms2.materialsName = i.materialsName AND ms2.username = :username) " +
+       "WHERE i.username = :username AND i.itemName = :itemName")
+List<MadeItemDTO> findByUsernameGrouped(String username, String itemName);
+
 
         @Query("SELECT im.itemName, im.materialsName, im.qty, ms.averageRate FROM ItemMake im JOIN MaterialsStock ms ON im.materialsName = ms.materialsName  WHERE im.username = :username GROUP BY im.itemName, im.materialsName, im.qty, ms.averageRate")
         List<Object[]> findMaterialsAndQtyGroupedByItemName(String username);

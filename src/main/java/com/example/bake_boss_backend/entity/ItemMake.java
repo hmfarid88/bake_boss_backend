@@ -15,10 +15,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(indexes = {
-    @Index(name = "idx_item_no", columnList = "itemNo"),
     @Index(name = "idx_item_name", columnList = "itemName"),
     @Index(name = "idx_materials_name", columnList = "materialsName"),
-    @Index(name = "idx_username", columnList = "username")
+    @Index(name = "idx_username", columnList = "username"),
+    @Index(name = "idx_username_materials_name", columnList = "username, materialsName")
 })
 public class ItemMake {
     @Id

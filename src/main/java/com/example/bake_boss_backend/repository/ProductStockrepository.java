@@ -5,11 +5,14 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.example.bake_boss_backend.dto.PendingStockDto;
 import com.example.bake_boss_backend.entity.ProductStock;
+
+import jakarta.transaction.Transactional;
 
 public interface ProductStockrepository extends JpaRepository<ProductStock, Long> {
         @Query("SELECT ps FROM ProductStock ps WHERE ps.productName = :productName AND ps.username = :username ORDER BY ps.productId DESC LIMIT 1")
@@ -38,7 +41,8 @@ public interface ProductStockrepository extends JpaRepository<ProductStock, Long
         List<ProductStock> findDamagedProductByStatus(String username);
 
         @Query("SELECT ps FROM ProductStock ps WHERE  YEAR(ps.date) = :year AND MONTH(ps.date) = :month AND ps.username=:username")
-        List<ProductStock> findProductByUsername(@Param("year") int year, @Param("month") int month, @Param("username") String username);
+        List<ProductStock> findProductByUsername(@Param("year") int year, @Param("month") int month,
+                        @Param("username") String username);
 
         @Query("SELECT ps FROM ProductStock ps WHERE  ps.username=:username AND ps.date BETWEEN :startDate AND :endDate")
         List<ProductStock> findDatewiseProductByUsername(String username, LocalDate startDate, LocalDate endDate);
@@ -47,4 +51,19 @@ public interface ProductStockrepository extends JpaRepository<ProductStock, Long
 
         @Query("SELECT ps FROM ProductStock ps WHERE ps.customer=:customer AND ps.invoiceNo=:invoiceNo AND ps.invoiceNo NOT IN (SELECT ss.invoiceNo FROM SalesStock ss WHERE ss.status='stored')")
         List<ProductStock> findByCustomerAndInvoiceNo(String customer, String invoiceNo);
+
+        @Query("SELECT p FROM ProductStock p WHERE p.status = 'sold' AND p.username=:username AND p.invoiceNo NOT IN (SELECT s.invoiceNo FROM SalesStock s WHERE s.status='stored') GROUP BY p.invoiceNo")
+        List<ProductStock> findSoldProductsNotInSalesStock(@Param("username") String username);
+
+        List<ProductStock> findByInvoiceNo(String invoiceNo);
+
+        @Modifying
+        @Transactional
+        @Query("UPDATE ProductStock p SET p.customer = :customer WHERE p.invoiceNo = :invoiceNo")
+        int updateCustomerByInvoiceNo(String customer, String invoiceNo);
+
+        @Modifying
+        @Transactional
+        @Query("UPDATE ProductStock p SET p.productQty = :productQty WHERE p.productId = :productId")
+        int updateProductQtyByProductId(Double productQty, Long productId);
 }

@@ -110,8 +110,8 @@ public class ProductController {
 
     @PostMapping("/addAdditionalName")
     public ResponseEntity<?> addAdditional(@RequestBody AdditionalName additionalName) {
-        if (additionalNameRepository.existsByAdditionalName(additionalName.getAdditionalName())){
-           return ResponseEntity.status(HttpStatus.CONFLICT)
+        if (additionalNameRepository.existsByAdditionalName(additionalName.getAdditionalName())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("Name " + additionalName.getAdditionalName() + " is already exists!");
         }
         AdditionalName savedAdditional = additionalNameRepository.save(additionalName);
@@ -432,6 +432,11 @@ public class ProductController {
         return productStockrepository.findByProductId(productId);
     }
 
+    @GetMapping("/getInvoiceProducts")
+    public List<ProductStock> getInvoiceProduct(@RequestParam String invoiceNo) {
+        return productStockrepository.findByInvoiceNo(invoiceNo);
+    }
+
     @GetMapping("/getSingleMaterial")
     public Optional<MaterialsStock> getSingleMaterial(@RequestParam Long materialsId) {
         return materialsRepository.findByMaterialsId(materialsId);
@@ -546,5 +551,32 @@ public class ProductController {
     @DeleteMapping("/deleteMaterialsName")
     public void deleteMaterials(@RequestParam String username, @RequestParam String materialsName) {
         productStockService.deleteByUsernameAndMaterialsName(username, materialsName);
+    }
+
+    @GetMapping("/getEditableDistribution")
+    public List<ProductStock> getUnsoldProducts(@RequestParam String username) {
+        return productStockrepository.findSoldProductsNotInSalesStock(username);
+    }
+
+    @PutMapping("/updateInvoiceOutletName")
+    public String updateCustomerByInvoiceNo(@RequestParam String customer, @RequestParam String invoiceNo) {
+        int updatedRows = productStockService.updateCustomerByInvoiceNo(customer, invoiceNo);
+        return updatedRows > 0 ? "Customer updated successfully" : "No records updated";
+    }
+
+    @PutMapping("/updateProductQty")
+    public String updateQtyByProductId(@RequestParam Double productQty, @RequestParam Long productId) {
+        int updatedRows = productStockService.updateQtyByProductId(productQty, productId);
+        return updatedRows > 0 ? "Quantity updated successfully" : "No records updated";
+    }
+
+    @PutMapping("updateInvoiceProductName/{productId}")
+    public String updateProductStock(@PathVariable Long productId, @RequestParam String productName, @RequestParam String username) {
+        try {
+            productStockService.updateProductStockByProductId(productId, productName, username);
+            return "ProductStock updated successfully.";
+        } catch (RuntimeException e) {
+            return e.getMessage();
+        }
     }
 }

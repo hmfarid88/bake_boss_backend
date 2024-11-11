@@ -22,7 +22,8 @@ import lombok.NoArgsConstructor;
         @Index(name = "idx_materials_name", columnList = "materialsName"),
         @Index(name = "idx_username", columnList = "username"),
         @Index(name = "idx_status", columnList = "status"),
-        @Index(name = "idx_made_item", columnList = "madeItem")
+        @Index(name = "idx_made_item", columnList = "madeItem"),
+        @Index(name = "idx_username_materials_name", columnList = "username, materialsName")
 })
 public class MaterialsStock {
     @Id

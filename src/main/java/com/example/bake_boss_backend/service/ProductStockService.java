@@ -43,7 +43,8 @@ public class ProductStockService {
     }
 
     @Transactional
-    public ProductRate upsertProductRate(String username, String productName, Double saleRate, Double unitRate, Double qty) {
+    public ProductRate upsertProductRate(String username, String productName, Double saleRate, Double unitRate,
+            Double qty) {
         Optional<ProductRate> existingSetup = productRateRepository.findByProductNameAndUsername(productName, username);
         if (existingSetup.isPresent()) {
             ProductRate productRate = existingSetup.get();
@@ -131,5 +132,46 @@ public class ProductStockService {
 
     public void deleteByUsernameAndMaterialsName(String username, String materialsName) {
         materialsNameRepository.deleteByUsernameAndMaterialsName(username, materialsName);
+    }
+
+    public int updateCustomerByInvoiceNo(String customer, String invoiceNo) {
+        return productStockRepository.updateCustomerByInvoiceNo(customer, invoiceNo);
+    }
+
+    public int updateQtyByProductId(Double productQty, Long productId) {
+        return productStockRepository.updateProductQtyByProductId( productQty, productId);
+    }
+
+    public void updateProductStockByProductId(Long productId, String productName, String username) {
+        // Find the last row by productName
+        Optional<ProductStock> lastProductStockOpt = productStockRepository
+                .findLatestProductStockByProductNameAndUsername(productName, username);
+
+        if (lastProductStockOpt.isPresent()) {
+            ProductStock lastProductStock = lastProductStockOpt.get();
+
+            // Retrieve the costPrice, dpRate, and rpRate from the last entry
+            Double costPrice = lastProductStock.getCostPrice();
+            Double dpRate = lastProductStock.getDpRate();
+            Double rpRate = lastProductStock.getRpRate();
+
+            // Find the ProductStock by productId and update the values
+            Optional<ProductStock> productStockOpt = productStockRepository.findById(productId);
+
+            if (productStockOpt.isPresent()) {
+                ProductStock productStock = productStockOpt.get();
+                productStock.setProductName(productName);
+                productStock.setCostPrice(costPrice);
+                productStock.setDpRate(dpRate);
+                productStock.setRpRate(rpRate);
+
+                // Save the updated ProductStock
+                productStockRepository.save(productStock);
+            } else {
+                throw new RuntimeException("ProductStock with productId " + productId + " not found.");
+            }
+        } else {
+            throw new RuntimeException("No ProductStock found for productName: " + productName);
+        }
     }
 }
