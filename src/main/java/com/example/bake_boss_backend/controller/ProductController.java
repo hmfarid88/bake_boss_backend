@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.bake_boss_backend.dto.EditInvoiceDto;
 import com.example.bake_boss_backend.dto.ItemDetailsDTO;
 import com.example.bake_boss_backend.dto.MadeItemDTO;
 import com.example.bake_boss_backend.dto.MaterialGroupedDto;
@@ -554,7 +555,7 @@ public class ProductController {
     }
 
     @GetMapping("/getEditableDistribution")
-    public List<ProductStock> getUnsoldProducts(@RequestParam String username) {
+    public List<EditInvoiceDto> getUnsoldProducts(@RequestParam String username) {
         return productStockrepository.findSoldProductsNotInSalesStock(username);
     }
 

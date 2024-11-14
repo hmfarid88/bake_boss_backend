@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.example.bake_boss_backend.dto.EditInvoiceDto;
 import com.example.bake_boss_backend.dto.PendingStockDto;
 import com.example.bake_boss_backend.entity.ProductStock;
 
@@ -16,7 +17,8 @@ import jakarta.transaction.Transactional;
 
 public interface ProductStockrepository extends JpaRepository<ProductStock, Long> {
         @Query("SELECT ps FROM ProductStock ps WHERE ps.productName = :productName AND ps.username = :username ORDER BY ps.productId DESC LIMIT 1")
-        Optional<ProductStock> findLatestProductStockByProductNameAndUsername(@Param("productName") String productName, @Param("username") String username);
+        Optional<ProductStock> findLatestProductStockByProductNameAndUsername(@Param("productName") String productName,
+                        @Param("username") String username);
 
         @Query("SELECT ps FROM ProductStock ps WHERE ps.username=:username AND ps.productId IN " +
                         "(SELECT MAX(ps2.productId) FROM ProductStock ps2 GROUP BY ps2.productName)")
@@ -52,9 +54,9 @@ public interface ProductStockrepository extends JpaRepository<ProductStock, Long
         @Query("SELECT ps FROM ProductStock ps WHERE ps.customer=:customer AND ps.invoiceNo=:invoiceNo AND ps.invoiceNo NOT IN (SELECT ss.invoiceNo FROM SalesStock ss WHERE ss.status='stored')")
         List<ProductStock> findByCustomerAndInvoiceNo(String customer, String invoiceNo);
 
-        @Query("SELECT p FROM ProductStock p WHERE p.status = 'sold' AND p.username=:username AND p.invoiceNo NOT IN (SELECT s.invoiceNo FROM SalesStock s WHERE s.status='stored') GROUP BY p.invoiceNo")
-        List<ProductStock> findSoldProductsNotInSalesStock(@Param("username") String username);
-
+        @Query("SELECT new com.example.bake_boss_backend.dto.EditInvoiceDto(p.invoiceNo, p.customer) FROM ProductStock p WHERE p.status = 'sold' AND p.username = :username AND p.invoiceNo NOT IN (SELECT s.invoiceNo FROM SalesStock s WHERE s.status = 'stored') GROUP BY p.invoiceNo, p.customer")
+        List<EditInvoiceDto> findSoldProductsNotInSalesStock(@Param("username") String username);
+       
         List<ProductStock> findByInvoiceNo(String invoiceNo);
 
         @Modifying
