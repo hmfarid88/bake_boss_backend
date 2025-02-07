@@ -26,10 +26,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.bake_boss_backend.dto.TopSalesDTO;
 import com.example.bake_boss_backend.dto.LossProfitAnalysis;
 import com.example.bake_boss_backend.dto.PendingVendorDto;
+import com.example.bake_boss_backend.dto.SaleReportDTO;
 import com.example.bake_boss_backend.dto.SalesProfitDto;
 import com.example.bake_boss_backend.dto.SalesRequest;
 import com.example.bake_boss_backend.dto.SalesStockDTO;
 import com.example.bake_boss_backend.dto.SixMonthSaleDTO;
+import com.example.bake_boss_backend.dto.StockLedgerDTO;
+import com.example.bake_boss_backend.dto.SupplierSalesStockDTO;
 import com.example.bake_boss_backend.entity.CustomerInfo;
 import com.example.bake_boss_backend.entity.SalesStock;
 import com.example.bake_boss_backend.repository.CustomerInfoRepository;
@@ -76,27 +79,24 @@ public class SalesController {
         return ResponseEntity.ok("Products added successfully");
     }
 
-    @PostMapping("/outletSale")
+        @PostMapping("/outletSale")
     public ResponseEntity<?> handleSale(@RequestBody SalesRequest saleRequest) {
         try {
             CustomerInfo savedCustomer = customerInfoRepository.save(saleRequest.getCustomer());
             List<SalesStock> savedSalesItems = new ArrayList<>();
 
             for (SalesStock salesItem : saleRequest.getSalesItems()) {
-                // Find the last SalesStock by productName and username
                 Optional<SalesStock> lastSalesStock = salesStockRepository
-                        .findTopByProductNameAndUsernameOrderByProductIdDesc(salesItem.getProductName(), salesItem.getUsername());
+                        .findLatestSalesStockByProductNameAndUsername(salesItem.getProductName(),
+                                salesItem.getUsername());
 
                 if (lastSalesStock.isPresent()) {
-                    // Update remainingQty by subtracting the new productQty
                     SalesStock lastStock = lastSalesStock.get();
-                    salesItem.setRemainingQty(lastStock.getRemainingQty() - salesItem.getProductQty());
-                    ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
-                    salesItem.setTime(dhakaTime.toLocalTime());
-                    salesStockRepository.save(salesItem);
+                    double updatedRemainingQty = lastStock.getRemainingQty() - salesItem.getProductQty();
+                    salesItem.setRemainingQty(updatedRemainingQty);
                 }
-
-                // Save the new sales item
+                ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+                salesItem.setTime(dhakaTime.toLocalTime());
                 savedSalesItems.add(salesStockRepository.save(salesItem));
             }
 
@@ -111,30 +111,32 @@ public class SalesController {
         }
     }
 
+    
     @PostMapping("/outletStockReturn")
     public ResponseEntity<List<SalesStock>> addMultipleSalesStock(@RequestBody List<SalesStock> salesStockList) {
         List<SalesStock> savedSalesStockList = new ArrayList<>();
 
         for (SalesStock salesItem : salesStockList) {
-            // Find the last SalesStock by productName and username
             Optional<SalesStock> lastSalesStock = salesStockRepository
-                    .findTopByProductNameAndUsernameOrderByProductIdDesc(salesItem.getProductName(),
-                            salesItem.getUsername());
+                    .findLatestSalesStockByProductNameAndUsername(salesItem.getProductName(), salesItem.getUsername());
 
             if (lastSalesStock.isPresent()) {
-                // Update remainingQty by subtracting the new productQty
                 SalesStock lastStock = lastSalesStock.get();
-                salesItem.setRemainingQty(lastStock.getRemainingQty() - salesItem.getProductQty());
-                ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
-                salesItem.setTime(dhakaTime.toLocalTime());
+                double updatedRemainingQty = lastStock.getRemainingQty() - salesItem.getProductQty();
+
+                if (updatedRemainingQty < 0) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body(Collections.emptyList());
+                }
+
+                salesItem.setRemainingQty(updatedRemainingQty);
             } else {
-                // If no previous stock exists, set remainingQty to a default value
                 salesItem.setRemainingQty(salesItem.getProductQty());
-                ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
-                salesItem.setTime(dhakaTime.toLocalTime());
             }
 
-            // Save the new sales item and add to savedSalesStockList
+            ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+            salesItem.setTime(dhakaTime.toLocalTime());
+
             savedSalesStockList.add(salesStockRepository.save(salesItem));
         }
 
@@ -142,7 +144,7 @@ public class SalesController {
     }
 
     @GetMapping("/getOutletSale")
-    public List<SalesStock> getCurrentMonthSoldStocks(@RequestParam String username) {
+    public List<SaleReportDTO> getCurrentMonthSoldStocks(@RequestParam String username) {
         return salesStockService.getCurrentMonthSoldStocks(username);
     }
 
@@ -168,8 +170,7 @@ public class SalesController {
     }
 
     @GetMapping("/getDatewiseSalesProfit")
-    public List<SalesProfitDto> getDatewiseSalesProfit(@RequestParam String username, LocalDate startDate,
-            LocalDate endDate) {
+    public List<SalesProfitDto> getDatewiseSalesProfit(@RequestParam String username, LocalDate startDate, LocalDate endDate) {
         return salesStockService.getDatewiseProfitByUsername(username, startDate, endDate);
     }
 
@@ -178,8 +179,13 @@ public class SalesController {
         return salesStockService.getCurrentMonthAllStockReturned();
     }
 
+    @GetMapping("/datewise-outlet-returned")
+    public List<SalesStock> getCurrentMonthAllStockReturned(LocalDate startDate, LocalDate endDate) {
+        return salesStockService.getDatewiseStockReturned(startDate, endDate);
+    }
+
     @GetMapping("/getDatewiseOutletSale")
-    public List<SalesStock> getDatewiseSale(@RequestParam String username, @RequestParam LocalDate startDate,
+    public List<SaleReportDTO> getDatewiseSale(@RequestParam String username, @RequestParam LocalDate startDate,
             @RequestParam LocalDate endDate) {
         return salesStockService.getDatewiseSoldStocks(username, startDate, endDate);
     }
@@ -201,24 +207,23 @@ public class SalesController {
     }
 
     @GetMapping("/monthlyStockLedger")
-    public List<SalesStock> getCurrentMonthSales(@RequestParam String username) {
+    public List<StockLedgerDTO> getCurrentMonthSales(@RequestParam String username) {
         return salesStockService.getCurrentMonthDataByUsername(username);
     }
 
     @GetMapping("/datewiseStockLedger")
-    public List<SalesStock> getDatewiseStockLedger(@RequestParam String username, LocalDate startDate,
-            LocalDate endDate) {
+    public List<StockLedgerDTO> getDatewiseStockLedger(@RequestParam String username, LocalDate startDate, LocalDate endDate) {
         return salesStockService.getDatewiseStockLedger(username, startDate, endDate);
     }
 
     @GetMapping("/salesStock/thismonth-entry")
-    public List<SalesStock> getCurrentMonthEntry(@RequestParam String username) {
+    public List<SupplierSalesStockDTO> getCurrentMonthEntry(@RequestParam String username) {
         return salesStockService.getCurrentMonthEntryByUsername(username);
     }
 
     @GetMapping("/datewiseEntryLedger")
-    public List<SalesStock> getDatewiseEntry(@RequestParam String username, LocalDate startDate, LocalDate endDate) {
-        return salesStockService.getDatewiseEntryByUsername(username, startDate, endDate);
+    public List<SupplierSalesStockDTO> getDatewiseEntry(LocalDate startDate, LocalDate endDate, @RequestParam String username) {
+        return salesStockService.getDatewiseEntryByUsername(startDate, endDate, username);
     }
 
     @GetMapping("/cashbook/previousSalesTotal")
@@ -230,7 +235,7 @@ public class SalesController {
     }
 
     @GetMapping("/sales/today")
-    public List<SalesStock> getTodaysSales(@RequestParam String username) {
+    public List<SaleReportDTO> getTodaysSales(@RequestParam String username) {
         return salesStockService.getTodaysSalesByUsername(username);
     }
 
@@ -246,9 +251,9 @@ public class SalesController {
 
     @PutMapping("/update-quantity/{productId}")
     public ResponseEntity<String> updateProductQty(
-            @PathVariable Long productId,
+            @PathVariable Long productId, @RequestParam String username,
             @RequestParam Double newQty) {
-        salesStockService.updateProductQty(productId, newQty);
+        salesStockService.updateProductQty(productId, username, newQty);
         return ResponseEntity.ok("Product quantity updated successfully");
     }
 
@@ -261,8 +266,8 @@ public class SalesController {
     }
 
     @DeleteMapping("/delete/{productId}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Long productId) {
-        salesStockService.deleteProductById(productId);
+    public ResponseEntity<Void> deleteProduct(@PathVariable Long productId, @RequestParam String username) {
+        salesStockService.deleteProductById(productId, username);
         return ResponseEntity.noContent().build();
     }
 

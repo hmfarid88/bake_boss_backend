@@ -17,8 +17,7 @@ import jakarta.transaction.Transactional;
 
 public interface ProductStockrepository extends JpaRepository<ProductStock, Long> {
         @Query("SELECT ps FROM ProductStock ps WHERE ps.productName = :productName AND ps.username = :username ORDER BY ps.productId DESC LIMIT 1")
-        Optional<ProductStock> findLatestProductStockByProductNameAndUsername(@Param("productName") String productName,
-                        @Param("username") String username);
+        Optional<ProductStock> findLatestProductStockByProductNameAndUsername(@Param("productName") String productName, @Param("username") String username);
 
         @Query("SELECT ps FROM ProductStock ps WHERE ps.username=:username AND ps.productId IN " +
                         "(SELECT MAX(ps2.productId) FROM ProductStock ps2 GROUP BY ps2.productName)")
@@ -29,8 +28,13 @@ public interface ProductStockrepository extends JpaRepository<ProductStock, Long
         List<ProductStock> findByUsernameAndInvoiceNo(String username, String invoiceNo);
 
         @Query("SELECT ps FROM ProductStock ps WHERE ps.status='sold' AND YEAR(ps.date) = :year AND MONTH(ps.date) = :month AND ps.username=:username")
-        List<ProductStock> findProductByStatus(@Param("year") int year, @Param("month") int month,
-                        @Param("username") String username);
+        List<ProductStock> findProductByStatus(@Param("year") int year, @Param("month") int month, @Param("username") String username);
+
+        @Query("SELECT ps FROM ProductStock ps WHERE ps.status='sold' AND ps.username=:username AND ps.date BETWEEN :startDate AND :endDate")
+        List<ProductStock> findDatewiseProductByStatus(String username, LocalDate startDate, LocalDate endDate);
+
+        @Query("SELECT ps FROM ProductStock ps WHERE ps.status='sold' AND  ps.username=:username AND ps.date BETWEEN :startDate AND :endDate")
+        List<ProductStock> datewiseSoldByUsername(String username, LocalDate startDate, LocalDate endDate);
 
         @Query("SELECT new com.example.bake_boss_backend.dto.PendingStockDto(ps.invoiceNo, SUM(ps.productQty)) " +
                         "FROM ProductStock ps " +
@@ -43,8 +47,7 @@ public interface ProductStockrepository extends JpaRepository<ProductStock, Long
         List<ProductStock> findDamagedProductByStatus(String username);
 
         @Query("SELECT ps FROM ProductStock ps WHERE  YEAR(ps.date) = :year AND MONTH(ps.date) = :month AND ps.username=:username")
-        List<ProductStock> findProductByUsername(@Param("year") int year, @Param("month") int month,
-                        @Param("username") String username);
+        List<ProductStock> findProductByUsername(@Param("year") int year, @Param("month") int month, @Param("username") String username);
 
         @Query("SELECT ps FROM ProductStock ps WHERE  ps.username=:username AND ps.date BETWEEN :startDate AND :endDate")
         List<ProductStock> findDatewiseProductByUsername(String username, LocalDate startDate, LocalDate endDate);

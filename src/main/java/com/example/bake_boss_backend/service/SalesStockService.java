@@ -14,9 +14,12 @@ import org.springframework.stereotype.Service;
 
 import com.example.bake_boss_backend.dto.LossProfitAnalysis;
 import com.example.bake_boss_backend.dto.PendingVendorDto;
+import com.example.bake_boss_backend.dto.SaleReportDTO;
 import com.example.bake_boss_backend.dto.SalesProfitDto;
 import com.example.bake_boss_backend.dto.SalesStockDTO;
 import com.example.bake_boss_backend.dto.SixMonthSaleDTO;
+import com.example.bake_boss_backend.dto.StockLedgerDTO;
+import com.example.bake_boss_backend.dto.SupplierSalesStockDTO;
 import com.example.bake_boss_backend.dto.TopSalesDTO;
 import com.example.bake_boss_backend.entity.ProductRate;
 import com.example.bake_boss_backend.entity.ProductStock;
@@ -88,7 +91,7 @@ public class SalesStockService {
 
         for (ProductStock productStock : productStocks) {
             Optional<SalesStock> existingSalesStock = salesStockRepository
-                    .findTopByProductNameAndUsernameOrderByProductIdDesc(productStock.getProductName(), customer);
+                    .findLatestSalesStockByProductNameAndUsername(productStock.getProductName(), customer);
 
             SalesStock newSalesStock = new SalesStock();
             newSalesStock.setDate(LocalDate.now());
@@ -125,7 +128,7 @@ public class SalesStockService {
 
         for (SalesStock salesStock : salesStocks) {
             Optional<SalesStock> existingSalesStock = salesStockRepository
-                    .findTopByProductNameAndUsernameOrderByProductIdDesc(salesStock.getProductName(), username);
+                    .findLatestSalesStockByProductNameAndUsername(salesStock.getProductName(), username);
 
             SalesStock newSalesStock = new SalesStock();
             newSalesStock.setDate(LocalDate.now());
@@ -155,7 +158,7 @@ public class SalesStockService {
         }
     }
 
-    public List<SalesStock> getCurrentMonthSoldStocks(String username) {
+    public List<SaleReportDTO> getCurrentMonthSoldStocks(String username) {
         return salesStockRepository.findCurrentMonthSoldStocksByUsername(username);
     }
 
@@ -175,11 +178,15 @@ public class SalesStockService {
         return salesStockRepository.findCurrentMonthAllReturnedStocks();
     }
 
-    public List<SalesStock> getDatewiseSoldStocks(String username, LocalDate startDate, LocalDate endDate) {
+    public List<SalesStock> getDatewiseStockReturned(LocalDate startDate, LocalDate endDate) {
+        return salesStockRepository.findDatewiseReturnedStocks(startDate, endDate);
+    }
+
+    public List<SaleReportDTO> getDatewiseSoldStocks(String username, LocalDate startDate, LocalDate endDate) {
         return salesStockRepository.findDatewiseSoldStocksByUsername(username, startDate, endDate);
     }
 
-    public List<SalesStock> getDatewiseStockLedger(String username, LocalDate startDate, LocalDate endDate) {
+    public List<StockLedgerDTO> getDatewiseStockLedger(String username, LocalDate startDate, LocalDate endDate) {
         return salesStockRepository.findDatewiseStockLedgerUsername(username, startDate, endDate);
     }
 
@@ -191,20 +198,16 @@ public class SalesStockService {
         return salesStockRepository.findByUsernameAndDateAndStatus(username, date, status);
     }
 
-    public List<SalesStock> getCurrentMonthDataByUsername(String username) {
-        LocalDate currentDate = LocalDate.now();
-        int year = currentDate.getYear();
-        int month = currentDate.getMonthValue();
-
-        return salesStockRepository.findCurrentMonthDataByUsername(username, year, month);
+    public List<StockLedgerDTO> getCurrentMonthDataByUsername(String username) {
+        return salesStockRepository.findCurrentMonthDataByUsername(username);
     }
 
-    public List<SalesStock> getCurrentMonthEntryByUsername(String username) {
+    public List<SupplierSalesStockDTO> getCurrentMonthEntryByUsername(String username) {
         return salesStockRepository.findCurrentMonthEntryByUsername(username);
     }
 
-    public List<SalesStock> getDatewiseEntryByUsername(String username, LocalDate startDate, LocalDate endDate) {
-        return salesStockRepository.findDatewiseEntryByUsername(username, startDate, endDate);
+    public List<SupplierSalesStockDTO> getDatewiseEntryByUsername(LocalDate startDate, LocalDate endDate, String username) {
+        return salesStockRepository.findDatewiseEntryByUsername(startDate, endDate, username);
     }
 
     public List<SalesProfitDto> getCurrentMonthProfitByUsername(String username) {
@@ -219,9 +222,8 @@ public class SalesStockService {
         return salesStockRepository.findTotalSaleRateByUsernameAndDateBefore(username, date);
     }
 
-    public List<SalesStock> getTodaysSalesByUsername(String username) {
-        LocalDate today = LocalDate.now();
-        return salesStockRepository.findByUsernameAndDate(username, today);
+    public List<SaleReportDTO> getTodaysSalesByUsername(String username) {
+       return salesStockRepository.findTodaysSaleByUsername(username);
     }
 
     public List<PendingVendorDto> getVendorStockByUsernameAndInvoiceNo(String username) {
@@ -233,7 +235,7 @@ public class SalesStockService {
     }
 
     @Transactional
-    public ResponseEntity<String> updateProductQty(Long productId, Double newQty) {
+    public ResponseEntity<String> updateProductQty(Long productId, String username, Double newQty) {
         Optional<SalesStock> optionalStock = salesStockRepository.findById(productId);
 
         if (optionalStock.isPresent()) {
@@ -242,10 +244,9 @@ public class SalesStockService {
             Double qtyDifference = newQty - oldQty;
             existingStock.setProductQty(newQty);
             if (qtyDifference > 0) {
-                salesStockRepository.reduceRemainingQty(existingStock.getProductName(), productId, qtyDifference);
+                salesStockRepository.reduceRemainingQty(existingStock.getProductName(), username, productId, qtyDifference);
             } else if (qtyDifference < 0) {
-                salesStockRepository.increaseRemainingQty(existingStock.getProductName(), productId,
-                        Math.abs(qtyDifference));
+                salesStockRepository.increaseRemainingQty(existingStock.getProductName(), username,  productId, Math.abs(qtyDifference));
             }
             salesStockRepository.save(existingStock);
         } else {
@@ -267,20 +268,17 @@ public class SalesStockService {
     }
 
     @Transactional
-    public void deleteProductById(Long productId) {
+    public void deleteProductById(Long productId, String username) {
         Optional<SalesStock> existingStockOptional = salesStockRepository.findById(productId);
-
         if (!existingStockOptional.isPresent()) {
             return;
         }
-
         SalesStock existingStock = existingStockOptional.get();
         Double productQty = existingStock.getProductQty();
         String productName = existingStock.getProductName();
 
         salesStockRepository.deleteById(productId);
-        List<SalesStock> affectedStocks = salesStockRepository.findByProductNameAndProductIdGreaterThan(productName,
-                productId);
+        List<SalesStock> affectedStocks = salesStockRepository.findByUsernameAndProductNameAndProductIdGreaterThan(username, productName, productId);
 
         for (SalesStock stock : affectedStocks) {
             stock.setRemainingQty(stock.getRemainingQty() + productQty);

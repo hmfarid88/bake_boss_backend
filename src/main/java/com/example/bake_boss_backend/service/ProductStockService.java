@@ -70,6 +70,14 @@ public class ProductStockService {
         return productStockRepository.findProductByStatus(year, month, username);
     }
 
+    public List<ProductStock> getDatewiseProductDist(String username, LocalDate startDate, LocalDate endDate) {
+       return productStockRepository.findDatewiseProductByStatus(username, startDate, endDate);
+    }
+
+    public List<ProductStock> getProductDistDatewise(String username, LocalDate startDate, LocalDate endDate) {
+     return productStockRepository.datewiseSoldByUsername(username, startDate, endDate);
+    }
+
     public List<ProductStock> getAllProductStock(String username) {
         LocalDate now = LocalDate.now();
         int year = now.getYear();

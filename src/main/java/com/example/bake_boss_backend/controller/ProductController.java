@@ -393,6 +393,16 @@ public class ProductController {
         return productStockService.getProductDistForCurrentMonth(username);
     }
 
+    @GetMapping("/getDatewiseDistProduct")
+    public List<ProductStock> getDatewiseSoldProduct(String username, LocalDate startDate, LocalDate endDate) {
+        return productStockService.getDatewiseProductDist(username, startDate, endDate);
+    }
+
+    @GetMapping("/getDatewiseSoldProduct")
+    public List<ProductStock> getSoldProduct(String username, LocalDate startDate, LocalDate endDate) {
+        return productStockService.getProductDistDatewise(username, startDate, endDate);
+    }
+
     @GetMapping("/getAllProduct")
     public List<ProductStock> getAllProduct(String username) {
         return productStockService.getAllProductStock(username);
