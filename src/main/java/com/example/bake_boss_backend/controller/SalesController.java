@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.bake_boss_backend.dto.TopSalesDTO;
+import com.example.bake_boss_backend.dto.VendorSaleReportDTO;
 import com.example.bake_boss_backend.dto.LossProfitAnalysis;
 import com.example.bake_boss_backend.dto.PendingVendorDto;
 import com.example.bake_boss_backend.dto.SaleReportDTO;
@@ -149,7 +150,7 @@ public class SalesController {
     }
 
     @GetMapping("/getVendorSale")
-    public List<SalesStock> getCurrentMonthVendorSale(@RequestParam String username) {
+    public List<VendorSaleReportDTO> getCurrentMonthVendorSale(@RequestParam String username) {
         return salesStockService.getCurrentMonthVendorsale(username);
     }
 
@@ -191,8 +192,7 @@ public class SalesController {
     }
 
     @GetMapping("/getDatewiseVendorSale")
-    public List<SalesStock> getDatewiseVendorSale(@RequestParam String username, @RequestParam LocalDate startDate,
-            @RequestParam LocalDate endDate) {
+    public List<VendorSaleReportDTO> getDatewiseVendorSale(@RequestParam String username, @RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {
         return salesStockService.getDatewiseVendorSale(username, startDate, endDate);
     }
 

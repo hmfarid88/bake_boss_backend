@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.example.bake_boss_backend.dto.TopSalesDTO;
+import com.example.bake_boss_backend.dto.VendorSaleReportDTO;
 import com.example.bake_boss_backend.dto.LossProfitAnalysis;
 import com.example.bake_boss_backend.dto.PendingVendorDto;
 import com.example.bake_boss_backend.dto.SaleReportDTO;
@@ -27,14 +28,14 @@ public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
   @Query("SELECT s FROM SalesStock s WHERE s.username = :username AND s.productId IN (SELECT MAX(ss.productId) FROM SalesStock ss WHERE ss.username = :username GROUP BY ss.productName) ORDER BY s.productName ASC")
   List<SalesStock> findLastByProductNameAndUsername(@Param("username") String username);
 
-  @Query("SELECT new com.example.bake_boss_backend.dto.SaleReportDTO(s.productId, s.date, s.time, s.category, s.productName, s.soldInvoice, c.customerName, c.phoneNumber, s.saleRate, s.discount, s.productQty) FROM SalesStock s JOIN CustomerInfo c ON s.soldInvoice = c.soldInvoice WHERE s.status = 'sold' AND MONTH(s.date) = MONTH(CURRENT_DATE) AND YEAR(s.date) = YEAR(CURRENT_DATE) AND s.username = :username")
+  @Query("SELECT new com.example.bake_boss_backend.dto.SaleReportDTO(s.productId, s.date, s.time, s.category, s.productName, s.soldInvoice, c.customerName, c.phoneNumber, s.saleRate, s.discount, s.productQty) FROM SalesStock s JOIN CustomerInfo c ON s.soldInvoice = c.soldInvoice WHERE s.status = 'sold' AND MONTH(s.date) = MONTH(CURRENT_DATE) AND YEAR(s.date) = YEAR(CURRENT_DATE) AND s.username = :username ORDER BY s.date")
   List<SaleReportDTO> findCurrentMonthSoldStocksByUsername(String username);
   
-  @Query("SELECT s FROM SalesStock s WHERE s.status = 'vendor' AND s.username = :username AND FUNCTION('MONTH', s.date) = FUNCTION('MONTH', CURRENT_DATE) AND FUNCTION('YEAR', s.date) = FUNCTION('YEAR', CURRENT_DATE)")
-  List<SalesStock> findCurrentMonthVendorSaleByUsername(@Param("username") String username);
+  @Query("SELECT new com.example.bake_boss_backend.dto.VendorSaleReportDTO(s.date, s.time, s.category, s.productName, s.soldInvoice, c.customerName, s.saleRate, s.productQty) FROM SalesStock s JOIN CustomerInfo c ON s.soldInvoice = c.soldInvoice WHERE s.status = 'vendor' AND MONTH(s.date) = MONTH(CURRENT_DATE) AND YEAR(s.date) = YEAR(CURRENT_DATE) AND s.username = :username ORDER BY s.date")
+  List<VendorSaleReportDTO> findCurrentMonthVendorSaleByUsername(String username);
 
-  @Query("SELECT s FROM SalesStock s WHERE s.status = 'vendor' AND s.username = :username AND  s.date BETWEEN :startDate AND :endDate")
-  List<SalesStock> findDatewiseVendorSaleByUsername(String username, LocalDate startDate, LocalDate endDate);
+  @Query("SELECT new com.example.bake_boss_backend.dto.VendorSaleReportDTO(s.date, s.time, s.category, s.productName, s.soldInvoice, c.customerName, s.saleRate, s.productQty) FROM SalesStock s JOIN CustomerInfo c ON s.soldInvoice = c.soldInvoice WHERE s.status = 'vendor' AND s.username = :username AND  s.date BETWEEN :startDate AND :endDate ORDER BY s.date")
+  List<VendorSaleReportDTO> findDatewiseVendorSaleByUsername(String username, LocalDate startDate, LocalDate endDate);
 
   @Query("SELECT s FROM SalesStock s WHERE s.status = 'Returned' AND s.username = :username AND FUNCTION('MONTH', s.date) = FUNCTION('MONTH', CURRENT_DATE) AND FUNCTION('YEAR', s.date) = FUNCTION('YEAR', CURRENT_DATE)")
   List<SalesStock> findCurrentMonthReturnedStocksByUsername(@Param("username") String username);
@@ -42,7 +43,7 @@ public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
   @Query("SELECT s FROM SalesStock s WHERE s.status = 'Returned' AND s.username = :username AND s.date BETWEEN :startDate AND :endDate")
   List<SalesStock> findDatewiseReturnedStocksByUsername(String username, LocalDate startDate, LocalDate endDate);
 
-  @Query("SELECT new com.example.bake_boss_backend.dto.SaleReportDTO(s.productId, s.date, s.time, s.category, s.productName, s.soldInvoice, c.customerName, c.phoneNumber, s.saleRate, s.discount, s.productQty) FROM SalesStock s JOIN CustomerInfo c ON s.soldInvoice = c.soldInvoice WHERE s.status = 'sold' AND s.username = :username AND  s.date BETWEEN :startDate AND :endDate")
+  @Query("SELECT new com.example.bake_boss_backend.dto.SaleReportDTO(s.productId, s.date, s.time, s.category, s.productName, s.soldInvoice, c.customerName, c.phoneNumber, s.saleRate, s.discount, s.productQty) FROM SalesStock s JOIN CustomerInfo c ON s.soldInvoice = c.soldInvoice WHERE s.status = 'sold' AND s.username = :username AND  s.date BETWEEN :startDate AND :endDate ORDER BY s.date")
   List<SaleReportDTO> findDatewiseSoldStocksByUsername(String username, LocalDate startDate, LocalDate endDate);
  
   List<SalesStock> findByProductIdAndUsername(Long productId, String username);
@@ -111,7 +112,7 @@ public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
       "LEFT JOIN SalesStock ss ON s.invoiceNo = ss.soldInvoice AND ss.status = 'vendor' " +
       "WHERE s.status = 'stored' " +
       "AND MONTH(s.date) = MONTH(CURRENT_DATE) AND YEAR(s.date) = YEAR(CURRENT_DATE) " +
-      "AND s.username = :username ")
+      "AND s.username = :username ORDER BY s.date")
   List<SupplierSalesStockDTO> findCurrentMonthEntryByUsername(@Param("username") String username);
 
   @Query("SELECT DISTINCT NEW com.example.bake_boss_backend.dto.SupplierSalesStockDTO( " +
@@ -122,7 +123,7 @@ public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
       "LEFT JOIN SalesStock ss ON s.invoiceNo = ss.soldInvoice AND ss.status = 'vendor' " +
       "WHERE s.status = 'stored' " +
       "AND s.date BETWEEN :startDate AND :endDate " +
-      "AND s.username = :username ")
+      "AND s.username = :username ORDER BY s.date")
   List<SupplierSalesStockDTO> findDatewiseEntryByUsername(LocalDate startDate, LocalDate endDate, String username);
 
   @Modifying

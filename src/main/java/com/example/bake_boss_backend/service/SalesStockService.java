@@ -21,6 +21,7 @@ import com.example.bake_boss_backend.dto.SixMonthSaleDTO;
 import com.example.bake_boss_backend.dto.StockLedgerDTO;
 import com.example.bake_boss_backend.dto.SupplierSalesStockDTO;
 import com.example.bake_boss_backend.dto.TopSalesDTO;
+import com.example.bake_boss_backend.dto.VendorSaleReportDTO;
 import com.example.bake_boss_backend.entity.ProductRate;
 import com.example.bake_boss_backend.entity.ProductStock;
 import com.example.bake_boss_backend.entity.SalesStock;
@@ -162,7 +163,7 @@ public class SalesStockService {
         return salesStockRepository.findCurrentMonthSoldStocksByUsername(username);
     }
 
-    public List<SalesStock> getCurrentMonthVendorsale(String username) {
+    public List<VendorSaleReportDTO> getCurrentMonthVendorsale(String username) {
         return salesStockRepository.findCurrentMonthVendorSaleByUsername(username);
     }
 
@@ -190,7 +191,7 @@ public class SalesStockService {
         return salesStockRepository.findDatewiseStockLedgerUsername(username, startDate, endDate);
     }
 
-    public List<SalesStock> getDatewiseVendorSale(String username, LocalDate startDate, LocalDate enDate) {
+    public List<VendorSaleReportDTO> getDatewiseVendorSale(String username, LocalDate startDate, LocalDate enDate) {
         return salesStockRepository.findDatewiseVendorSaleByUsername(username, startDate, enDate);
     }
 
