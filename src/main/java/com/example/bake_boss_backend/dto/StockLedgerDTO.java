@@ -9,6 +9,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class StockLedgerDTO {
+    private Long productId;
     private LocalDate date;
     private LocalTime time;
     private String supplier;

@@ -57,25 +57,25 @@ public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
   @Query("SELECT ps FROM SalesStock ps WHERE ps.productName = :productName AND ps.username = :username ORDER BY ps.productId DESC LIMIT 1")
   Optional<SalesStock> findLatestProductStockByProductNameAndUsername(String productName, String username);
 
-  @Query("SELECT NEW com.example.bake_boss_backend.dto.StockLedgerDTO( " +
-      "s.date, s.time, COALESCE(ps.username, ci.customerName, 'Aurora') AS supplier, " +
+  @Query("SELECT DISTINCT NEW com.example.bake_boss_backend.dto.StockLedgerDTO( " +
+      "s.productId, s.date, s.time, COALESCE(ps.username, ci.customerName, 'Aurora') AS supplier, " +
       "COALESCE(s.invoiceNo, s.soldInvoice), s.category, s.productName, s.costPrice, s.status, s.productQty, s.remainingQty) "
       +
       "FROM SalesStock s " +
       "LEFT JOIN ProductStock ps ON s.invoiceNo = ps.invoiceNo " +
       "LEFT JOIN CustomerInfo ci ON s.soldInvoice = ci.soldInvoice " +
       "WHERE MONTH(s.date) = MONTH(CURRENT_DATE) AND YEAR(s.date) = YEAR(CURRENT_DATE) " +
-      "AND s.username = :username ORDER BY s.date")
+      "AND s.username = :username ORDER BY s.productId")
   List<StockLedgerDTO> findCurrentMonthDataByUsername(@Param("username") String username);
 
-  @Query("SELECT NEW com.example.bake_boss_backend.dto.StockLedgerDTO( " +
-      "s.date, s.time, COALESCE(ps.username, ci.customerName, 'Aurora') AS supplier, " +
+  @Query("SELECT DISTINCT NEW com.example.bake_boss_backend.dto.StockLedgerDTO( " +
+      "s.productId, s.date, s.time, COALESCE(ps.username, ci.customerName, 'Aurora') AS supplier, " +
       "COALESCE(s.invoiceNo, s.soldInvoice), s.category, s.productName, s.costPrice, s.status, s.productQty, s.remainingQty) "
       +
       "FROM SalesStock s " +
       "LEFT JOIN ProductStock ps ON s.invoiceNo = ps.invoiceNo " +
       "LEFT JOIN CustomerInfo ci ON s.soldInvoice = ci.soldInvoice " +
-      "WHERE s.username = :username AND  s.date BETWEEN :startDate AND :endDate ORDER BY s.date")
+      "WHERE s.username = :username AND  s.date BETWEEN :startDate AND :endDate ORDER BY s.productId")
   List<StockLedgerDTO> findDatewiseStockLedgerUsername(String username, LocalDate startDate, LocalDate endDate);
 
   @Query("SELECT s FROM SalesStock s WHERE s.status = 'Returned' AND FUNCTION('MONTH', s.date) = FUNCTION('MONTH', CURRENT_DATE) AND FUNCTION('YEAR', s.date) = FUNCTION('YEAR', CURRENT_DATE)")
