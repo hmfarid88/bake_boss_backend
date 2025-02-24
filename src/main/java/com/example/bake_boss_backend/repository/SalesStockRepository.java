@@ -141,18 +141,18 @@ public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
   List<SalesStock> findByUsernameAndProductNameAndProductIdGreaterThan(String username, String productName,
       Long productId);
 
-  @Query("SELECT new com.example.bake_boss_backend.dto.SalesProfitDto(s.date, s.category, s.productName, SUM(s.costPrice), SUM(s.saleRate), SUM(s.productQty), SUM(s.discount)) "
+  @Query("SELECT new com.example.bake_boss_backend.dto.SalesProfitDto(s.date, s.category, s.productName, s.costPrice, s.saleRate, SUM(s.productQty), SUM(s.discount)) "
       +
       "FROM SalesStock s WHERE s.status='sold' AND s.username = :username AND FUNCTION('MONTH', s.date) = FUNCTION('MONTH', CURRENT_DATE) AND FUNCTION('YEAR', s.date) = FUNCTION('YEAR', CURRENT_DATE) "
       +
-      "GROUP BY s.date, s.category, s.productName")
+      "GROUP BY s.date, s.category, s.productName, s.costPrice, s.saleRate")
   List<SalesProfitDto> findMonthlyProfit(@Param("username") String username);
 
-  @Query("SELECT new com.example.bake_boss_backend.dto.SalesProfitDto(s.date, s.category, s.productName, SUM(s.costPrice), SUM(s.saleRate), SUM(s.productQty), SUM(s.discount)) "
+  @Query("SELECT new com.example.bake_boss_backend.dto.SalesProfitDto(s.date, s.category, s.productName, s.costPrice, s.saleRate, SUM(s.productQty), SUM(s.discount)) "
       +
       "FROM SalesStock s WHERE s.status = 'sold' AND s.username = :username AND s.date BETWEEN :startDate AND :endDate "
       +
-      "GROUP BY s.date, s.category, s.productName")
+      "GROUP BY s.date, s.category, s.productName, s.costPrice, s.saleRate")
   List<SalesProfitDto> findDatewiseProfit(String username, LocalDate startDate, LocalDate endDate);
 
   @Query("SELECT new com.example.bake_boss_backend.dto.TopSalesDTO(ss.productName, SUM(ss.saleRate * ss.productQty)) "
