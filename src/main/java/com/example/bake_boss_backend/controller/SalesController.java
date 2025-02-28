@@ -80,7 +80,7 @@ public class SalesController {
         return ResponseEntity.ok("Products added successfully");
     }
 
-        @PostMapping("/outletSale")
+    @PostMapping("/outletSale")
     public ResponseEntity<?> handleSale(@RequestBody SalesRequest saleRequest) {
         try {
             CustomerInfo savedCustomer = customerInfoRepository.save(saleRequest.getCustomer());
@@ -112,7 +112,6 @@ public class SalesController {
         }
     }
 
-    
     @PostMapping("/outletStockReturn")
     public ResponseEntity<List<SalesStock>> addMultipleSalesStock(@RequestBody List<SalesStock> salesStockList) {
         List<SalesStock> savedSalesStockList = new ArrayList<>();
@@ -171,7 +170,8 @@ public class SalesController {
     }
 
     @GetMapping("/getDatewiseSalesProfit")
-    public List<SalesProfitDto> getDatewiseSalesProfit(@RequestParam String username, LocalDate startDate, LocalDate endDate) {
+    public List<SalesProfitDto> getDatewiseSalesProfit(@RequestParam String username, LocalDate startDate,
+            LocalDate endDate) {
         return salesStockService.getDatewiseProfitByUsername(username, startDate, endDate);
     }
 
@@ -192,7 +192,8 @@ public class SalesController {
     }
 
     @GetMapping("/getDatewiseVendorSale")
-    public List<VendorSaleReportDTO> getDatewiseVendorSale(@RequestParam String username, @RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {
+    public List<VendorSaleReportDTO> getDatewiseVendorSale(@RequestParam String username,
+            @RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {
         return salesStockService.getDatewiseVendorSale(username, startDate, endDate);
     }
 
@@ -212,7 +213,8 @@ public class SalesController {
     }
 
     @GetMapping("/datewiseStockLedger")
-    public List<StockLedgerDTO> getDatewiseStockLedger(@RequestParam String username, LocalDate startDate, LocalDate endDate) {
+    public List<StockLedgerDTO> getDatewiseStockLedger(@RequestParam String username, LocalDate startDate,
+            LocalDate endDate) {
         return salesStockService.getDatewiseStockLedger(username, startDate, endDate);
     }
 
@@ -222,7 +224,8 @@ public class SalesController {
     }
 
     @GetMapping("/datewiseEntryLedger")
-    public List<SupplierSalesStockDTO> getDatewiseEntry(LocalDate startDate, LocalDate endDate, @RequestParam String username) {
+    public List<SupplierSalesStockDTO> getDatewiseEntry(LocalDate startDate, LocalDate endDate,
+            @RequestParam String username) {
         return salesStockService.getDatewiseEntryByUsername(startDate, endDate, username);
     }
 
@@ -250,11 +253,11 @@ public class SalesController {
     }
 
     @PutMapping("/update-quantity/{productId}")
-    public ResponseEntity<String> updateProductQty(
-            @PathVariable Long productId, @RequestParam String username,
+    public ResponseEntity<Map<String, String>> updateProductQty(
+            @PathVariable Long productId,
+            @RequestParam String username,
             @RequestParam Double newQty) {
-        salesStockService.updateProductQty(productId, username, newQty);
-        return ResponseEntity.ok("Product quantity updated successfully");
+        return salesStockService.updateProductQty(productId, username, newQty);
     }
 
     @PutMapping("/update-discount/{productId}")

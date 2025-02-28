@@ -4,7 +4,9 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -235,26 +237,49 @@ public class SalesStockService {
         return salesStockRepository.findBySoldInvoiceNotInStock(soldInvoice);
     }
 
-    @Transactional
-    public ResponseEntity<String> updateProductQty(Long productId, String username, Double newQty) {
-        Optional<SalesStock> optionalStock = salesStockRepository.findById(productId);
 
-        if (optionalStock.isPresent()) {
-            SalesStock existingStock = optionalStock.get();
-            Double oldQty = existingStock.getProductQty();
-            Double qtyDifference = newQty - oldQty;
-            existingStock.setProductQty(newQty);
-            if (qtyDifference > 0) {
-                salesStockRepository.reduceRemainingQty(existingStock.getProductName(), username, productId, qtyDifference);
-            } else if (qtyDifference < 0) {
-                salesStockRepository.increaseRemainingQty(existingStock.getProductName(), username,  productId, Math.abs(qtyDifference));
-            }
-            salesStockRepository.save(existingStock);
-        } else {
-            System.out.println("SalesStock not found for productId: " + productId);
+@Transactional
+public ResponseEntity<Map<String, String>> updateProductQty(Long productId, String username, Double newQty) {
+    Optional<SalesStock> optionalStock = salesStockRepository.findById(productId);
+
+    Map<String, String> response = new HashMap<>();
+
+    if (optionalStock.isPresent()) {
+        SalesStock existingStock = optionalStock.get();
+        Double oldQty = existingStock.getProductQty();
+        Double qtyDifference = newQty - oldQty;
+
+        // Fetch the remainingQty from the database
+        Double remainingQty = salesStockRepository.getRemainingQty(existingStock.getProductName(), username);
+
+        // Check if newQty exceeds available remainingQty
+        if (qtyDifference > 0 && remainingQty < qtyDifference) {
+            response.put("status", "error");
+            response.put("message", "Insufficient remaining quantity. Update failed.");
+            return ResponseEntity.badRequest().body(response);
         }
-        return null;
+
+        existingStock.setProductQty(newQty);
+
+        if (qtyDifference > 0) {
+            salesStockRepository.reduceRemainingQty(existingStock.getProductName(), username, productId, qtyDifference);
+        } else if (qtyDifference < 0) {
+            salesStockRepository.increaseRemainingQty(existingStock.getProductName(), username, productId, Math.abs(qtyDifference));
+        }
+
+        salesStockRepository.save(existingStock);
+        
+        response.put("status", "success");
+        response.put("message", "Product quantity updated successfully.");
+        return ResponseEntity.ok(response);
+    } else {
+        response.put("status", "error");
+        response.put("message", "SalesStock not found for productId: " + productId);
+        return ResponseEntity.badRequest().body(response);
     }
+}
+
+
 
     @Transactional
     public void updateDiscount(Long productId, Double newDiscount) {
