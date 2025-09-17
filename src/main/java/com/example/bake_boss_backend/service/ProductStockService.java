@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.bake_boss_backend.dto.DistProductDto;
 import com.example.bake_boss_backend.dto.PendingStockDto;
 import com.example.bake_boss_backend.dto.RequisitionSummaryDTO;
 import com.example.bake_boss_backend.entity.MaterialsStock;
@@ -63,18 +64,18 @@ public class ProductStockService {
         }
     }
 
-    public List<ProductStock> getProductDistForCurrentMonth(String username) {
+    public List<DistProductDto> getProductDistForCurrentMonth(String username) {
         LocalDate now = LocalDate.now();
         int year = now.getYear();
         int month = now.getMonthValue();
-        return productStockRepository.findProductByStatus(year, month, username);
+        return productStockRepository.findSoldProductsWithSaleRate(year, month, username);
     }
 
     public List<ProductStock> getDatewiseProductDist(String username, LocalDate startDate, LocalDate endDate) {
        return productStockRepository.findDatewiseProductByStatus(username, startDate, endDate);
     }
 
-    public List<ProductStock> getProductDistDatewise(String username, LocalDate startDate, LocalDate endDate) {
+    public List<DistProductDto> getProductDistDatewise(String username, LocalDate startDate, LocalDate endDate) {
      return productStockRepository.datewiseSoldByUsername(username, startDate, endDate);
     }
 

@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.example.bake_boss_backend.dto.DistProductDto;
 import com.example.bake_boss_backend.dto.EditInvoiceDto;
 import com.example.bake_boss_backend.dto.PendingStockDto;
 import com.example.bake_boss_backend.entity.ProductStock;
@@ -27,14 +28,39 @@ public interface ProductStockrepository extends JpaRepository<ProductStock, Long
 
         List<ProductStock> findByUsernameAndInvoiceNo(String username, String invoiceNo);
 
+
+@Query("SELECT new com.example.bake_boss_backend.dto.DistProductDto(" +
+       "ps.date, ps.time, ps.customer, ps.category, ps.productName, ps.invoiceNo, ps.dpRate, ps.costPrice, ps.productQty, MAX(pr.saleRate)) " +
+       "FROM ProductStock ps " +
+       "JOIN ProductRate pr ON ps.productName = pr.productName " +
+       "WHERE ps.status = 'sold' " +
+       "AND FUNCTION('YEAR', ps.date) = :year " +
+       "AND FUNCTION('MONTH', ps.date) = :month " +
+       "AND ps.username = :username " +
+       "GROUP BY ps.date, ps.time, ps.customer, ps.category, ps.productName, ps.invoiceNo, ps.dpRate, ps.costPrice, ps.productQty")
+        List<DistProductDto> findSoldProductsWithSaleRate(
+        @Param("year") int year,
+        @Param("month") int month,
+        @Param("username") String username);
+
+
+
         @Query("SELECT ps FROM ProductStock ps WHERE ps.status='sold' AND YEAR(ps.date) = :year AND MONTH(ps.date) = :month AND ps.username=:username")
         List<ProductStock> findProductByStatus(@Param("year") int year, @Param("month") int month, @Param("username") String username);
 
         @Query("SELECT ps FROM ProductStock ps WHERE ps.status='sold' AND ps.username=:username AND ps.date BETWEEN :startDate AND :endDate")
         List<ProductStock> findDatewiseProductByStatus(String username, LocalDate startDate, LocalDate endDate);
 
-        @Query("SELECT ps FROM ProductStock ps WHERE ps.status='sold' AND  ps.username=:username AND ps.date BETWEEN :startDate AND :endDate")
-        List<ProductStock> datewiseSoldByUsername(String username, LocalDate startDate, LocalDate endDate);
+      
+        @Query("SELECT new com.example.bake_boss_backend.dto.DistProductDto(" +
+       "ps.date, ps.time, ps.customer, ps.category, ps.productName, ps.invoiceNo, ps.dpRate, ps.costPrice, ps.productQty, MAX(pr.saleRate)) " +
+       "FROM ProductStock ps " +
+       "JOIN ProductRate pr ON ps.productName = pr.productName " +
+       "WHERE ps.status = 'sold' " +
+       "AND ps.username = :username " +
+       "AND ps.date BETWEEN :startDate AND :endDate " +
+       "GROUP BY ps.date, ps.time, ps.customer, ps.category, ps.productName, ps.invoiceNo, ps.dpRate, ps.costPrice, ps.productQty")
+        List<DistProductDto> datewiseSoldByUsername(String username, LocalDate startDate, LocalDate endDate);
 
         @Query("SELECT new com.example.bake_boss_backend.dto.PendingStockDto(ps.invoiceNo, SUM(ps.productQty)) " +
                         "FROM ProductStock ps " +

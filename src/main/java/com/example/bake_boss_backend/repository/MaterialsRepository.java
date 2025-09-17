@@ -12,9 +12,12 @@ import com.example.bake_boss_backend.dto.DetailsSupplierDTO;
 import com.example.bake_boss_backend.entity.MaterialsStock;
 
 public interface MaterialsRepository extends JpaRepository<MaterialsStock, Long> {
-        @Query("SELECT m FROM MaterialsStock m WHERE m.materialsName = :materialsName AND m.username = :username ORDER BY m.materialsId DESC LIMIT 1")
-        Optional<MaterialsStock> findLatestByMaterialsNameAndUsername(@Param("materialsName") String materialsName,
-                        @Param("username") String username);
+        // @Query("SELECT m FROM MaterialsStock m WHERE m.materialsName = :materialsName AND m.username = :username ORDER BY m.materialsId DESC LIMIT 1")
+        @Query(value = "SELECT * FROM materials_stock m " +
+               "WHERE m.materials_name = :materialsName AND m.username = :username " +
+               "ORDER BY m.materials_id DESC LIMIT 1", 
+       nativeQuery = true)
+        Optional<MaterialsStock> findLatestByMaterialsNameAndUsername(@Param("materialsName") String materialsName, @Param("username") String username);
 
         @Query("SELECT ms FROM MaterialsStock ms WHERE ms.username=:username AND ms.materialsId IN " +
                         "(SELECT MAX(ms2.materialsId) FROM MaterialsStock ms2 GROUP BY ms2.materialsName)")

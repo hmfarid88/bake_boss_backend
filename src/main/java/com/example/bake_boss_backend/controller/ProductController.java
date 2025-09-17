@@ -3,6 +3,7 @@ package com.example.bake_boss_backend.controller;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.bake_boss_backend.dto.DistProductDto;
 import com.example.bake_boss_backend.dto.EditInvoiceDto;
 import com.example.bake_boss_backend.dto.ItemDetailsDTO;
 import com.example.bake_boss_backend.dto.MadeItemDTO;
@@ -52,6 +54,8 @@ import com.example.bake_boss_backend.repository.SupplierNameRepository;
 import com.example.bake_boss_backend.service.ItemMakeService;
 import com.example.bake_boss_backend.service.ProductStockService;
 import com.example.bake_boss_backend.service.SalesStockService;
+
+import jakarta.transaction.Transactional;
 
 @RestController
 @RequestMapping("/api")
@@ -201,30 +205,60 @@ public class ProductController {
         }).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
     }
 
-    @PostMapping("/addAllMaterials")
-    public List<MaterialsStock> saveMaterials(@RequestBody List<MaterialsStock> allItems) {
-        for (MaterialsStock newItem : allItems) {
-            Optional<MaterialsStock> existingMaterialOpt = materialsRepository
-                    .findLatestByMaterialsNameAndUsername(newItem.getMaterialsName(), newItem.getUsername());
-            if (existingMaterialOpt.isPresent()) {
-                MaterialsStock existingMaterial = existingMaterialOpt.get();
-                Double newTotalQty = existingMaterial.getRemainingQty() + newItem.getMaterialsQty();
-                Double newTotalValue = (existingMaterial.getRemainingQty() * existingMaterial.getAverageRate())
-                        + (newItem.getMaterialsQty() * newItem.getMaterialsRate());
-                Double newAverageRate = newTotalValue / newTotalQty;
+    // @PostMapping("/addAllMaterials")
+    // public List<MaterialsStock> saveMaterials(@RequestBody List<MaterialsStock> allItems) {
+    //     for (MaterialsStock newItem : allItems) {
+    //         Optional<MaterialsStock> existingMaterialOpt = materialsRepository
+    //                 .findLatestByMaterialsNameAndUsername(newItem.getMaterialsName(), newItem.getUsername());
+    //         if (existingMaterialOpt.isPresent()) {
+    //             MaterialsStock existingMaterial = existingMaterialOpt.get();
+    //             Double newTotalQty = existingMaterial.getRemainingQty() + newItem.getMaterialsQty();
+    //             Double newTotalValue = (existingMaterial.getRemainingQty() * existingMaterial.getAverageRate())
+    //                     + (newItem.getMaterialsQty() * newItem.getMaterialsRate());
+    //             Double newAverageRate = newTotalValue / newTotalQty;
 
-                newItem.setAverageRate(newAverageRate);
-                newItem.setRemainingQty(existingMaterial.getRemainingQty() + newItem.getMaterialsQty());
-                materialsRepository.save(newItem);
-            } else {
-                newItem.setAverageRate(newItem.getMaterialsRate());
-                newItem.setRemainingQty(newItem.getMaterialsQty());
-                materialsRepository.save(newItem);
-            }
+    //             newItem.setAverageRate(newAverageRate);
+    //             newItem.setRemainingQty(existingMaterial.getRemainingQty() + newItem.getMaterialsQty());
+    //             materialsRepository.save(newItem);
+    //         } else {
+    //             newItem.setAverageRate(newItem.getMaterialsRate());
+    //             newItem.setRemainingQty(newItem.getMaterialsQty());
+    //             materialsRepository.save(newItem);
+    //         }
+    //     }
+
+    //     return materialsRepository.findAll();
+    // }
+
+@PostMapping("/addAllMaterials")
+@Transactional
+public List<MaterialsStock> saveMaterials(@RequestBody List<MaterialsStock> allItems) {
+    List<MaterialsStock> toSave = new ArrayList<>();
+
+    for (MaterialsStock newItem : allItems) {
+        Optional<MaterialsStock> existingMaterialOpt =materialsRepository.findLatestByMaterialsNameAndUsername(newItem.getMaterialsName(), newItem.getUsername());
+
+        if (existingMaterialOpt.isPresent()) {
+            MaterialsStock existingMaterial = existingMaterialOpt.get();
+
+            double newTotalQty = existingMaterial.getRemainingQty() + newItem.getMaterialsQty();
+            double newTotalValue = (existingMaterial.getRemainingQty() * existingMaterial.getAverageRate())
+                                 + (newItem.getMaterialsQty() * newItem.getMaterialsRate());
+            double newAverageRate = newTotalValue / newTotalQty;
+
+            newItem.setAverageRate(newAverageRate);
+            newItem.setRemainingQty(newTotalQty);
+        } else {
+            newItem.setAverageRate(newItem.getMaterialsRate());
+            newItem.setRemainingQty(newItem.getMaterialsQty());
         }
 
-        return materialsRepository.findAll();
+        toSave.add(newItem);
     }
+
+    return materialsRepository.saveAll(toSave); // Save in batch
+}
+
 
     @PostMapping("/addAllProducts")
     public List<ProductStock> saveProducts(@RequestBody List<ProductStock> allItems) {
@@ -387,9 +421,9 @@ public class ProductController {
     public List<MaterialsStock> getMaterialsStock(String username) {
         return materialsRepository.findLatestMaterialsStockByUsername(username);
     }
-
+    
     @GetMapping("/getSoldProduct")
-    public List<ProductStock> getSoldProduct(String username) {
+    public List<DistProductDto> getSoldProduct(String username) {
         return productStockService.getProductDistForCurrentMonth(username);
     }
 
@@ -399,7 +433,7 @@ public class ProductController {
     }
 
     @GetMapping("/getDatewiseSoldProduct")
-    public List<ProductStock> getSoldProduct(String username, LocalDate startDate, LocalDate endDate) {
+    public List<DistProductDto> getSoldProduct(String username, LocalDate startDate, LocalDate endDate) {
         return productStockService.getProductDistDatewise(username, startDate, endDate);
     }
 
