@@ -185,6 +185,10 @@ public class SalesStockService {
         return salesStockRepository.findDatewiseReturnedStocks(startDate, endDate);
     }
 
+    public List<SalesStock> getReturnedByInvoiceno(String username, String invoiceNo) {
+        return salesStockRepository.findReturnedStocksByInvoice(username, invoiceNo);
+    }
+
     public List<SaleReportDTO> getDatewiseSoldStocks(String username, LocalDate startDate, LocalDate endDate) {
         return salesStockRepository.findDatewiseSoldStocksByUsername(username, startDate, endDate);
     }

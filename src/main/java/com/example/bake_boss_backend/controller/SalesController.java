@@ -185,6 +185,11 @@ public class SalesController {
         return salesStockService.getDatewiseStockReturned(startDate, endDate);
     }
 
+    @GetMapping("/getOutletReturnedByInvoice")
+    public List<SalesStock> getReturnedByInvoiceno(String username, String invoiceNo) {
+        return salesStockService.getReturnedByInvoiceno(username, invoiceNo);
+    }
+
     @GetMapping("/getDatewiseOutletSale")
     public List<SaleReportDTO> getDatewiseSale(@RequestParam String username, @RequestParam LocalDate startDate,
             @RequestParam LocalDate endDate) {

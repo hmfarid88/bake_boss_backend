@@ -87,6 +87,9 @@ public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
   @Query("SELECT s FROM SalesStock s WHERE s.status = 'Returned' AND s.date BETWEEN :startDate AND :endDate")
   List<SalesStock> findDatewiseReturnedStocks(LocalDate startDate, LocalDate endDate);
 
+  @Query("SELECT s FROM SalesStock s WHERE s.status = 'Returned' AND s.username = :username AND s.invoiceNo = :invoiceNo")
+ List<SalesStock> findReturnedStocksByInvoice(@Param("username") String username, @Param("invoiceNo") String invoiceNo);
+
   List<SalesStock> findByProductName(String oldItemName);
 
   @Query("SELECT SUM(s.productQty * s.saleRate) - SUM(COALESCE(s.discount, 0)) " +
