@@ -202,4 +202,13 @@ public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
   List<LossProfitAnalysis> findLastTwelveMonthsProfitLoss(@Param("username") String username,
       @Param("startDate") LocalDate startDate);
 
+       @Query("""
+        SELECT s.username,
+               SUM((s.saleRate - s.discount) * s.productQty) AS totalSale
+        FROM SalesStock s
+        WHERE s.date = :today
+          AND s.status = 'sold'
+        GROUP BY s.username
+    """)
+    List<Object[]> getTodayTotalSaleGroupedByUsername(@Param("today") LocalDate today);
 }

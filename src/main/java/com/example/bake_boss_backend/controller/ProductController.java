@@ -423,8 +423,8 @@ public List<MaterialsStock> saveMaterials(@RequestBody List<MaterialsStock> allI
     }
     
     @GetMapping("/getSoldProduct")
-    public List<DistProductDto> getSoldProduct(String username) {
-        return productStockService.getProductDistForCurrentMonth(username);
+    public List<DistProductDto> getSoldProduct(String username, int percent) {
+        return productStockService.getProductDistForCurrentMonth(username, percent);
     }
 
     @GetMapping("/getDatewiseDistProduct")
@@ -433,8 +433,8 @@ public List<MaterialsStock> saveMaterials(@RequestBody List<MaterialsStock> allI
     }
 
     @GetMapping("/getDatewiseSoldProduct")
-    public List<DistProductDto> getSoldProduct(String username, LocalDate startDate, LocalDate endDate) {
-        return productStockService.getProductDistDatewise(username, startDate, endDate);
+    public List<DistProductDto> getSoldProduct(String username, LocalDate startDate, LocalDate endDate, int percent) {
+        return productStockService.getProductDistDatewise(username, startDate, endDate, percent);
     }
 
     @GetMapping("/getAllProduct")

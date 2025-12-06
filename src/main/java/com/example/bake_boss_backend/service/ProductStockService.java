@@ -1,8 +1,11 @@
 package com.example.bake_boss_backend.service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -64,19 +67,59 @@ public class ProductStockService {
         }
     }
 
-    public List<DistProductDto> getProductDistForCurrentMonth(String username) {
+    // public List<DistProductDto> getProductDistForCurrentMonth(String username) {
+    //     LocalDate now = LocalDate.now();
+    //     int year = now.getYear();
+    //     int month = now.getMonthValue();
+    //     return productStockRepository.findSoldProductsWithSaleRate(year, month, username);
+    // }
+
+    public List<DistProductDto> getProductDistForCurrentMonth(String username, int percent) {
         LocalDate now = LocalDate.now();
         int year = now.getYear();
         int month = now.getMonthValue();
-        return productStockRepository.findSoldProductsWithSaleRate(year, month, username);
+        List<DistProductDto> fullList= productStockRepository.findSoldProductsWithSaleRate(year, month, username);
+
+        Map<String, List<DistProductDto>> grouped = fullList.stream()
+                .collect(Collectors.groupingBy(s -> String.valueOf(s.getDate())));
+
+        List<DistProductDto> finalList = new ArrayList<>();
+
+        grouped.entrySet().stream()
+            .sorted(Map.Entry.comparingByKey())
+            .forEach(entry -> {
+                List<DistProductDto> list = entry.getValue();
+                int limit = (int) Math.ceil((percent / 100.0) * list.size());
+                finalList.addAll(list.stream().limit(limit).toList());
+            });
+
+        return finalList;
     }
 
     public List<ProductStock> getDatewiseProductDist(String username, LocalDate startDate, LocalDate endDate) {
        return productStockRepository.findDatewiseProductByStatus(username, startDate, endDate);
     }
 
-    public List<DistProductDto> getProductDistDatewise(String username, LocalDate startDate, LocalDate endDate) {
-     return productStockRepository.datewiseSoldByUsername(username, startDate, endDate);
+    // public List<DistProductDto> getProductDistDatewise(String username, LocalDate startDate, LocalDate endDate) {
+    //  return productStockRepository.datewiseSoldByUsername(username, startDate, endDate);
+    // }
+
+    public List<DistProductDto> getProductDistDatewise(String username, LocalDate startDate, LocalDate endDate, int percent) {
+     List<DistProductDto> fulList= productStockRepository.datewiseSoldByUsername(username, startDate, endDate);
+     Map<String, List<DistProductDto>> grouped = fulList.stream()
+                .collect(Collectors.groupingBy(s -> String.valueOf(s.getDate())));
+
+        List<DistProductDto> finalList = new ArrayList<>();
+
+        grouped.entrySet().stream()
+            .sorted(Map.Entry.comparingByKey())
+            .forEach(entry -> {
+                List<DistProductDto> list = entry.getValue();
+                int limit = (int) Math.ceil((percent / 100.0) * list.size());
+                finalList.addAll(list.stream().limit(limit).toList());
+            });
+
+        return finalList;
     }
 
     public List<ProductStock> getAllProductStock(String username) {

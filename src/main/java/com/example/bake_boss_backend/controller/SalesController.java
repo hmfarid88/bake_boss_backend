@@ -144,13 +144,13 @@ public class SalesController {
     }
 
     @GetMapping("/getOutletSale")
-    public List<SaleReportDTO> getCurrentMonthSoldStocks(@RequestParam String username) {
-        return salesStockService.getCurrentMonthSoldStocks(username);
+    public List<SaleReportDTO> getCurrentMonthSoldStocks(@RequestParam String username, @RequestParam int percent) {
+        return salesStockService.getCurrentMonthSoldStocks(username, percent);
     }
 
     @GetMapping("/getVendorSale")
-    public List<VendorSaleReportDTO> getCurrentMonthVendorSale(@RequestParam String username) {
-        return salesStockService.getCurrentMonthVendorsale(username);
+    public List<VendorSaleReportDTO> getCurrentMonthVendorSale(@RequestParam String username, @RequestParam int percent) {
+        return salesStockService.getCurrentMonthVendorsale(username, percent);
     }
 
     @GetMapping("/getOutletReturned")
@@ -165,14 +165,14 @@ public class SalesController {
     }
 
     @GetMapping("/getMonthlySalesProfit")
-    public List<SalesProfitDto> getCurrentMonthSalesProfit(@RequestParam String username) {
-        return salesStockService.getCurrentMonthProfitByUsername(username);
+    public List<SalesProfitDto> getCurrentMonthSalesProfit(@RequestParam String username, @RequestParam int percent) {
+        return salesStockService.getCurrentMonthProfitByUsername(username, percent);
     }
 
     @GetMapping("/getDatewiseSalesProfit")
     public List<SalesProfitDto> getDatewiseSalesProfit(@RequestParam String username, LocalDate startDate,
-            LocalDate endDate) {
-        return salesStockService.getDatewiseProfitByUsername(username, startDate, endDate);
+            LocalDate endDate, @RequestParam int percent) {
+        return salesStockService.getDatewiseProfitByUsername(username, startDate, endDate, percent);
     }
 
     @GetMapping("/getOutletAllReturned")
@@ -191,24 +191,23 @@ public class SalesController {
     }
 
     @GetMapping("/getDatewiseOutletSale")
-    public List<SaleReportDTO> getDatewiseSale(@RequestParam String username, @RequestParam LocalDate startDate,
-            @RequestParam LocalDate endDate) {
-        return salesStockService.getDatewiseSoldStocks(username, startDate, endDate);
+    public List<SaleReportDTO> getDatewiseSale(@RequestParam String username, @RequestParam LocalDate startDate, @RequestParam LocalDate endDate, @RequestParam int percent) {
+        return salesStockService.getDatewiseSoldStocks(username, startDate, endDate, percent);
     }
 
     @GetMapping("/getDatewiseVendorSale")
     public List<VendorSaleReportDTO> getDatewiseVendorSale(@RequestParam String username,
-            @RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {
-        return salesStockService.getDatewiseVendorSale(username, startDate, endDate);
+            @RequestParam LocalDate startDate, @RequestParam LocalDate endDate, @RequestParam int percent) {
+        return salesStockService.getDatewiseVendorSale(username, startDate, endDate, percent);
     }
 
     @GetMapping("/cashbook/dateWiseSale")
     public ResponseEntity<List<Object[]>> findByUsernameAndDateAndStatus(
             @RequestParam String username,
             @RequestParam String date,
-            @RequestParam String status) {
+            @RequestParam String status, @RequestParam int percent) {
         LocalDate localDate = LocalDate.parse(date);
-        List<Object[]> salesStocks = salesStockService.findByUsernameAndDateAndStatus(username, localDate, status);
+        List<Object[]> salesStocks = salesStockService.findByUsernameAndDateAndStatus(username, localDate, status, percent);
         return ResponseEntity.ok(salesStocks);
     }
 
@@ -243,8 +242,8 @@ public class SalesController {
     }
 
     @GetMapping("/sales/today")
-    public List<SaleReportDTO> getTodaysSales(@RequestParam String username) {
-        return salesStockService.getTodaysSalesByUsername(username);
+    public List<SaleReportDTO> getTodaysSales(@RequestParam String username,  @RequestParam int percent) {
+        return salesStockService.getTodaysSalesByUsername(username, percent);
     }
 
     @GetMapping("/pendingVendorStock")
@@ -265,6 +264,14 @@ public class SalesController {
         return salesStockService.updateProductQty(productId, username, newQty);
     }
 
+    @PutMapping("/update-stockQuantity/{productId}")
+    public ResponseEntity<Map<String, String>> updateStockProductQty(
+            @PathVariable Long productId,
+            @RequestParam String username,
+            @RequestParam Double newQty) {
+        return salesStockService.updateSalesProductQty(productId, username, newQty);
+    }
+
     @PutMapping("/update-discount/{productId}")
     public ResponseEntity<Void> updateDiscount(
             @PathVariable Long productId,
@@ -280,8 +287,8 @@ public class SalesController {
     }
 
     @GetMapping("/current-month/saleprogress")
-    public ResponseEntity<List<TopSalesDTO>> getCurrentMonthSalesData(@RequestParam String username) {
-        List<TopSalesDTO> salesData = salesStockService.getTop10SoldProducts(username);
+    public ResponseEntity<List<TopSalesDTO>> getCurrentMonthSalesData(@RequestParam String username, @RequestParam int percent) {
+        List<TopSalesDTO> salesData = salesStockService.getTop10SoldProducts(username, percent);
         return ResponseEntity.ok(salesData);
     }
 

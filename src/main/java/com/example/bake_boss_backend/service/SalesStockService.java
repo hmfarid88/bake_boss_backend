@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +13,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -90,7 +93,8 @@ public class SalesStockService {
     @Transactional
     public void insertOrUpdateProductStockInSalesStock(String customer, String invoiceNo) {
         // Fetch ProductStock entries for the specific customer and invoice number
-        List<ProductStock> productStocks = productStockService.getProductStockByUsernameAndInvoiceNo(customer, invoiceNo);
+        List<ProductStock> productStocks = productStockService.getProductStockByUsernameAndInvoiceNo(customer,
+                invoiceNo);
 
         for (ProductStock productStock : productStocks) {
             Optional<SalesStock> existingSalesStock = salesStockRepository
@@ -161,12 +165,55 @@ public class SalesStockService {
         }
     }
 
-    public List<SaleReportDTO> getCurrentMonthSoldStocks(String username) {
-        return salesStockRepository.findCurrentMonthSoldStocksByUsername(username);
+    // public List<SaleReportDTO> getCurrentMonthSoldStocks(String username) {
+    // return salesStockRepository.findCurrentMonthSoldStocksByUsername(username);
+    // }
+
+    public List<SaleReportDTO> getCurrentMonthSoldStocks(String username, int percent) {
+        List<SaleReportDTO> fullList = salesStockRepository.findCurrentMonthSoldStocksByUsername(username);
+        Map<String, List<SaleReportDTO>> grouped = fullList.stream()
+                .collect(Collectors.groupingBy(s -> String.valueOf(s.getDate())));
+        // .collect(Collectors.groupingBy(s -> s.getDate() + "_" + s.getProductName()));
+
+        List<SaleReportDTO> finalList = new ArrayList<>();
+
+        // grouped.forEach((key, list) -> {
+        // int limit = (int) Math.ceil((percent / 100.0) * list.size());
+        // finalList.addAll(list.stream().limit(limit).toList());
+        // });
+        grouped.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey()) // ascending date
+                .forEach(entry -> {
+                    List<SaleReportDTO> list = entry.getValue();
+                    int limit = (int) Math.ceil((percent / 100.0) * list.size());
+                    finalList.addAll(list.stream().limit(limit).toList());
+                });
+
+        return finalList;
     }
 
-    public List<VendorSaleReportDTO> getCurrentMonthVendorsale(String username) {
-        return salesStockRepository.findCurrentMonthVendorSaleByUsername(username);
+    // public List<VendorSaleReportDTO> getCurrentMonthVendorsale(String username) {
+    // return salesStockRepository.findCurrentMonthVendorSaleByUsername(username);
+    // }
+
+    public List<VendorSaleReportDTO> getCurrentMonthVendorsale(String username, int percent) {
+        List<VendorSaleReportDTO> fullList = salesStockRepository.findCurrentMonthVendorSaleByUsername(username);
+
+        Map<String, List<VendorSaleReportDTO>> grouped = fullList.stream()
+                // .collect(Collectors.groupingBy(s -> s.getDate() + "_" + s.getProductName()));
+                .collect(Collectors.groupingBy(s -> String.valueOf(s.getDate())));
+
+        List<VendorSaleReportDTO> finalList = new ArrayList<>();
+
+        grouped.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey()) // ascending date
+                .forEach(entry -> {
+                    List<VendorSaleReportDTO> list = entry.getValue();
+                    int limit = (int) Math.ceil((percent / 100.0) * list.size());
+                    finalList.addAll(list.stream().limit(limit).toList());
+                });
+
+        return finalList;
     }
 
     public List<SalesStock> getCurrentMonthStockReturned(String username) {
@@ -189,20 +236,79 @@ public class SalesStockService {
         return salesStockRepository.findReturnedStocksByInvoice(username, invoiceNo);
     }
 
-    public List<SaleReportDTO> getDatewiseSoldStocks(String username, LocalDate startDate, LocalDate endDate) {
-        return salesStockRepository.findDatewiseSoldStocksByUsername(username, startDate, endDate);
+    // public List<SaleReportDTO> getDatewiseSoldStocks(String username, LocalDate
+    // startDate, LocalDate endDate) {
+    // return salesStockRepository.findDatewiseSoldStocksByUsername(username,
+    // startDate, endDate);
+    // }
+
+    public List<SaleReportDTO> getDatewiseSoldStocks(String username, LocalDate startDate, LocalDate endDate,
+            int percent) {
+        List<SaleReportDTO> fullList = salesStockRepository.findDatewiseSoldStocksByUsername(username, startDate,
+                endDate);
+        Map<String, List<SaleReportDTO>> grouped = fullList.stream()
+                .collect(Collectors.groupingBy(s -> String.valueOf(s.getDate())));
+        List<SaleReportDTO> finalList = new ArrayList<>();
+        grouped.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(entry -> {
+                    List<SaleReportDTO> list = entry.getValue();
+                    int limit = (int) Math.ceil((percent / 100.0) * list.size());
+                    finalList.addAll(list.stream().limit(limit).toList());
+                });
+
+        return finalList;
     }
 
     public List<StockLedgerDTO> getDatewiseStockLedger(String username, LocalDate startDate, LocalDate endDate) {
         return salesStockRepository.findDatewiseStockLedgerUsername(username, startDate, endDate);
     }
 
-    public List<VendorSaleReportDTO> getDatewiseVendorSale(String username, LocalDate startDate, LocalDate enDate) {
-        return salesStockRepository.findDatewiseVendorSaleByUsername(username, startDate, enDate);
+    // public List<VendorSaleReportDTO> getDatewiseVendorSale(String username,
+    // LocalDate startDate, LocalDate endDate) {
+    // return salesStockRepository.findDatewiseVendorSaleByUsername(username,
+    // startDate, enDate);
+    // }
+
+    public List<VendorSaleReportDTO> getDatewiseVendorSale(String username, LocalDate startDate, LocalDate endDate,
+            int percent) {
+        List<VendorSaleReportDTO> fullList = salesStockRepository.findDatewiseVendorSaleByUsername(username, startDate,
+                endDate);
+        Map<String, List<VendorSaleReportDTO>> grouped = fullList.stream()
+                // .collect(Collectors.groupingBy(s -> s.getDate() + "_" + s.getProductName()));
+                .collect(Collectors.groupingBy(s -> String.valueOf(s.getDate())));
+        List<VendorSaleReportDTO> finalList = new ArrayList<>();
+        grouped.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(entry -> {
+                    List<VendorSaleReportDTO> list = entry.getValue();
+                    int limit = (int) Math.ceil((percent / 100.0) * list.size());
+                    finalList.addAll(list.stream().limit(limit).toList());
+                });
+
+        return finalList;
     }
 
-    public List<Object[]> findByUsernameAndDateAndStatus(String username, LocalDate date, String status) {
-        return salesStockRepository.findByUsernameAndDateAndStatus(username, date, status);
+    // public List<Object[]> findByUsernameAndDateAndStatus(String username,
+    // LocalDate date, String status) {
+    // return salesStockRepository.findByUsernameAndDateAndStatus(username, date,
+    // status);
+    // }
+    public List<Object[]> findByUsernameAndDateAndStatus(String username, LocalDate date, String status, int percent) {
+        List<Object[]> fullList = salesStockRepository.findByUsernameAndDateAndStatus(username, date, status);
+        Map<String, List<Object[]>> grouped = fullList.stream()
+                .collect(Collectors.groupingBy(s -> String.valueOf(s[0])));
+        List<Object[]> finalList = new ArrayList<>();
+        grouped.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(entry -> {
+                    List<Object[]> list = entry.getValue();
+                    list.sort(Comparator.comparing(o -> (String) o[0]));
+                    int limit = (int) Math.ceil((percent / 100.0) * list.size());
+                    finalList.addAll(list.stream().limit(limit).toList());
+                });
+
+        return finalList;
     }
 
     public List<StockLedgerDTO> getCurrentMonthDataByUsername(String username) {
@@ -213,24 +319,88 @@ public class SalesStockService {
         return salesStockRepository.findCurrentMonthEntryByUsername(username);
     }
 
-    public List<SupplierSalesStockDTO> getDatewiseEntryByUsername(LocalDate startDate, LocalDate endDate, String username) {
+    public List<SupplierSalesStockDTO> getDatewiseEntryByUsername(LocalDate startDate, LocalDate endDate,
+            String username) {
         return salesStockRepository.findDatewiseEntryByUsername(startDate, endDate, username);
     }
 
-    public List<SalesProfitDto> getCurrentMonthProfitByUsername(String username) {
-        return salesStockRepository.findMonthlyProfit(username);
+    // public List<SalesProfitDto> getCurrentMonthProfitByUsername(String username)
+    // {
+    // return salesStockRepository.findMonthlyProfit(username);
+    // }
+
+    public List<SalesProfitDto> getCurrentMonthProfitByUsername(String username, int percent) {
+        List<SalesProfitDto> fullList = salesStockRepository.findMonthlyProfit(username);
+        Map<String, List<SalesProfitDto>> grouped = fullList.stream()
+                // .collect(Collectors.groupingBy(SalesProfitDto::getProductName));
+                .collect(Collectors.groupingBy(s -> String.valueOf(s.getDate())));
+
+        List<SalesProfitDto> finalList = new ArrayList<>();
+
+        grouped.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey()) // ascending date
+                .forEach(entry -> {
+                    List<SalesProfitDto> list = entry.getValue();
+                    int limit = (int) Math.ceil((percent / 100.0) * list.size());
+                    finalList.addAll(list.stream().limit(limit).toList());
+                });
+
+        return finalList;
     }
 
-    public List<SalesProfitDto> getDatewiseProfitByUsername(String username, LocalDate startDate, LocalDate endDate) {
-        return salesStockRepository.findDatewiseProfit(username, startDate, endDate);
+    // public List<SalesProfitDto> getDatewiseProfitByUsername(String username,
+    // LocalDate startDate, LocalDate endDate) {
+    // return salesStockRepository.findDatewiseProfit(username, startDate, endDate);
+    // }
+
+    public List<SalesProfitDto> getDatewiseProfitByUsername(String username, LocalDate startDate, LocalDate endDate,
+            int percent) {
+        List<SalesProfitDto> fullList = salesStockRepository.findDatewiseProfit(username, startDate, endDate);
+        Map<String, List<SalesProfitDto>> grouped = fullList.stream()
+                // .collect(Collectors.groupingBy(SalesProfitDto::getProductName));
+                .collect(Collectors.groupingBy(s -> String.valueOf(s.getDate())));
+
+        List<SalesProfitDto> finalList = new ArrayList<>();
+
+        grouped.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey()) // ascending date
+                .forEach(entry -> {
+                    List<SalesProfitDto> list = entry.getValue();
+                    int limit = (int) Math.ceil((percent / 100.0) * list.size());
+                    finalList.addAll(list.stream().limit(limit).toList());
+                });
+
+        return finalList;
     }
 
     public Double getTotalSaleRateByUsernameAndDate(String username, LocalDate date) {
         return salesStockRepository.findTotalSaleRateByUsernameAndDateBefore(username, date);
     }
 
-    public List<SaleReportDTO> getTodaysSalesByUsername(String username) {
-       return salesStockRepository.findTodaysSaleByUsername(username);
+    // public List<SaleReportDTO> getTodaysSalesByUsername(String username) {
+    // return salesStockRepository.findTodaysSaleByUsername(username);
+    // }
+
+    public List<SaleReportDTO> getTodaysSalesByUsername(String username, int percent) {
+
+        List<SaleReportDTO> fullList = salesStockRepository.findTodaysSaleByUsername(username);
+
+        // Group by productName (you can also add date or time if needed)
+        Map<String, List<SaleReportDTO>> grouped = fullList.stream()
+                // .collect(Collectors.groupingBy(SaleReportDTO::getProductName));
+                .collect(Collectors.groupingBy(s -> String.valueOf(s.getDate())));
+
+        List<SaleReportDTO> finalList = new ArrayList<>();
+
+        grouped.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey()) // ascending date
+                .forEach(entry -> {
+                    List<SaleReportDTO> list = entry.getValue();
+                    int limit = (int) Math.ceil((percent / 100.0) * list.size());
+                    finalList.addAll(list.stream().limit(limit).toList());
+                });
+
+        return finalList;
     }
 
     public List<PendingVendorDto> getVendorStockByUsernameAndInvoiceNo(String username) {
@@ -241,47 +411,71 @@ public class SalesStockService {
         return salesStockRepository.findBySoldInvoiceNotInStock(soldInvoice);
     }
 
+    @Transactional
+    public ResponseEntity<Map<String, String>> updateProductQty(Long productId, String username, Double newQty) {
+        Optional<SalesStock> optionalStock = salesStockRepository.findById(productId);
 
-@Transactional
-public ResponseEntity<Map<String, String>> updateProductQty(Long productId, String username, Double newQty) {
-    Optional<SalesStock> optionalStock = salesStockRepository.findById(productId);
+        Map<String, String> response = new HashMap<>();
 
-    Map<String, String> response = new HashMap<>();
+        if (optionalStock.isPresent()) {
+            SalesStock existingStock = optionalStock.get();
+            Double oldQty = existingStock.getProductQty();
+            Double qtyDifference = newQty - oldQty;
 
-    if (optionalStock.isPresent()) {
-        SalesStock existingStock = optionalStock.get();
-        Double oldQty = existingStock.getProductQty();
-        Double qtyDifference = newQty - oldQty;
+            // Fetch the remainingQty from the database
+            Double remainingQty = salesStockRepository.getRemainingQty(existingStock.getProductName(), username);
 
-        // Fetch the remainingQty from the database
-        Double remainingQty = salesStockRepository.getRemainingQty(existingStock.getProductName(), username);
+            // Check if newQty exceeds available remainingQty
+            if (qtyDifference > 0 && remainingQty < qtyDifference) {
+                response.put("status", "error");
+                response.put("message", "Insufficient remaining quantity. Update failed.");
+                return ResponseEntity.badRequest().body(response);
+            }
 
-        // Check if newQty exceeds available remainingQty
-        if (qtyDifference > 0 && remainingQty < qtyDifference) {
+            existingStock.setProductQty(newQty);
+
+            if (qtyDifference > 0) {
+                salesStockRepository.reduceRemainingQty(existingStock.getProductName(), username, productId,
+                        qtyDifference);
+            } else if (qtyDifference < 0) {
+                salesStockRepository.increaseRemainingQty(existingStock.getProductName(), username, productId,
+                        Math.abs(qtyDifference));
+            }
+
+            salesStockRepository.save(existingStock);
+
+            response.put("status", "success");
+            response.put("message", "Product quantity updated successfully.");
+            return ResponseEntity.ok(response);
+        } else {
             response.put("status", "error");
-            response.put("message", "Insufficient remaining quantity. Update failed.");
+            response.put("message", "SalesStock not found for productId: " + productId);
             return ResponseEntity.badRequest().body(response);
         }
-
-        existingStock.setProductQty(newQty);
-
-        if (qtyDifference > 0) {
-            salesStockRepository.reduceRemainingQty(existingStock.getProductName(), username, productId, qtyDifference);
-        } else if (qtyDifference < 0) {
-            salesStockRepository.increaseRemainingQty(existingStock.getProductName(), username, productId, Math.abs(qtyDifference));
-        }
-
-        salesStockRepository.save(existingStock);
-        
-        response.put("status", "success");
-        response.put("message", "Product quantity updated successfully.");
-        return ResponseEntity.ok(response);
-    } else {
-        response.put("status", "error");
-        response.put("message", "SalesStock not found for productId: " + productId);
-        return ResponseEntity.badRequest().body(response);
     }
+  @Transactional
+  public ResponseEntity<Map<String, String>> updateSalesProductQty(Long productId, String username, Double newQty) {
+    Map<String, String> response = new HashMap<>();
+
+    List<SalesStock> list = salesStockRepository.findByProductIdAndUsername(productId, username);
+
+    if (list.isEmpty()) {
+        response.put("message", "Product not found");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    // take single or last row
+    SalesStock salesStock = list.get(0); // or list.get(list.size() - 1);
+
+    // overwrite remaining qty
+    salesStock.setRemainingQty(newQty);
+
+    salesStockRepository.save(salesStock);
+
+    response.put("message", "Remaining quantity overwritten successfully");
+    return ResponseEntity.ok(response);
 }
+
 
 
 
@@ -308,7 +502,8 @@ public ResponseEntity<Map<String, String>> updateProductQty(Long productId, Stri
         String productName = existingStock.getProductName();
 
         salesStockRepository.deleteById(productId);
-        List<SalesStock> affectedStocks = salesStockRepository.findByUsernameAndProductNameAndProductIdGreaterThan(username, productName, productId);
+        List<SalesStock> affectedStocks = salesStockRepository
+                .findByUsernameAndProductNameAndProductIdGreaterThan(username, productName, productId);
 
         for (SalesStock stock : affectedStocks) {
             stock.setRemainingQty(stock.getRemainingQty() + productQty);
@@ -316,13 +511,33 @@ public ResponseEntity<Map<String, String>> updateProductQty(Long productId, Stri
         }
     }
 
-    public List<TopSalesDTO> getTop10SoldProducts(String username) {
-        List<TopSalesDTO> soldProducts = salesStockRepository.findTop10SoldProductsByUsernameAndStatusSold(username);
-        return soldProducts.stream().limit(10).toList();
+    // public List<TopSalesDTO> getTop10SoldProducts(String username) {
+    // List<TopSalesDTO> soldProducts =
+    // salesStockRepository.findTop10SoldProductsByUsernameAndStatusSold(username);
+    // return soldProducts.stream().limit(10).toList();
+    // }
+
+    public List<TopSalesDTO> getTop10SoldProducts(String username, int percent) {
+
+        List<TopSalesDTO> fullList = salesStockRepository.findTop10SoldProductsByUsernameAndStatusSold(username);
+
+        // Group by productName
+        Map<String, List<TopSalesDTO>> grouped = fullList.stream()
+                .collect(Collectors.groupingBy(TopSalesDTO::getProductName));
+
+        List<TopSalesDTO> finalList = new ArrayList<>();
+
+        grouped.forEach((product, list) -> {
+            int limit = (int) Math.ceil((percent / 100.0) * list.size());
+            finalList.addAll(list.stream().limit(limit).toList());
+        });
+
+        return finalList;
     }
 
     public List<TopSalesDTO> getTop10SoldProductsToday(String username) {
-        List<TopSalesDTO> soldProducts = salesStockRepository.findTop10SoldProductsByUsernameAndStatusSoldForToday(username);
+        List<TopSalesDTO> soldProducts = salesStockRepository
+                .findTop10SoldProductsByUsernameAndStatusSoldForToday(username);
         return soldProducts.stream().limit(10).toList();
     }
 
@@ -335,5 +550,5 @@ public ResponseEntity<Map<String, String>> updateProductQty(Long productId, Stri
         LocalDate twelveMonthsAgo = LocalDate.now().minus(12, ChronoUnit.MONTHS);
         return salesStockRepository.findLastTwelveMonthsProfitLoss(username, twelveMonthsAgo);
     }
-    
+
 }
