@@ -296,14 +296,15 @@ public class SalesStockService {
     // }
     public List<Object[]> findByUsernameAndDateAndStatus(String username, LocalDate date, String status, int percent) {
         List<Object[]> fullList = salesStockRepository.findByUsernameAndDateAndStatus(username, date, status);
-        Map<String, List<Object[]>> grouped = fullList.stream()
-                .collect(Collectors.groupingBy(s -> String.valueOf(s[0])));
+        Map<LocalDate, List<Object[]>> grouped = fullList.stream()
+                .collect(Collectors.groupingBy(s -> (LocalDate) s[0]));
         List<Object[]> finalList = new ArrayList<>();
+
         grouped.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
                 .forEach(entry -> {
                     List<Object[]> list = entry.getValue();
-                    list.sort(Comparator.comparing(o -> (String) o[0]));
+                    list.sort(Comparator.comparing(o -> (LocalDate) o[0]));
                     int limit = (int) Math.ceil((percent / 100.0) * list.size());
                     finalList.addAll(list.stream().limit(limit).toList());
                 });
@@ -453,31 +454,29 @@ public class SalesStockService {
             return ResponseEntity.badRequest().body(response);
         }
     }
-  @Transactional
-  public ResponseEntity<Map<String, String>> updateSalesProductQty(Long productId, String username, Double newQty) {
-    Map<String, String> response = new HashMap<>();
 
-    List<SalesStock> list = salesStockRepository.findByProductIdAndUsername(productId, username);
+    @Transactional
+    public ResponseEntity<Map<String, String>> updateSalesProductQty(Long productId, String username, Double newQty) {
+        Map<String, String> response = new HashMap<>();
 
-    if (list.isEmpty()) {
-        response.put("message", "Product not found");
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        List<SalesStock> list = salesStockRepository.findByProductIdAndUsername(productId, username);
+
+        if (list.isEmpty()) {
+            response.put("message", "Product not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        // take single or last row
+        SalesStock salesStock = list.get(0); // or list.get(list.size() - 1);
+
+        // overwrite remaining qty
+        salesStock.setRemainingQty(newQty);
+
+        salesStockRepository.save(salesStock);
+
+        response.put("message", "Remaining quantity overwritten successfully");
+        return ResponseEntity.ok(response);
     }
-
-    // take single or last row
-    SalesStock salesStock = list.get(0); // or list.get(list.size() - 1);
-
-    // overwrite remaining qty
-    salesStock.setRemainingQty(newQty);
-
-    salesStockRepository.save(salesStock);
-
-    response.put("message", "Remaining quantity overwritten successfully");
-    return ResponseEntity.ok(response);
-}
-
-
-
 
     @Transactional
     public void updateDiscount(Long productId, Double newDiscount) {
