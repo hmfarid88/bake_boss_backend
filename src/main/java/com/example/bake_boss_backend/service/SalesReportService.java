@@ -30,7 +30,7 @@ public class SalesReportService {
                 String username = (String) row[0];
                 Double totalSale = (Double) row[1];
 
-                report.append("Username: ").append(username)
+                  report.append(username)
                         .append(" | Total Sale: ")
                         .append(String.format("%.2f", totalSale))
                         .append("\n");

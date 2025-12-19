@@ -455,27 +455,22 @@ public class SalesStockService {
         }
     }
 
+ 
     @Transactional
-    public ResponseEntity<Map<String, String>> updateSalesProductQty(Long productId, String username, Double newQty) {
-        Map<String, String> response = new HashMap<>();
+    public ResponseEntity<Map<String, String>> updateSalesProductQty(
+            Long productId,
+            String username,
+            Double newQty) {
 
-        List<SalesStock> list = salesStockRepository.findByProductIdAndUsername(productId, username);
+        SalesStock salesStock = salesStockRepository.findTopByProductIdAndUsernameOrderByDateDesc(productId, username);
 
-        if (list.isEmpty()) {
-            response.put("message", "Product not found");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        if (salesStock == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", "Product not found"));
         }
 
-        // take single or last row
-        SalesStock salesStock = list.get(0); // or list.get(list.size() - 1);
-
-        // overwrite remaining qty
         salesStock.setRemainingQty(newQty);
-
-        salesStockRepository.save(salesStock);
-
-        response.put("message", "Remaining quantity overwritten successfully");
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(Map.of("message", "Remaining qty updated"));
     }
 
     @Transactional

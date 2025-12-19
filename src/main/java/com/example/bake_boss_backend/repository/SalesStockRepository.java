@@ -211,4 +211,6 @@ public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
         GROUP BY s.username
     """)
     List<Object[]> getTodayTotalSaleGroupedByUsername(@Param("today") LocalDate today);
+
+       SalesStock findTopByProductIdAndUsernameOrderByDateDesc(Long productId, String username);
 }
