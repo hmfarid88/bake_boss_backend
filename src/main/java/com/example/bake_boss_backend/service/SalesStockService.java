@@ -455,22 +455,28 @@ public class SalesStockService {
         }
     }
 
- 
     @Transactional
     public ResponseEntity<Map<String, String>> updateSalesProductQty(
             Long productId,
             String username,
             Double newQty) {
 
-        SalesStock salesStock = salesStockRepository.findTopByProductIdAndUsernameOrderByDateDesc(productId, username);
+        List<SalesStock> list = salesStockRepository.findByProductIdAndUsername(productId, username);
 
-        if (salesStock == null) {
+        if (list.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("message", "Product not found"));
         }
 
+        // take last entry (latest)
+        SalesStock salesStock = list.get(list.size() - 1);
+
         salesStock.setRemainingQty(newQty);
-        return ResponseEntity.ok(Map.of("message", "Remaining qty updated"));
+
+        salesStockRepository.save(salesStock);
+
+        return ResponseEntity.ok(
+                Map.of("message", "Remaining qty updated successfully"));
     }
 
     @Transactional

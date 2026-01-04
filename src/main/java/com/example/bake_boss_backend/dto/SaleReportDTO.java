@@ -16,6 +16,7 @@ public class SaleReportDTO {
     private String productName;
     private String soldInvoice;
     private String customerName;
+    private String soldBy;
     private String phoneNumber;
     private Double saleRate;
     private Double discount;

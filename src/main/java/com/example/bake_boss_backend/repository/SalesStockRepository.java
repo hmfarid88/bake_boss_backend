@@ -31,7 +31,7 @@ public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
   @Query("SELECT s FROM SalesStock s WHERE s.username = :username AND s.productId IN (SELECT MAX(ss.productId) FROM SalesStock ss WHERE ss.username = :username GROUP BY ss.productName) ORDER BY s.productName ASC")
   List<SalesStock> findLastByProductNameAndUsername(@Param("username") String username);
 
-  @Query("SELECT new com.example.bake_boss_backend.dto.SaleReportDTO(s.productId, s.date, s.time, s.category, s.productName, s.soldInvoice, c.customerName, c.phoneNumber, s.saleRate, s.discount, s.productQty) FROM SalesStock s JOIN CustomerInfo c ON s.soldInvoice = c.soldInvoice WHERE s.status = 'sold' AND MONTH(s.date) = MONTH(CURRENT_DATE) AND YEAR(s.date) = YEAR(CURRENT_DATE) AND s.username = :username ORDER BY s.date")
+  @Query("SELECT new com.example.bake_boss_backend.dto.SaleReportDTO(s.productId, s.date, s.time, s.category, s.productName, s.soldInvoice, c.customerName, c.soldBy, c.phoneNumber, s.saleRate, s.discount, s.productQty) FROM SalesStock s JOIN CustomerInfo c ON s.soldInvoice = c.soldInvoice WHERE s.status = 'sold' AND MONTH(s.date) = MONTH(CURRENT_DATE) AND YEAR(s.date) = YEAR(CURRENT_DATE) AND s.username = :username ORDER BY s.date")
   List<SaleReportDTO> findCurrentMonthSoldStocksByUsername(String username);
   
   @Query("SELECT new com.example.bake_boss_backend.dto.VendorSaleReportDTO(s.date, s.time, s.category, s.productName, s.soldInvoice, c.customerName, s.saleRate, s.productQty) FROM SalesStock s JOIN CustomerInfo c ON s.soldInvoice = c.soldInvoice WHERE s.status = 'vendor' AND MONTH(s.date) = MONTH(CURRENT_DATE) AND YEAR(s.date) = YEAR(CURRENT_DATE) AND s.username = :username ORDER BY s.date")
@@ -46,7 +46,7 @@ public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
   @Query("SELECT s FROM SalesStock s WHERE s.status = 'Returned' AND s.username = :username AND s.date BETWEEN :startDate AND :endDate")
   List<SalesStock> findDatewiseReturnedStocksByUsername(String username, LocalDate startDate, LocalDate endDate);
 
-  @Query("SELECT new com.example.bake_boss_backend.dto.SaleReportDTO(s.productId, s.date, s.time, s.category, s.productName, s.soldInvoice, c.customerName, c.phoneNumber, s.saleRate, s.discount, s.productQty) FROM SalesStock s JOIN CustomerInfo c ON s.soldInvoice = c.soldInvoice WHERE s.status = 'sold' AND s.username = :username AND  s.date BETWEEN :startDate AND :endDate ORDER BY s.date")
+  @Query("SELECT new com.example.bake_boss_backend.dto.SaleReportDTO(s.productId, s.date, s.time, s.category, s.productName, s.soldInvoice, c.customerName, c.soldBy, c.phoneNumber, s.saleRate, s.discount, s.productQty) FROM SalesStock s JOIN CustomerInfo c ON s.soldInvoice = c.soldInvoice WHERE s.status = 'sold' AND s.username = :username AND  s.date BETWEEN :startDate AND :endDate ORDER BY s.date")
   List<SaleReportDTO> findDatewiseSoldStocksByUsername(String username, LocalDate startDate, LocalDate endDate);
  
   List<SalesStock> findByProductIdAndUsername(Long productId, String username);
@@ -96,7 +96,7 @@ public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
       "FROM SalesStock s WHERE s.status = 'sold' AND s.username = :username AND s.date < :date")
   Double findTotalSaleRateByUsernameAndDateBefore(@Param("username") String username, @Param("date") LocalDate date);
 
-  @Query("SELECT new com.example.bake_boss_backend.dto.SaleReportDTO(s.productId, s.date, s.time, s.category, s.productName, s.soldInvoice, c.customerName, c.phoneNumber, s.saleRate, s.discount, s.productQty) FROM SalesStock s JOIN CustomerInfo c ON s.soldInvoice = c.soldInvoice WHERE s.status = 'sold' AND s.date=CURRENT_DATE AND s.username = :username")
+  @Query("SELECT new com.example.bake_boss_backend.dto.SaleReportDTO(s.productId, s.date, s.time, s.category, s.productName, s.soldInvoice, c.customerName, c.soldBy, c.phoneNumber, s.saleRate, s.discount, s.productQty) FROM SalesStock s JOIN CustomerInfo c ON s.soldInvoice = c.soldInvoice WHERE s.status = 'sold' AND s.date=CURRENT_DATE AND s.username = :username")
   List<SaleReportDTO> findTodaysSaleByUsername(String username);
 
   @Query("SELECT new com.example.bake_boss_backend.dto.PendingVendorDto(s.username, s.soldInvoice, SUM(s.productQty)) "
@@ -212,5 +212,4 @@ public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
     """)
     List<Object[]> getTodayTotalSaleGroupedByUsername(@Param("today") LocalDate today);
 
-       SalesStock findTopByProductIdAndUsernameOrderByDateDesc(Long productId, String username);
 }
