@@ -226,4 +226,19 @@ public class ProductStockService {
             throw new RuntimeException("No ProductStock found for productName: " + productName);
         }
     }
+
+    
+    public void updateAverageRate(Long materialsId, Double averageRate) {
+        int updated = materialsRepository.updateAverageRateByMaterialsId(materialsId, averageRate);
+        if (updated == 0) {
+            throw new RuntimeException("MaterialsStock not found with ID: " + materialsId);
+        }
+    }
+
+    public void updateMaterialsQty(Long materialsId, Double materialsQty) {
+        int updated = materialsRepository.updateMaterialsQtyByMaterialsId(materialsId, materialsQty);
+        if (updated == 0) {
+            throw new RuntimeException("MaterialsStock not found with ID: " + materialsId);
+        }
+    }
 }

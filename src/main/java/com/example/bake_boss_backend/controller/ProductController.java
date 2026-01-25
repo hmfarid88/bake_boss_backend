@@ -624,4 +624,24 @@ public List<MaterialsStock> saveMaterials(@RequestBody List<MaterialsStock> allI
             return e.getMessage();
         }
     }
+
+@PutMapping("/materials/average-rate/{materialsId}")
+public ResponseEntity<String> updateAverageRate(
+        @PathVariable Long materialsId,
+        @RequestBody Map<String, Double> body) {
+    Double averageRate = body.get("averageRate");
+    productStockService.updateAverageRate(materialsId, averageRate);
+    return ResponseEntity.ok("Average rate updated successfully");
+}
+
+@PutMapping("/materials/materialsQty/{materialsId}")
+public ResponseEntity<String> updateMaterialsQty(
+        @PathVariable Long materialsId,
+        @RequestBody Map<String, Double> body) {
+    Double materialsQty = body.get("materialsQty");
+    productStockService.updateMaterialsQty(materialsId, materialsQty);
+    return ResponseEntity.ok("Materials Qty updated successfully");
+}
+
+
 }
