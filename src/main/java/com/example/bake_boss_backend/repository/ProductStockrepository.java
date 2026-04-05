@@ -33,7 +33,7 @@ public interface ProductStockrepository extends JpaRepository<ProductStock, Long
        "ps.date, ps.time, ps.customer, ps.category, ps.productName, ps.invoiceNo, ps.dpRate, ps.costPrice, ps.productQty, MAX(pr.saleRate)) " +
        "FROM ProductStock ps " +
        "JOIN ProductRate pr ON ps.productName = pr.productName " +
-       "WHERE ps.status = 'sold' " +
+       "WHERE ps.status = 'sold' AND pr.username !='bliss bites lounge'" +
        "AND FUNCTION('YEAR', ps.date) = :year " +
        "AND FUNCTION('MONTH', ps.date) = :month " +
        "AND ps.username = :username " +
@@ -56,7 +56,7 @@ public interface ProductStockrepository extends JpaRepository<ProductStock, Long
        "ps.date, ps.time, ps.customer, ps.category, ps.productName, ps.invoiceNo, ps.dpRate, ps.costPrice, ps.productQty, MAX(pr.saleRate)) " +
        "FROM ProductStock ps " +
        "JOIN ProductRate pr ON ps.productName = pr.productName " +
-       "WHERE ps.status = 'sold' " +
+       "WHERE ps.status = 'sold' AND pr.username !='bliss bites lounge'" +
        "AND ps.username = :username " +
        "AND ps.date BETWEEN :startDate AND :endDate " +
        "GROUP BY ps.date, ps.time, ps.customer, ps.category, ps.productName, ps.invoiceNo, ps.dpRate, ps.costPrice, ps.productQty")
