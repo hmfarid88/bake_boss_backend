@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.example.bake_boss_backend.dto.DistProductDto;
 import com.example.bake_boss_backend.dto.EditInvoiceDto;
+import com.example.bake_boss_backend.dto.FactoryInvoiceDTO;
 import com.example.bake_boss_backend.dto.PendingStockDto;
 import com.example.bake_boss_backend.entity.ProductStock;
 
@@ -26,8 +27,18 @@ public interface ProductStockrepository extends JpaRepository<ProductStock, Long
 
         Optional<ProductStock> findByProductId(Long productId);
 
-        List<ProductStock> findByUsernameAndInvoiceNo(String username, String invoiceNo);
+        // List<ProductStock> findByUsernameAndInvoiceNo(String username, String invoiceNo);
 
+
+@Query("SELECT new com.example.bake_boss_backend.dto.FactoryInvoiceDTO(" +
+       "ps.date, ps.time, ps.category, ps.productName, ps.productQty, ps.customer, ps.invoiceNo, MAX(pr.saleRate)) " +
+       "FROM ProductStock ps " +
+       "JOIN ProductRate pr ON ps.productName = pr.productName " +
+       "WHERE ps.status = 'sold' AND pr.username !='bliss bites lounge'" +
+       "AND ps.username = :username AND ps.invoiceNo = :invoiceNo " +
+       "GROUP BY ps.date, ps.time, ps.customer, ps.category, ps.productName, ps.invoiceNo, ps.productQty")
+        List<FactoryInvoiceDTO> findByUsernameAndInvoiceNo(
+          @Param("username") String username, @Param("invoiceNo") String invoiceNo);
 
 @Query("SELECT new com.example.bake_boss_backend.dto.DistProductDto(" +
        "ps.date, ps.time, ps.customer, ps.category, ps.productName, ps.invoiceNo, ps.dpRate, ps.costPrice, ps.productQty, MAX(pr.saleRate)) " +
@@ -79,6 +90,38 @@ public interface ProductStockrepository extends JpaRepository<ProductStock, Long
         List<ProductStock> findDatewiseProductByUsername(String username, LocalDate startDate, LocalDate endDate);
 
         List<ProductStock> findByUsernameAndProductName(String username, String oldItemName);
+
+       @Query("""
+SELECT new com.example.bake_boss_backend.dto.FactoryInvoiceDTO(
+    ps.date,
+    ps.time,
+    ps.category,
+    ps.productName,
+    ps.productQty,
+    ps.customer,
+    ps.invoiceNo,
+    MAX(pr.saleRate)
+)
+FROM ProductStock ps
+JOIN ProductRate pr ON ps.productName = pr.productName
+WHERE ps.customer = :customer
+  AND ps.invoiceNo = :invoiceNo
+  AND NOT EXISTS (
+        SELECT 1 FROM SalesStock ss 
+        WHERE ss.invoiceNo = ps.invoiceNo 
+          AND ss.status = 'stored'
+  )
+GROUP BY 
+    ps.date,
+    ps.time,
+    ps.category,
+    ps.productName,
+    ps.productQty,
+    ps.customer,
+    ps.invoiceNo
+""")
+List<FactoryInvoiceDTO> findPendingproducts(String customer, String invoiceNo);
+
 
         @Query("SELECT ps FROM ProductStock ps WHERE ps.customer=:customer AND ps.invoiceNo=:invoiceNo AND ps.invoiceNo NOT IN (SELECT ss.invoiceNo FROM SalesStock ss WHERE ss.status='stored')")
         List<ProductStock> findByCustomerAndInvoiceNo(String customer, String invoiceNo);

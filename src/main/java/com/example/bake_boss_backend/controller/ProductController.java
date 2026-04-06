@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.bake_boss_backend.dto.DistProductDto;
 import com.example.bake_boss_backend.dto.EditInvoiceDto;
+import com.example.bake_boss_backend.dto.FactoryInvoiceDTO;
 import com.example.bake_boss_backend.dto.ItemDetailsDTO;
 import com.example.bake_boss_backend.dto.MadeItemDTO;
 import com.example.bake_boss_backend.dto.MaterialGroupedDto;
@@ -468,7 +469,7 @@ public List<MaterialsStock> saveMaterials(@RequestBody List<MaterialsStock> allI
     }
 
     @GetMapping("/getInvoiceData")
-    public List<ProductStock> getInvoiceData(String username, String invoiceNo) {
+    public List<FactoryInvoiceDTO> getInvoiceData(String username, String invoiceNo) {
         return productStockrepository.findByUsernameAndInvoiceNo(username, invoiceNo);
     }
 
@@ -572,9 +573,9 @@ public List<MaterialsStock> saveMaterials(@RequestBody List<MaterialsStock> allI
     }
 
     @GetMapping("/pendingDetailsStock")
-    public List<ProductStock> getProductStockByUsernameAndInvoiceNo(@RequestParam String customer,
+    public List<FactoryInvoiceDTO> getProductStockByUsernameAndInvoiceNo(@RequestParam String customer,
             @RequestParam String invoiceNo) {
-        return productStockService.getProductStockByUsernameAndInvoiceNo(customer, invoiceNo);
+        return productStockService.getPendingproductStocks(customer, invoiceNo);
     }
 
     @GetMapping("/materials/used-quantity")

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.bake_boss_backend.dto.DistProductDto;
+import com.example.bake_boss_backend.dto.FactoryInvoiceDTO;
 import com.example.bake_boss_backend.dto.PendingStockDto;
 import com.example.bake_boss_backend.dto.RequisitionSummaryDTO;
 import com.example.bake_boss_backend.entity.MaterialsStock;
@@ -167,6 +168,10 @@ public class ProductStockService {
     @Transactional
     public void acceptRequisition(Long reqId) {
         requisitionRepository.updateStatusByReqId(reqId, "accepted");
+    }
+
+    public List<FactoryInvoiceDTO> getPendingproductStocks(String customer, String invoiceNo) {
+        return productStockRepository.findPendingproducts(customer, invoiceNo);
     }
 
     public List<ProductStock> getProductStockByUsernameAndInvoiceNo(String customer, String invoiceNo) {
