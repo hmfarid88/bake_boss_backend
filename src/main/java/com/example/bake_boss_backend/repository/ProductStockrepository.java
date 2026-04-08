@@ -122,6 +122,32 @@ GROUP BY
 """)
 List<FactoryInvoiceDTO> findPendingproducts(String customer, String invoiceNo);
 
+//      @Query("""
+// SELECT new com.example.bake_boss_backend.dto.FactoryInvoiceDTO(
+//     ps.date,
+//     ps.time,
+//     ps.category,
+//     ps.productName,
+//     ps.productQty,
+//     ps.customer,
+//     ps.invoiceNo,
+//     (
+//         SELECT MAX(pr2.saleRate) 
+//         FROM ProductRate pr2 
+//         WHERE pr2.productName = ps.productName
+//     )
+// )
+// FROM ProductStock ps
+// WHERE ps.customer = :customer
+//   AND ps.invoiceNo = :invoiceNo
+//   AND NOT EXISTS (
+//         SELECT 1 FROM SalesStock ss 
+//         WHERE ss.invoiceNo = ps.invoiceNo 
+//           AND ss.status = 'stored'
+//   )
+// """)
+// List<FactoryInvoiceDTO> findPendingproducts(String customer, String invoiceNo);
+
 
         @Query("SELECT ps FROM ProductStock ps WHERE ps.customer=:customer AND ps.invoiceNo=:invoiceNo AND ps.invoiceNo NOT IN (SELECT ss.invoiceNo FROM SalesStock ss WHERE ss.status='stored')")
         List<ProductStock> findByCustomerAndInvoiceNo(String customer, String invoiceNo);

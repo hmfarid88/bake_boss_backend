@@ -573,10 +573,14 @@ public List<MaterialsStock> saveMaterials(@RequestBody List<MaterialsStock> allI
     }
 
     @GetMapping("/pendingDetailsStock")
-    public List<FactoryInvoiceDTO> getProductStockByUsernameAndInvoiceNo(@RequestParam String customer,
-            @RequestParam String invoiceNo) {
+    public List<FactoryInvoiceDTO> getProductStockByUsernameAndInvoiceNo(@RequestParam String customer, @RequestParam String invoiceNo) {
         return productStockService.getPendingproductStocks(customer, invoiceNo);
     }
+
+    // @GetMapping("/pendingDetailsStock")
+    // public List<ProductStock> getProductStockByUsernameAndInvoiceNo(@RequestParam String customer, @RequestParam String invoiceNo) {
+    //     return productStockService.getProductStockByUsernameAndInvoiceNo(customer, invoiceNo);
+    // }
 
     @GetMapping("/materials/used-quantity")
     public List<Object[]> getTotalUsedMaterialsQtyForCurrentMonth(String username) {
