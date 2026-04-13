@@ -100,10 +100,10 @@ SELECT new com.example.bake_boss_backend.dto.FactoryInvoiceDTO(
     ps.productQty,
     ps.customer,
     ps.invoiceNo,
-    MAX(pr.saleRate)
+    COALESCE(MAX(pr.saleRate), 0)
 )
 FROM ProductStock ps
-JOIN ProductRate pr ON ps.productName = pr.productName
+LEFT JOIN ProductRate pr ON ps.productName = pr.productName
 WHERE ps.customer = :customer
   AND ps.invoiceNo = :invoiceNo
   AND NOT EXISTS (
@@ -121,7 +121,6 @@ GROUP BY
     ps.invoiceNo
 """)
 List<FactoryInvoiceDTO> findPendingproducts(String customer, String invoiceNo);
-
 //      @Query("""
 // SELECT new com.example.bake_boss_backend.dto.FactoryInvoiceDTO(
 //     ps.date,
