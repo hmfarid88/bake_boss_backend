@@ -13,11 +13,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.bake_boss_backend.dto.FactoryInvoiceDTO;
 import com.example.bake_boss_backend.dto.OutletInvoiceDTO;
 import com.example.bake_boss_backend.entity.CustomerInfo;
+import com.example.bake_boss_backend.entity.MaterialsStock;
+import com.example.bake_boss_backend.entity.RawMaterialStock;
 import com.example.bake_boss_backend.entity.SalesStock;
 import com.example.bake_boss_backend.entity.ShopInfo;
 import com.example.bake_boss_backend.repository.CustomerInfoRepository;
+import com.example.bake_boss_backend.repository.RawMaterialRepository;
+import com.example.bake_boss_backend.repository.ProductStockrepository;
 import com.example.bake_boss_backend.repository.SalesStockRepository;
 import com.example.bake_boss_backend.service.ShopInfoService;
 
@@ -27,14 +32,28 @@ public class InvoiceController {
     private final SalesStockRepository salesStockRepository;
     private final CustomerInfoRepository customerInfoRepository;
     private final ShopInfoService shopInfoService;
+    private final ProductStockrepository productStockrepository;
+    private final RawMaterialRepository rawMaterialsRepository;
     
 
     @Autowired
     public InvoiceController(SalesStockRepository salesStockRepository, CustomerInfoRepository customerInfoRepository,
-            ShopInfoService shopInfoService) {
+           ProductStockrepository productStockrepository, RawMaterialRepository rawMaterialsRepository, ShopInfoService shopInfoService) {
         this.salesStockRepository = salesStockRepository;
         this.customerInfoRepository = customerInfoRepository;
+        this.productStockrepository = productStockrepository;
+        this.rawMaterialsRepository = rawMaterialsRepository;
         this.shopInfoService = shopInfoService;
+    }
+
+   @GetMapping("/getInvoiceData")
+    public List<FactoryInvoiceDTO> getInvoiceData(String username, String invoiceNo) {
+        return productStockrepository.findByUsernameAndInvoiceNo(username, invoiceNo);
+    }
+
+   @GetMapping("/getMaterialsInvoiceData")
+    public List<RawMaterialStock> getMaterialsInvoiceData(String invoiceNo) {
+        return rawMaterialsRepository.findBySupplierInvoice(invoiceNo);
     }
 
     @GetMapping("/outletInvoice")

@@ -17,11 +17,13 @@ import com.example.bake_boss_backend.dto.RequisitionSummaryDTO;
 import com.example.bake_boss_backend.entity.MaterialsStock;
 import com.example.bake_boss_backend.entity.ProductRate;
 import com.example.bake_boss_backend.entity.ProductStock;
+import com.example.bake_boss_backend.entity.RawMaterialStock;
 import com.example.bake_boss_backend.entity.Requisition;
 import com.example.bake_boss_backend.repository.MaterialsNameRepository;
 import com.example.bake_boss_backend.repository.MaterialsRepository;
 import com.example.bake_boss_backend.repository.ProductRateRepository;
 import com.example.bake_boss_backend.repository.ProductStockrepository;
+import com.example.bake_boss_backend.repository.RawMaterialRepository;
 import com.example.bake_boss_backend.repository.RequisitionRepository;
 
 import jakarta.transaction.Transactional;
@@ -42,6 +44,9 @@ public class ProductStockService {
 
     @Autowired
     private MaterialsNameRepository materialsNameRepository;
+
+    @Autowired
+    private RawMaterialRepository rawMaterialsRepository;
 
     public List<PendingStockDto> getProductStockWithInvoiceNotInSalesStock(String customer) {
         return productStockRepository.findProductStockWithInvoiceNotInSalesStock(customer);
@@ -141,20 +146,52 @@ public class ProductStockService {
         return materialsRepository.findMaterialsByUsername(year, month, username);
     }
 
+    public List<RawMaterialStock> getAllRawMaterialsStock(String username) {
+        LocalDate now = LocalDate.now();
+        int year = now.getYear();
+        int month = now.getMonthValue();
+        return rawMaterialsRepository.findMaterialsByUsername(year, month, username);
+    }
+
     public List<MaterialsStock> getAllStoredMaterialsStock(String username) {
         LocalDate now = LocalDate.now();
         int year = now.getYear();
         int month = now.getMonthValue();
         return materialsRepository.findStoredMaterialsByUsername(year, month, username);
     }
+    
+    public List<RawMaterialStock> getAllStoredRawMaterialsStock(String username) {
+        LocalDate now = LocalDate.now();
+        int year = now.getYear();
+        int month = now.getMonthValue();
+        return rawMaterialsRepository.findStoredRawMaterialsByUsername(year, month, username);
+    }
+    
+    public List<RawMaterialStock> getAllSoldRawMaterialsStock(String username) {
+        LocalDate now = LocalDate.now();
+        int year = now.getYear();
+        int month = now.getMonthValue();
+        return rawMaterialsRepository.findSoldRawMaterialsByUsername(year, month, username);
+    }
 
     public List<MaterialsStock> getDatewiseMaterialsStock(String username, LocalDate startDate, LocalDate endDate) {
         return materialsRepository.findDatewiseMaterialsByUsername(username, startDate, endDate);
     }
+    
+    public List<RawMaterialStock> getDatewiseRawMaterialsStock(String username, LocalDate startDate, LocalDate endDate) {
+        return rawMaterialsRepository.findDatewiseRawMaterialsByUsername(username, startDate, endDate); 
+    }
 
-    public List<MaterialsStock> getDatewiseStoredMaterialsStock(String username, LocalDate startDate,
-            LocalDate endDate) {
+    public List<RawMaterialStock> getDatewiseSoldRawMaterials(String username, LocalDate startDate, LocalDate endDate) {
+        return rawMaterialsRepository.findDatewiseSoldRawMaterialsByUsername(username, startDate, endDate); 
+    }
+
+    public List<MaterialsStock> getDatewiseStoredMaterialsStock(String username, LocalDate startDate, LocalDate endDate) {
         return materialsRepository.findDatewiseStoredMaterialsByUsername(username, startDate, endDate);
+    }
+    
+    public List<RawMaterialStock> getDatewiseStoredRawMaterialsStock(String username, LocalDate startDate, LocalDate endDate) {
+        return rawMaterialsRepository.findDatewiseStoredRawMaterialsByUsername(username, startDate, endDate);
     }
 
     public List<Requisition> saveAllRequisitions(List<Requisition> requisitions) {
@@ -234,16 +271,16 @@ public class ProductStockService {
 
     
     public void updateAverageRate(Long materialsId, Double averageRate) {
-        int updated = materialsRepository.updateAverageRateByMaterialsId(materialsId, averageRate);
+        int updated = rawMaterialsRepository.updateAverageRateByMaterialsId(materialsId, averageRate);
         if (updated == 0) {
-            throw new RuntimeException("MaterialsStock not found with ID: " + materialsId);
+            throw new RuntimeException("RawMaterialsStock not found with ID: " + materialsId);
         }
     }
 
     public void updateMaterialsQty(Long materialsId, Double materialsQty) {
-        int updated = materialsRepository.updateMaterialsQtyByMaterialsId(materialsId, materialsQty);
+        int updated = rawMaterialsRepository.updateMaterialsQtyByMaterialsId(materialsId, materialsQty);
         if (updated == 0) {
-            throw new RuntimeException("MaterialsStock not found with ID: " + materialsId);
+            throw new RuntimeException("RawMaterialsStock not found with ID: " + materialsId);
         }
     }
 }

@@ -38,6 +38,7 @@ import com.example.bake_boss_backend.entity.MaterialsStock;
 import com.example.bake_boss_backend.entity.ProductRate;
 import com.example.bake_boss_backend.entity.ProductStock;
 import com.example.bake_boss_backend.entity.ProductionStock;
+import com.example.bake_boss_backend.entity.RawMaterialStock;
 import com.example.bake_boss_backend.entity.Requisition;
 import com.example.bake_boss_backend.entity.SalesStock;
 import com.example.bake_boss_backend.entity.SupplierName;
@@ -49,6 +50,7 @@ import com.example.bake_boss_backend.repository.MaterialsRepository;
 import com.example.bake_boss_backend.repository.ProductRateRepository;
 import com.example.bake_boss_backend.repository.ProductStockrepository;
 import com.example.bake_boss_backend.repository.ProductionStockRepository;
+import com.example.bake_boss_backend.repository.RawMaterialRepository;
 import com.example.bake_boss_backend.repository.RequisitionRepository;
 import com.example.bake_boss_backend.repository.SalesStockRepository;
 import com.example.bake_boss_backend.repository.SupplierNameRepository;
@@ -68,11 +70,12 @@ public class ProductController {
     private final CategoryNameRepository categoryNameRepository;
     private final ProductStockrepository productStockrepository;
     private final SalesStockRepository salesStockRepository;
+    private final RawMaterialRepository rawMaterialRepository;
 
     ProductController(MaterialsNameRepository materialsNameRepository, ItemMakeRepository itemMakeRepository,
             SupplierNameRepository supplierNameRepository, MaterialsRepository materialsRepository,
             CategoryNameRepository categoryNameRepository, ProductStockrepository productStockrepository,
-            SalesStockRepository salesStockRepository) {
+            SalesStockRepository salesStockRepository, RawMaterialRepository rawMaterialRepository) {
         this.materialsNameRepository = materialsNameRepository;
         this.itemMakeRepository = itemMakeRepository;
         this.supplierNameRepository = supplierNameRepository;
@@ -80,6 +83,8 @@ public class ProductController {
         this.categoryNameRepository = categoryNameRepository;
         this.productStockrepository = productStockrepository;
         this.salesStockRepository = salesStockRepository;
+        this.rawMaterialRepository = rawMaterialRepository;
+
     }
 
     @Autowired
@@ -206,60 +211,65 @@ public class ProductController {
         }).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
     }
 
-    // @PostMapping("/addAllMaterials")
-    // public List<MaterialsStock> saveMaterials(@RequestBody List<MaterialsStock> allItems) {
-    //     for (MaterialsStock newItem : allItems) {
-    //         Optional<MaterialsStock> existingMaterialOpt = materialsRepository
-    //                 .findLatestByMaterialsNameAndUsername(newItem.getMaterialsName(), newItem.getUsername());
-    //         if (existingMaterialOpt.isPresent()) {
-    //             MaterialsStock existingMaterial = existingMaterialOpt.get();
-    //             Double newTotalQty = existingMaterial.getRemainingQty() + newItem.getMaterialsQty();
-    //             Double newTotalValue = (existingMaterial.getRemainingQty() * existingMaterial.getAverageRate())
-    //                     + (newItem.getMaterialsQty() * newItem.getMaterialsRate());
-    //             Double newAverageRate = newTotalValue / newTotalQty;
+    @PostMapping("/addAllMaterials")
+    @Transactional
+    public List<MaterialsStock> saveMaterials(@RequestBody List<MaterialsStock> allItems) {
+        List<MaterialsStock> toSave = new ArrayList<>();
 
-    //             newItem.setAverageRate(newAverageRate);
-    //             newItem.setRemainingQty(existingMaterial.getRemainingQty() + newItem.getMaterialsQty());
-    //             materialsRepository.save(newItem);
-    //         } else {
-    //             newItem.setAverageRate(newItem.getMaterialsRate());
-    //             newItem.setRemainingQty(newItem.getMaterialsQty());
-    //             materialsRepository.save(newItem);
-    //         }
-    //     }
+        for (MaterialsStock newItem : allItems) {
+            Optional<MaterialsStock> existingMaterialOpt = materialsRepository
+                    .findLatestByMaterialsNameAndUsername(newItem.getMaterialsName(), newItem.getUsername());
 
-    //     return materialsRepository.findAll();
-    // }
+            if (existingMaterialOpt.isPresent()) {
+                MaterialsStock existingMaterial = existingMaterialOpt.get();
 
-@PostMapping("/addAllMaterials")
-@Transactional
-public List<MaterialsStock> saveMaterials(@RequestBody List<MaterialsStock> allItems) {
-    List<MaterialsStock> toSave = new ArrayList<>();
+                double newTotalQty = existingMaterial.getRemainingQty() + newItem.getMaterialsQty();
+                double newTotalValue = (existingMaterial.getRemainingQty() * existingMaterial.getAverageRate())
+                        + (newItem.getMaterialsQty() * newItem.getMaterialsRate());
+                double newAverageRate = newTotalValue / newTotalQty;
 
-    for (MaterialsStock newItem : allItems) {
-        Optional<MaterialsStock> existingMaterialOpt =materialsRepository.findLatestByMaterialsNameAndUsername(newItem.getMaterialsName(), newItem.getUsername());
+                newItem.setAverageRate(newAverageRate);
+                newItem.setRemainingQty(newTotalQty);
+            } else {
+                newItem.setAverageRate(newItem.getMaterialsRate());
+                newItem.setRemainingQty(newItem.getMaterialsQty());
+            }
 
-        if (existingMaterialOpt.isPresent()) {
-            MaterialsStock existingMaterial = existingMaterialOpt.get();
-
-            double newTotalQty = existingMaterial.getRemainingQty() + newItem.getMaterialsQty();
-            double newTotalValue = (existingMaterial.getRemainingQty() * existingMaterial.getAverageRate())
-                                 + (newItem.getMaterialsQty() * newItem.getMaterialsRate());
-            double newAverageRate = newTotalValue / newTotalQty;
-
-            newItem.setAverageRate(newAverageRate);
-            newItem.setRemainingQty(newTotalQty);
-        } else {
-            newItem.setAverageRate(newItem.getMaterialsRate());
-            newItem.setRemainingQty(newItem.getMaterialsQty());
+            toSave.add(newItem);
         }
 
-        toSave.add(newItem);
+        return materialsRepository.saveAll(toSave); // Save in batch
     }
 
-    return materialsRepository.saveAll(toSave); // Save in batch
-}
+    @PostMapping("/addRawMaterials")
+    @Transactional
+    public List<RawMaterialStock> saveRawMaterials(@RequestBody List<RawMaterialStock> allItems) {
+        List<RawMaterialStock> toSave = new ArrayList<>();
 
+        for (RawMaterialStock newItem : allItems) {
+            Optional<RawMaterialStock> existingMaterialOpt = rawMaterialRepository
+                    .findLatestByRawMaterialsNameAndUsername(newItem.getMaterialsName(), newItem.getUsername());
+
+            if (existingMaterialOpt.isPresent()) {
+                RawMaterialStock existingMaterial = existingMaterialOpt.get();
+
+                double newTotalQty = existingMaterial.getRemainingQty() + newItem.getMaterialsQty();
+                double newTotalValue = (existingMaterial.getRemainingQty() * existingMaterial.getAverageRate())
+                        + (newItem.getMaterialsQty() * newItem.getMaterialsRate());
+                double newAverageRate = newTotalValue / newTotalQty;
+
+                newItem.setAverageRate(newAverageRate);
+                newItem.setRemainingQty(newTotalQty);
+            } else {
+                newItem.setAverageRate(newItem.getMaterialsRate());
+                newItem.setRemainingQty(newItem.getMaterialsQty());
+            }
+
+            toSave.add(newItem);
+        }
+
+        return rawMaterialRepository.saveAll(toSave);
+    }
 
     @PostMapping("/addAllProducts")
     public List<ProductStock> saveProducts(@RequestBody List<ProductStock> allItems) {
@@ -373,6 +383,49 @@ public List<MaterialsStock> saveMaterials(@RequestBody List<MaterialsStock> allI
         return savedMaterialsStock;
     }
 
+       
+    @PostMapping("/rawMaterialSale")
+    @Transactional
+    public List<RawMaterialStock> updateRawMaterials(@RequestBody List<RawMaterialStock> allItems) {
+
+        List<RawMaterialStock> result = new ArrayList<>();
+
+        for (RawMaterialStock newItem : allItems) {
+
+            Optional<RawMaterialStock> latestStockOpt = rawMaterialRepository.findLatestByMaterialsNameAndUsername(
+                    newItem.getMaterialsName(),
+                    newItem.getUsername());
+
+            double previousRemaining = latestStockOpt
+                    .map(RawMaterialStock::getRemainingQty)
+                    .orElse(0.0);
+
+            double newRemaining = previousRemaining - newItem.getMaterialsQty();
+
+            // ⚠️ Optional safety check
+            if (newRemaining < 0) {
+                throw new RuntimeException("Stock cannot be negative for: " + newItem.getMaterialsName());
+            }
+
+            RawMaterialStock stock = new RawMaterialStock();
+            stock.setDate(newItem.getDate());
+            stock.setMaterialsName(newItem.getMaterialsName());
+            stock.setUsername(newItem.getUsername());
+            stock.setStatus(newItem.getStatus());
+            stock.setMadeItem(newItem.getMadeItem());
+            stock.setMaterialsQty(newItem.getMaterialsQty());
+            stock.setAverageRate(newItem.getAverageRate());
+            stock.setMaterialsRate(newItem.getMaterialsRate());
+            stock.setRemainingQty(newRemaining);
+            stock.setSupplierInvoice(newItem.getSupplierInvoice());
+
+            result.add(rawMaterialRepository.save(stock));
+        }
+
+        return result;
+    }
+
+    
     @GetMapping("/getCategoryName")
     public List<CategoryName> getCategoryNameByUsername(@RequestParam String username) {
         return categoryNameRepository.getCategoryNameByUsername(username);
@@ -422,7 +475,12 @@ public List<MaterialsStock> saveMaterials(@RequestBody List<MaterialsStock> allI
     public List<MaterialsStock> getMaterialsStock(String username) {
         return materialsRepository.findLatestMaterialsStockByUsername(username);
     }
-    
+
+    @GetMapping("/getRawMaterialsStock")
+    public List<RawMaterialStock> getRawMaterialsStock() {
+        return rawMaterialRepository.findLatestRawMaterialsStock();
+    }
+
     @GetMapping("/getSoldProduct")
     public List<DistProductDto> getSoldProduct(String username, int percent) {
         return productStockService.getProductDistForCurrentMonth(username, percent);
@@ -453,9 +511,24 @@ public List<MaterialsStock> saveMaterials(@RequestBody List<MaterialsStock> allI
         return productStockService.getAllMaterialsStock(username);
     }
 
+    @GetMapping("/getAllRawMaterials")
+    public List<RawMaterialStock> getAllRawMaterials(String username) {
+        return productStockService.getAllRawMaterialsStock(username);
+    }
+
     @GetMapping("/getAllStoredMaterials")
     public List<MaterialsStock> getAllStoredMaterials(String username) {
         return productStockService.getAllStoredMaterialsStock(username);
+    }
+
+    @GetMapping("/getAllStoredRawMaterials")
+    public List<RawMaterialStock> getAllStoredRawMaterials(String username) {
+        return productStockService.getAllStoredRawMaterialsStock(username);
+    }
+
+    @GetMapping("/getAllSoldRawMaterials")
+    public List<RawMaterialStock> getAllSoldRawMaterials(String username) {
+        return productStockService.getAllSoldRawMaterialsStock(username);
     }
 
     @GetMapping("/datewiseMaterialsLedger")
@@ -463,14 +536,24 @@ public List<MaterialsStock> saveMaterials(@RequestBody List<MaterialsStock> allI
         return productStockService.getDatewiseMaterialsStock(username, startDate, endDate);
     }
 
+    @GetMapping("/datewiseRawMaterialsLedger")
+    public List<RawMaterialStock> getDatewiseRawMaterials(String username, LocalDate startDate, LocalDate endDate) {
+        return productStockService.getDatewiseRawMaterialsStock(username, startDate, endDate);
+    }
+
     @GetMapping("/datewiseStoredMaterialsLedger")
     public List<MaterialsStock> getDatewiseStoredMaterials(String username, LocalDate startDate, LocalDate endDate) {
         return productStockService.getDatewiseStoredMaterialsStock(username, startDate, endDate);
     }
 
-    @GetMapping("/getInvoiceData")
-    public List<FactoryInvoiceDTO> getInvoiceData(String username, String invoiceNo) {
-        return productStockrepository.findByUsernameAndInvoiceNo(username, invoiceNo);
+    @GetMapping("/datewiseStoredRawMaterialsLedger")
+    public List<RawMaterialStock> getDatewiseStoredRawMaterials(String username, LocalDate startDate, LocalDate endDate) {
+        return productStockService.getDatewiseStoredRawMaterialsStock(username, startDate, endDate);
+    }
+
+    @GetMapping("/datewiseSoldRawMaterialsLedger")
+    public List<RawMaterialStock> getDatewiseSoldRawMaterials(String username, LocalDate startDate, LocalDate endDate) {
+        return productStockService.getDatewiseSoldRawMaterials(username, startDate, endDate);
     }
 
     @GetMapping("/getSingleProduct")
@@ -486,6 +569,11 @@ public List<MaterialsStock> saveMaterials(@RequestBody List<MaterialsStock> allI
     @GetMapping("/getSingleMaterial")
     public Optional<MaterialsStock> getSingleMaterial(@RequestParam Long materialsId) {
         return materialsRepository.findByMaterialsId(materialsId);
+    }
+
+    @GetMapping("/getRawSingleMaterial")
+    public Optional<RawMaterialStock> getRawSingleMaterial(@RequestParam Long materialsId) {
+        return rawMaterialRepository.findByMaterialsId(materialsId);
     }
 
     @GetMapping("/pendingSalesStock")
@@ -573,13 +661,16 @@ public List<MaterialsStock> saveMaterials(@RequestBody List<MaterialsStock> allI
     }
 
     @GetMapping("/pendingDetailsStock")
-    public List<FactoryInvoiceDTO> getProductStockByUsernameAndInvoiceNo(@RequestParam String customer, @RequestParam String invoiceNo) {
+    public List<FactoryInvoiceDTO> getProductStockByUsernameAndInvoiceNo(@RequestParam String customer,
+            @RequestParam String invoiceNo) {
         return productStockService.getPendingproductStocks(customer, invoiceNo);
     }
 
     // @GetMapping("/pendingDetailsStock")
-    // public List<ProductStock> getProductStockByUsernameAndInvoiceNo(@RequestParam String customer, @RequestParam String invoiceNo) {
-    //     return productStockService.getProductStockByUsernameAndInvoiceNo(customer, invoiceNo);
+    // public List<ProductStock> getProductStockByUsernameAndInvoiceNo(@RequestParam
+    // String customer, @RequestParam String invoiceNo) {
+    // return productStockService.getProductStockByUsernameAndInvoiceNo(customer,
+    // invoiceNo);
     // }
 
     @GetMapping("/materials/used-quantity")
@@ -588,8 +679,7 @@ public List<MaterialsStock> saveMaterials(@RequestBody List<MaterialsStock> allI
     }
 
     @GetMapping("/materials/datewise-used-quantity")
-    public List<Object[]> getDatewiseUsed(@RequestParam String username, @RequestParam LocalDate startDate,
-            @RequestParam LocalDate endDate) {
+    public List<Object[]> getDatewiseUsed(@RequestParam String username, @RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {
         return productStockService.getDatewiseUsedMaterials(username, startDate, endDate);
     }
 
@@ -621,7 +711,8 @@ public List<MaterialsStock> saveMaterials(@RequestBody List<MaterialsStock> allI
     }
 
     @PutMapping("updateInvoiceProductName/{productId}")
-    public String updateProductStock(@PathVariable Long productId, @RequestParam String productName, @RequestParam String username) {
+    public String updateProductStock(@PathVariable Long productId, @RequestParam String productName,
+            @RequestParam String username) {
         try {
             productStockService.updateProductStockByProductId(productId, productName, username);
             return "ProductStock updated successfully.";
@@ -630,23 +721,22 @@ public List<MaterialsStock> saveMaterials(@RequestBody List<MaterialsStock> allI
         }
     }
 
-@PutMapping("/materials/average-rate/{materialsId}")
-public ResponseEntity<String> updateAverageRate(
-        @PathVariable Long materialsId,
-        @RequestBody Map<String, Double> body) {
-    Double averageRate = body.get("averageRate");
-    productStockService.updateAverageRate(materialsId, averageRate);
-    return ResponseEntity.ok("Average rate updated successfully");
-}
+    @PutMapping("/materials/average-rate/{materialsId}")
+    public ResponseEntity<String> updateAverageRate(
+            @PathVariable Long materialsId,
+            @RequestBody Map<String, Double> body) {
+        Double averageRate = body.get("averageRate");
+        productStockService.updateAverageRate(materialsId, averageRate);
+        return ResponseEntity.ok("Average rate updated successfully");
+    }
 
-@PutMapping("/materials/materialsQty/{materialsId}")
-public ResponseEntity<String> updateMaterialsQty(
-        @PathVariable Long materialsId,
-        @RequestBody Map<String, Double> body) {
-    Double materialsQty = body.get("materialsQty");
-    productStockService.updateMaterialsQty(materialsId, materialsQty);
-    return ResponseEntity.ok("Materials Qty updated successfully");
-}
-
+    @PutMapping("/materials/materialsQty/{materialsId}")
+    public ResponseEntity<String> updateMaterialsQty(
+            @PathVariable Long materialsId,
+            @RequestBody Map<String, Double> body) {
+        Double materialsQty = body.get("materialsQty");
+        productStockService.updateMaterialsQty(materialsId, materialsQty);
+        return ResponseEntity.ok("Materials Qty updated successfully");
+    }
 
 }
