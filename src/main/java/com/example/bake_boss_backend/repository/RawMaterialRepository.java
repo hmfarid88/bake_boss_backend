@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.example.bake_boss_backend.dto.PendingStockDto;
 import com.example.bake_boss_backend.entity.RawMaterialStock;
 
 import jakarta.transaction.Transactional;
@@ -63,7 +64,7 @@ public interface RawMaterialRepository extends JpaRepository<RawMaterialStock, L
      List<RawMaterialStock> findStoredRawMaterialsByUsername(@Param("year") int year, @Param("month") int month, @Param("username") String username);
         
      @Query("SELECT ms FROM RawMaterialStock ms WHERE status='sold' AND YEAR(ms.date) = :year AND MONTH(ms.date) = :month AND ms.username=:username")
-        List<RawMaterialStock> findSoldRawMaterialsByUsername(@Param("year") int year, @Param("month") int month, @Param("username") String username);
+     List<RawMaterialStock> findSoldRawMaterialsByUsername(@Param("year") int year, @Param("month") int month, @Param("username") String username);
 
      @Query("SELECT ms FROM RawMaterialStock ms WHERE status='stored' AND ms.username=:username AND ms.date BETWEEN :startDate AND :endDate")
     List<RawMaterialStock> findDatewiseStoredRawMaterialsByUsername(String username, LocalDate startDate, LocalDate endDate);
@@ -71,4 +72,23 @@ public interface RawMaterialRepository extends JpaRepository<RawMaterialStock, L
     @Query("SELECT ms FROM RawMaterialStock ms WHERE status='sold' AND ms.username=:username AND ms.date BETWEEN :startDate AND :endDate")
     List<RawMaterialStock> findDatewiseSoldRawMaterialsByUsername(String username, LocalDate startDate, LocalDate endDate);
 
+    @Query("""
+    SELECT new com.example.bake_boss_backend.dto.PendingStockDto(
+        ps.supplierInvoice,
+        SUM(ps.materialsQty)
+    )
+    FROM RawMaterialStock ps
+    WHERE ps.madeItem = :customer
+      AND ps.status = 'sold'
+      AND NOT EXISTS (
+          SELECT 1
+          FROM MaterialsStock ss
+          WHERE ss.supplierInvoice = ps.supplierInvoice
+            AND ss.status = 'stored'
+      )
+    GROUP BY ps.supplierInvoice
+""")
+List<PendingStockDto> findPendingMaterials(String customer);
+
+List<RawMaterialStock> findByMadeItemAndSupplierInvoice(String madeItem, String supplierInvoice);
 }

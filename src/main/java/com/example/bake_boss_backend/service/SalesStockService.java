@@ -50,7 +50,7 @@ public class SalesStockService {
         List<SalesStock> salesStocks = salesStockRepository.findLastByProductNameAndUsername(username);
         return salesStocks.stream().map(salesStock -> {
             Optional<ProductRate> productRateOpt = productRateRepository
-                    .findByProductNameAndUsername(salesStock.getProductName(), salesStock.getUsername());
+                    .findByProductName(salesStock.getProductName());
             Double saleRate = productRateOpt.map(ProductRate::getSaleRate).orElse((double) 0);
             Double unitRate = productRateOpt.map(ProductRate::getUnitRate).orElse((double) 0);
             Double qty = productRateOpt.map(ProductRate::getQty).orElse((double) 0);
@@ -72,7 +72,7 @@ public class SalesStockService {
         List<SalesStock> salesStocks = salesStockRepository.findByProductIdAndUsername(productId, username);
         return salesStocks.stream().map(salesStock -> {
             Optional<ProductRate> productRateOpt = productRateRepository
-                    .findByProductNameAndUsername(salesStock.getProductName(), salesStock.getUsername());
+                    .findByProductName(salesStock.getProductName());
             Double saleRate = productRateOpt.map(ProductRate::getSaleRate).orElse((double) 0);
             Double unitRate = productRateOpt.map(ProductRate::getUnitRate).orElse((double) 0);
             Double qty = productRateOpt.map(ProductRate::getQty).orElse((double) 0);
@@ -93,9 +93,7 @@ public class SalesStockService {
     @Transactional
     public void insertOrUpdateProductStockInSalesStock(String customer, String invoiceNo) {
         // Fetch ProductStock entries for the specific customer and invoice number
-        List<ProductStock> productStocks = productStockService.getProductStockByUsernameAndInvoiceNo(customer,
-                invoiceNo);
-
+        List<ProductStock> productStocks = productStockService.getProductStockByUsernameAndInvoiceNo(customer, invoiceNo);
         for (ProductStock productStock : productStocks) {
             Optional<SalesStock> existingSalesStock = salesStockRepository
                     .findLatestSalesStockByProductNameAndUsername(productStock.getProductName(), customer);

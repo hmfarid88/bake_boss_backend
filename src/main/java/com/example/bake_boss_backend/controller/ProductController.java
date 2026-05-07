@@ -241,6 +241,58 @@ public class ProductController {
         return materialsRepository.saveAll(toSave); // Save in batch
     }
 
+    @PostMapping("/transferToMaterials")
+    @Transactional
+    public List<MaterialsStock> transferToMaterials(
+            @RequestParam String madeItem,
+            @RequestParam String supplierInvoice) {
+
+        List<RawMaterialStock> rawMaterials = rawMaterialRepository
+                .findByMadeItemAndSupplierInvoice(madeItem, supplierInvoice);
+
+        List<MaterialsStock> toSave = new ArrayList<>();
+
+        for (RawMaterialStock raw : rawMaterials) {
+
+            MaterialsStock newItem = new MaterialsStock();
+
+            // 🔁 Mapping fields
+            newItem.setDate(LocalDate.now());
+            newItem.setMaterialsName(raw.getMaterialsName());
+            newItem.setUsername(raw.getMadeItem());
+            newItem.setMaterialsQty(raw.getMaterialsQty());
+            newItem.setMaterialsRate(raw.getMaterialsRate());
+            newItem.setSupplierName(raw.getUsername());
+            newItem.setSupplierInvoice(raw.getSupplierInvoice());
+            newItem.setStatus("stored");
+
+            // 🔥 Your existing average logic
+            Optional<MaterialsStock> existingMaterialOpt = materialsRepository
+                    .findLatestByMaterialsNameAndUsername(raw.getMaterialsName(), raw.getUsername());
+
+            if (existingMaterialOpt.isPresent()) {
+                MaterialsStock existing = existingMaterialOpt.get();
+
+                double newTotalQty = existing.getRemainingQty() + raw.getMaterialsQty();
+                double newTotalValue = (existing.getRemainingQty() * existing.getAverageRate()) +
+                        (raw.getMaterialsQty() * raw.getMaterialsRate());
+
+                double newAvgRate = newTotalValue / newTotalQty;
+
+                newItem.setAverageRate(newAvgRate);
+                newItem.setRemainingQty(newTotalQty);
+
+            } else {
+                newItem.setAverageRate(raw.getMaterialsRate());
+                newItem.setRemainingQty(raw.getMaterialsQty());
+            }
+
+            toSave.add(newItem);
+        }
+
+        return materialsRepository.saveAll(toSave);
+    }
+
     @PostMapping("/addRawMaterials")
     @Transactional
     public List<RawMaterialStock> saveRawMaterials(@RequestBody List<RawMaterialStock> allItems) {
@@ -383,7 +435,6 @@ public class ProductController {
         return savedMaterialsStock;
     }
 
-       
     @PostMapping("/rawMaterialSale")
     @Transactional
     public List<RawMaterialStock> updateRawMaterials(@RequestBody List<RawMaterialStock> allItems) {
@@ -408,14 +459,14 @@ public class ProductController {
             }
 
             RawMaterialStock stock = new RawMaterialStock();
-            stock.setDate(newItem.getDate());
+            stock.setDate(LocalDate.now());
             stock.setMaterialsName(newItem.getMaterialsName());
             stock.setUsername(newItem.getUsername());
             stock.setStatus(newItem.getStatus());
             stock.setMadeItem(newItem.getMadeItem());
             stock.setMaterialsQty(newItem.getMaterialsQty());
             stock.setAverageRate(newItem.getAverageRate());
-            stock.setMaterialsRate(newItem.getMaterialsRate());
+            stock.setMaterialsRate(newItem.getAverageRate());
             stock.setRemainingQty(newRemaining);
             stock.setSupplierInvoice(newItem.getSupplierInvoice());
 
@@ -425,7 +476,6 @@ public class ProductController {
         return result;
     }
 
-    
     @GetMapping("/getCategoryName")
     public List<CategoryName> getCategoryNameByUsername(@RequestParam String username) {
         return categoryNameRepository.getCategoryNameByUsername(username);
@@ -547,7 +597,8 @@ public class ProductController {
     }
 
     @GetMapping("/datewiseStoredRawMaterialsLedger")
-    public List<RawMaterialStock> getDatewiseStoredRawMaterials(String username, LocalDate startDate, LocalDate endDate) {
+    public List<RawMaterialStock> getDatewiseStoredRawMaterials(String username, LocalDate startDate,
+            LocalDate endDate) {
         return productStockService.getDatewiseStoredRawMaterialsStock(username, startDate, endDate);
     }
 
@@ -579,6 +630,11 @@ public class ProductController {
     @GetMapping("/pendingSalesStock")
     public List<PendingStockDto> getProductStockWithInvoiceNotInSalesStock(String customer) {
         return productStockService.getProductStockWithInvoiceNotInSalesStock(customer);
+    }
+
+    @GetMapping("/pendingMaterialsStock")
+    public List<PendingStockDto> getPendingMaterialsStock(String customer) {
+        return productStockService.getPendingMaterialsStock(customer);
     }
 
     @PostMapping("/addSalesStock")
@@ -679,7 +735,8 @@ public class ProductController {
     }
 
     @GetMapping("/materials/datewise-used-quantity")
-    public List<Object[]> getDatewiseUsed(@RequestParam String username, @RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {
+    public List<Object[]> getDatewiseUsed(@RequestParam String username, @RequestParam LocalDate startDate,
+            @RequestParam LocalDate endDate) {
         return productStockService.getDatewiseUsedMaterials(username, startDate, endDate);
     }
 

@@ -80,6 +80,7 @@ public interface ProductStockrepository extends JpaRepository<ProductStock, Long
                         "GROUP BY ps.invoiceNo")
         List<PendingStockDto> findProductStockWithInvoiceNotInSalesStock(String customer);
 
+        
         @Query("SELECT ps FROM ProductStock ps WHERE ps.username=:username AND ps.status='damaged'")
         List<ProductStock> findDamagedProductByStatus(String username);
 

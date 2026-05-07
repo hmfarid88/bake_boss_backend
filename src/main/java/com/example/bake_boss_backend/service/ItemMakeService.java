@@ -101,13 +101,13 @@ public class ItemMakeService {
             }
         }
 
-        List<ProductRate> productRates = productRateRepository.findByProductName(oldItemName);
-        if (productRates != null) {
-            for (ProductRate productRate : productRates) {
-                productRate.setProductName(newItemName);
-                productRateRepository.save(productRate);
-            }
-        }
+        // List<ProductRate> productRates = productRateRepository.findByProductName(oldItemName);
+        // if (productRates != null) {
+        //     for (ProductRate productRate : productRates) {
+        //         productRate.setProductName(newItemName);
+        //         productRateRepository.save(productRate);
+        //     }
+        // }
 
     }
     public List<ItemDetailsDTO> findCategoryAndMaterialsByProductName(String productName) {

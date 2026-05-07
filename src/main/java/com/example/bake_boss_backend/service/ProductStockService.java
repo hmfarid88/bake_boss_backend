@@ -52,10 +52,14 @@ public class ProductStockService {
         return productStockRepository.findProductStockWithInvoiceNotInSalesStock(customer);
     }
 
+    public List<PendingStockDto> getPendingMaterialsStock(String customer) {
+        return rawMaterialsRepository.findPendingMaterials(customer);
+    }
+
     @Transactional
     public ProductRate upsertProductRate(String username, String productName, Double saleRate, Double unitRate,
             Double qty) {
-        Optional<ProductRate> existingSetup = productRateRepository.findByProductNameAndUsername(productName, username);
+        Optional<ProductRate> existingSetup = productRateRepository.findByProductName(productName);
         if (existingSetup.isPresent()) {
             ProductRate productRate = existingSetup.get();
             productRate.setSaleRate(saleRate);
