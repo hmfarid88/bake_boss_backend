@@ -90,5 +90,23 @@ public interface RawMaterialRepository extends JpaRepository<RawMaterialStock, L
 """)
 List<PendingStockDto> findPendingMaterials(String customer);
 
+    @Query("""
+    SELECT new com.example.bake_boss_backend.dto.PendingStockDto(
+        ps.supplierInvoice,
+        SUM(ps.materialsQty)
+    )
+    FROM RawMaterialStock ps
+    WHERE ps.madeItem = :customer
+      AND ps.status = 'sold'
+      AND NOT EXISTS (
+          SELECT 1
+          FROM SalesStock ss
+          WHERE ss.invoiceNo = ps.supplierInvoice
+            AND ss.status = 'stored'
+      )
+    GROUP BY ps.supplierInvoice
+""")
+List<PendingStockDto> findPendingSalesStock(String customer);
+
 List<RawMaterialStock> findByMadeItemAndSupplierInvoice(String madeItem, String supplierInvoice);
 }

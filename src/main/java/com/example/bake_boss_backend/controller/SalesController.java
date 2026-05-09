@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.bake_boss_backend.dto.TopSalesDTO;
 import com.example.bake_boss_backend.dto.VendorSaleReportDTO;
 import com.example.bake_boss_backend.dto.LossProfitAnalysis;
+import com.example.bake_boss_backend.dto.PendingStockDto;
 import com.example.bake_boss_backend.dto.PendingVendorDto;
 import com.example.bake_boss_backend.dto.SaleReportDTO;
 import com.example.bake_boss_backend.dto.SalesProfitDto;
@@ -249,6 +250,11 @@ public class SalesController {
     @GetMapping("/pendingVendorStock")
     public List<PendingVendorDto> getProductStockByUsernameAndInvoiceNo(@RequestParam String username) {
         return salesStockService.getVendorStockByUsernameAndInvoiceNo(username);
+    }
+
+    @GetMapping("/pendingAdditionalStock")
+    public List<PendingStockDto> getAdditionalStockByUsernameAndInvoiceNo(@RequestParam String username) {
+        return salesStockService.getAdditionalStockByUsernameAndInvoiceNo(username);
     }
 
     @GetMapping("/pendingDetailsVendor")

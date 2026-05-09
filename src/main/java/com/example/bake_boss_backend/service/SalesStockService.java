@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.example.bake_boss_backend.dto.LossProfitAnalysis;
+import com.example.bake_boss_backend.dto.PendingStockDto;
 import com.example.bake_boss_backend.dto.PendingVendorDto;
 import com.example.bake_boss_backend.dto.SaleReportDTO;
 import com.example.bake_boss_backend.dto.SalesProfitDto;
@@ -31,6 +32,7 @@ import com.example.bake_boss_backend.entity.ProductRate;
 import com.example.bake_boss_backend.entity.ProductStock;
 import com.example.bake_boss_backend.entity.SalesStock;
 import com.example.bake_boss_backend.repository.ProductRateRepository;
+import com.example.bake_boss_backend.repository.RawMaterialRepository;
 import com.example.bake_boss_backend.repository.SalesStockRepository;
 
 import jakarta.transaction.Transactional;
@@ -45,6 +47,9 @@ public class SalesStockService {
 
     @Autowired
     private ProductRateRepository productRateRepository;
+
+    @Autowired
+    private RawMaterialRepository rawMaterialsRepository;
 
     public List<SalesStockDTO> getAllSalesStockWithRate(String username) {
         List<SalesStock> salesStocks = salesStockRepository.findLastByProductNameAndUsername(username);
@@ -404,6 +409,10 @@ public class SalesStockService {
 
     public List<PendingVendorDto> getVendorStockByUsernameAndInvoiceNo(String username) {
         return salesStockRepository.findPendingVendorData(username);
+    }
+    
+    public List<PendingStockDto> getAdditionalStockByUsernameAndInvoiceNo(String username) {
+        return rawMaterialsRepository.findPendingSalesStock(username);
     }
 
     public List<SalesStock> getDetailsvendorSalesStock(String soldInvoice) {
