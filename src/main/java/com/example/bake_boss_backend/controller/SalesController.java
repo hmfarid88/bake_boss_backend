@@ -113,26 +113,19 @@ public class SalesController {
         }
     }
 
-    @PostMapping("/outletStockReturn")
-    public ResponseEntity<List<SalesStock>> addMultipleSalesStock(@RequestBody List<SalesStock> salesStockList) {
+    @PostMapping("/outlet-return-pending")
+    public ResponseEntity<List<SalesStock>> addReturnPending(@RequestBody List<SalesStock> salesStockList) {
         List<SalesStock> savedSalesStockList = new ArrayList<>();
 
         for (SalesStock salesItem : salesStockList) {
             Optional<SalesStock> lastSalesStock = salesStockRepository
                     .findLatestSalesStockByProductNameAndUsername(salesItem.getProductName(), salesItem.getUsername());
-
             if (lastSalesStock.isPresent()) {
                 SalesStock lastStock = lastSalesStock.get();
-                double updatedRemainingQty = lastStock.getRemainingQty() - salesItem.getProductQty();
 
-                if (updatedRemainingQty < 0) {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body(Collections.emptyList());
-                }
-
-                salesItem.setRemainingQty(updatedRemainingQty);
+                salesItem.setRemainingQty(lastStock.getRemainingQty());
             } else {
-                salesItem.setRemainingQty(salesItem.getProductQty());
+                salesItem.setRemainingQty(0.00);
             }
 
             ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
@@ -144,14 +137,117 @@ public class SalesController {
         return ResponseEntity.ok(savedSalesStockList);
     }
 
+    @GetMapping("/outlet-return-pending/{productId}")
+    public ResponseEntity<SalesStock> getPendingReturnByProductId(
+            @PathVariable Long productId) {
+
+        Optional<SalesStock> salesStock = salesStockRepository.findById(productId);
+
+        if (salesStock.isPresent()) {
+            return ResponseEntity.ok(salesStock.get());
+        }
+
+        return ResponseEntity.notFound().build();
+    }
+
+    // @PostMapping("/outletStockReturn")
+    // public ResponseEntity<List<SalesStock>> addMultipleSalesStock(@RequestBody
+    // List<SalesStock> salesStockList) {
+    // List<SalesStock> savedSalesStockList = new ArrayList<>();
+
+    // for (SalesStock salesItem : salesStockList) {
+    // Optional<SalesStock> lastSalesStock = salesStockRepository
+    // .findLatestSalesStockByProductNameAndUsername(salesItem.getProductName(),
+    // salesItem.getUsername());
+
+    // if (lastSalesStock.isPresent()) {
+    // SalesStock lastStock = lastSalesStock.get();
+    // double updatedRemainingQty = lastStock.getRemainingQty() -
+    // salesItem.getProductQty();
+
+    // if (updatedRemainingQty < 0) {
+    // return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+    // .body(Collections.emptyList());
+    // }
+    // salesItem.setStatus("Returned");
+    // salesItem.setRemainingQty(updatedRemainingQty);
+    // } else {
+    // salesItem.setRemainingQty(salesItem.getProductQty());
+    // }
+
+    // ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+    // salesItem.setTime(dhakaTime.toLocalTime());
+
+    // savedSalesStockList.add(salesStockRepository.save(salesItem));
+    // }
+
+    // return ResponseEntity.ok(savedSalesStockList);
+    // }
+
+    @PostMapping("/outletStockReturn")
+    public ResponseEntity<List<SalesStock>> addMultipleSalesStock(
+            @RequestBody List<SalesStock> salesStockList) {
+
+        List<SalesStock> savedSalesStockList = new ArrayList<>();
+
+        for (SalesStock salesItem : salesStockList) {
+
+            Long pendingId = salesItem.getProductId(); // keep pending row id
+
+            Optional<SalesStock> lastSalesStock = salesStockRepository
+                    .findLatestSalesStockByProductNameAndUsername(
+                            salesItem.getProductName(),
+                            salesItem.getUsername());
+
+            if (lastSalesStock.isPresent()) {
+                SalesStock lastStock = lastSalesStock.get();
+
+                double updatedRemainingQty = lastStock.getRemainingQty() - salesItem.getProductQty();
+
+                if (updatedRemainingQty < 0) {
+                    return ResponseEntity.badRequest()
+                            .body(Collections.emptyList());
+                }
+
+                salesItem.setStatus("Returned");
+                salesItem.setRemainingQty(updatedRemainingQty);
+            }
+
+            ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+            salesItem.setTime(dhakaTime.toLocalTime());
+
+            // Force INSERT
+            salesItem.setProductId(null);
+
+            SalesStock saved = salesStockRepository.save(salesItem);
+            savedSalesStockList.add(saved);
+
+            // Delete pending row
+            salesStockRepository.deleteById(pendingId);
+        }
+
+        return ResponseEntity.ok(savedSalesStockList);
+    }
+
     @GetMapping("/getOutletSale")
     public List<SaleReportDTO> getCurrentMonthSoldStocks(@RequestParam String username, @RequestParam int percent) {
         return salesStockService.getCurrentMonthSoldStocks(username, percent);
     }
 
     @GetMapping("/getVendorSale")
-    public List<VendorSaleReportDTO> getCurrentMonthVendorSale(@RequestParam String username, @RequestParam int percent) {
+    public List<VendorSaleReportDTO> getCurrentMonthVendorSale(@RequestParam String username,
+            @RequestParam int percent) {
         return salesStockService.getCurrentMonthVendorsale(username, percent);
+    }
+
+    @GetMapping("/getpendingreturned")
+    public List<SalesStock> getPendingReturned(@RequestParam String username) {
+        return salesStockService.getPendingStockReturned(username);
+    }
+
+    @GetMapping("/getAllpendingreturned")
+    public List<SalesStock> getAllPendingReturned() {
+        return salesStockService.getAllPendingStockReturned();
     }
 
     @GetMapping("/getOutletReturned")
@@ -192,7 +288,8 @@ public class SalesController {
     }
 
     @GetMapping("/getDatewiseOutletSale")
-    public List<SaleReportDTO> getDatewiseSale(@RequestParam String username, @RequestParam LocalDate startDate, @RequestParam LocalDate endDate, @RequestParam int percent) {
+    public List<SaleReportDTO> getDatewiseSale(@RequestParam String username, @RequestParam LocalDate startDate,
+            @RequestParam LocalDate endDate, @RequestParam int percent) {
         return salesStockService.getDatewiseSoldStocks(username, startDate, endDate, percent);
     }
 
@@ -208,7 +305,8 @@ public class SalesController {
             @RequestParam String date,
             @RequestParam String status, @RequestParam int percent) {
         LocalDate localDate = LocalDate.parse(date);
-        List<Object[]> salesStocks = salesStockService.findByUsernameAndDateAndStatus(username, localDate, status, percent);
+        List<Object[]> salesStocks = salesStockService.findByUsernameAndDateAndStatus(username, localDate, status,
+                percent);
         return ResponseEntity.ok(salesStocks);
     }
 
@@ -243,7 +341,7 @@ public class SalesController {
     }
 
     @GetMapping("/sales/today")
-    public List<SaleReportDTO> getTodaysSales(@RequestParam String username,  @RequestParam int percent) {
+    public List<SaleReportDTO> getTodaysSales(@RequestParam String username, @RequestParam int percent) {
         return salesStockService.getTodaysSalesByUsername(username, percent);
     }
 
@@ -253,8 +351,8 @@ public class SalesController {
     }
 
     @GetMapping("/pendingAdditionalStock")
-    public List<PendingStockDto> getAdditionalStockByUsernameAndInvoiceNo(@RequestParam String username) {
-        return salesStockService.getAdditionalStockByUsernameAndInvoiceNo(username);
+    public List<PendingStockDto> getAdditionalStockByUsernameAndInvoiceNo(@RequestParam String customer) {
+        return salesStockService.getAdditionalStockByUsernameAndInvoiceNo(customer);
     }
 
     @GetMapping("/pendingDetailsVendor")
@@ -293,7 +391,8 @@ public class SalesController {
     }
 
     @GetMapping("/current-month/saleprogress")
-    public ResponseEntity<List<TopSalesDTO>> getCurrentMonthSalesData(@RequestParam String username, @RequestParam int percent) {
+    public ResponseEntity<List<TopSalesDTO>> getCurrentMonthSalesData(@RequestParam String username,
+            @RequestParam int percent) {
         List<TopSalesDTO> salesData = salesStockService.getTop10SoldProducts(username, percent);
         return ResponseEntity.ok(salesData);
     }

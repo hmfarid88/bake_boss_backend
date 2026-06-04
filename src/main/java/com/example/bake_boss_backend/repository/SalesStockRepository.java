@@ -40,6 +40,12 @@ public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
   @Query("SELECT new com.example.bake_boss_backend.dto.VendorSaleReportDTO(s.date, s.time, s.category, s.productName, s.soldInvoice, c.customerName, s.saleRate, s.productQty) FROM SalesStock s JOIN CustomerInfo c ON s.soldInvoice = c.soldInvoice WHERE s.status = 'vendor' AND s.username = :username AND  s.date BETWEEN :startDate AND :endDate ORDER BY s.date")
   List<VendorSaleReportDTO> findDatewiseVendorSaleByUsername(String username, LocalDate startDate, LocalDate endDate);
 
+  @Query("SELECT s FROM SalesStock s WHERE s.status = 'return-pending'")
+  List<SalesStock> findAllPendingReturnedStocksByUsername();
+
+  @Query("SELECT s FROM SalesStock s WHERE s.status = 'return-pending' AND s.username = :username ")
+  List<SalesStock> findPendingReturnedStocksByUsername(@Param("username") String username);
+
   @Query("SELECT s FROM SalesStock s WHERE s.status = 'Returned' AND s.username = :username AND FUNCTION('MONTH', s.date) = FUNCTION('MONTH', CURRENT_DATE) AND FUNCTION('YEAR', s.date) = FUNCTION('YEAR', CURRENT_DATE)")
   List<SalesStock> findCurrentMonthReturnedStocksByUsername(@Param("username") String username);
 
@@ -87,7 +93,7 @@ public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
   @Query("SELECT s FROM SalesStock s WHERE s.status = 'Returned' AND s.date BETWEEN :startDate AND :endDate")
   List<SalesStock> findDatewiseReturnedStocks(LocalDate startDate, LocalDate endDate);
 
-  @Query("SELECT s FROM SalesStock s WHERE s.status = 'Returned' AND s.username = :username AND s.invoiceNo = :invoiceNo")
+  @Query("SELECT s FROM SalesStock s WHERE s.status = 'return-pending' AND s.username = :username AND s.invoiceNo = :invoiceNo")
  List<SalesStock> findReturnedStocksByInvoice(@Param("username") String username, @Param("invoiceNo") String invoiceNo);
 
   List<SalesStock> findByProductName(String oldItemName);

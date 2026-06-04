@@ -293,6 +293,56 @@ public class ProductController {
         return materialsRepository.saveAll(toSave);
     }
 
+    @PostMapping("/materialsToSalesStock")
+    @Transactional
+    public List<SalesStock> mateialsToSalesStock(
+            @RequestParam String madeItem,
+            @RequestParam String supplierInvoice) {
+        List<RawMaterialStock> rawMaterials = rawMaterialRepository
+                .findByMadeItemAndSupplierInvoice(madeItem, supplierInvoice);
+        List<SalesStock> toSave = new ArrayList<>();
+        for (RawMaterialStock raw : rawMaterials) {
+            SalesStock newItem = new SalesStock();
+            // 🔁 Mapping fields
+            newItem.setDate(LocalDate.now());
+            newItem.setTime(ZonedDateTime.now(ZoneId.of("Asia/Dhaka")).toLocalTime());
+            newItem.setCategory("Additional");
+            newItem.setProductName(raw.getMaterialsName());
+            newItem.setUsername(raw.getMadeItem());
+            newItem.setProductQty(raw.getMaterialsQty());
+            newItem.setStockRate(raw.getMaterialsRate());
+            newItem.setCostPrice(raw.getAverageRate());
+            newItem.setInvoiceNo(raw.getSupplierInvoice());
+            newItem.setSupplier(raw.getUsername());
+            newItem.setStatus("stored");
+
+            // 🔥 Your existing average logic
+            Optional<SalesStock> existingMaterialOpt = salesStockRepository
+                    .findLatestSalesStockByProductNameAndUsername(raw.getMaterialsName(), raw.getUsername());
+
+            if (existingMaterialOpt.isPresent()) {
+                SalesStock existing = existingMaterialOpt.get();
+
+                double newTotalQty = existing.getRemainingQty() + raw.getMaterialsQty();
+                double newTotalValue = (existing.getRemainingQty() * existing.getCostPrice()) +
+                        (raw.getMaterialsQty() * raw.getMaterialsRate());
+
+                double newAvgRate = newTotalValue / newTotalQty;
+
+                newItem.setCostPrice(newAvgRate);
+                newItem.setRemainingQty(newTotalQty);
+
+            } else {
+                newItem.setCostPrice(raw.getMaterialsRate());
+                newItem.setRemainingQty(raw.getMaterialsQty());
+            }
+
+            toSave.add(newItem);
+        }
+
+        return salesStockRepository.saveAll(toSave);
+    }
+
     @PostMapping("/addRawMaterials")
     @Transactional
     public List<RawMaterialStock> saveRawMaterials(@RequestBody List<RawMaterialStock> allItems) {

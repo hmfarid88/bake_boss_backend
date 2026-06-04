@@ -219,6 +219,12 @@ public class SalesStockService {
         return finalList;
     }
 
+    public List<SalesStock> getPendingStockReturned(String username) {
+        return salesStockRepository.findPendingReturnedStocksByUsername(username);
+    }
+    public List<SalesStock> getAllPendingStockReturned() {
+        return salesStockRepository.findAllPendingReturnedStocksByUsername();
+    }
     public List<SalesStock> getCurrentMonthStockReturned(String username) {
         return salesStockRepository.findCurrentMonthReturnedStocksByUsername(username);
     }
@@ -411,8 +417,8 @@ public class SalesStockService {
         return salesStockRepository.findPendingVendorData(username);
     }
     
-    public List<PendingStockDto> getAdditionalStockByUsernameAndInvoiceNo(String username) {
-        return rawMaterialsRepository.findPendingSalesStock(username);
+    public List<PendingStockDto> getAdditionalStockByUsernameAndInvoiceNo(String customer) {
+        return rawMaterialsRepository.findPendingSalesStock(customer);
     }
 
     public List<SalesStock> getDetailsvendorSalesStock(String soldInvoice) {

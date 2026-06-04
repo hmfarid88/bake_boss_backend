@@ -25,6 +25,7 @@ public class ProductionStock {
     private String username;
     private String status;
     private String madeItem;
+    private String receivedBy;
     private Double materialsQty;
     private Double remainingQty;
 }

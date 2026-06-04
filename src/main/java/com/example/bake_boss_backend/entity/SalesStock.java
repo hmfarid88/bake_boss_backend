@@ -39,4 +39,5 @@ public class SalesStock {
     private String username;
     private String invoiceNo;
     private String soldInvoice;
+    private String supplier;
 }
