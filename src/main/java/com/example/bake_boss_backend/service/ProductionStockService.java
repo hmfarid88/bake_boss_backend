@@ -33,7 +33,8 @@ public class ProductionStockService {
             productionStockRepository.save(newItem);
         }
 
-        return productionStockRepository.findAll();
+        // return productionStockRepository.findAll();
+        return allItems;
     }
 
     public List<ProductionStock> latestProductionStock(String username) {

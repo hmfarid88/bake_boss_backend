@@ -131,8 +131,7 @@ public class ProductController {
 
     @PostMapping("/addMaterialsName")
     public ResponseEntity<?> addMaterials(@RequestBody MaterialName materialName) {
-        if (materialsNameRepository.existsByUsernameAndMaterialsName(materialName.getUsername(),
-                materialName.getMaterialsName())) {
+        if (materialsNameRepository.existsByMaterialsName(materialName.getMaterialsName())) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("Materials " + materialName.getMaterialsName() + " is already exists!");
         }
@@ -537,8 +536,8 @@ public class ProductController {
     }
 
     @GetMapping("/getMaterialsName")
-    public List<MaterialName> getMaterialsNameByUsername(@RequestParam String username) {
-        return materialsNameRepository.getMaterialsNameByUsername(username);
+    public List<MaterialName> getMaterialsNameByUsername() {
+        return materialsNameRepository.findAll();
     }
 
     @GetMapping("/getSuppliersName")

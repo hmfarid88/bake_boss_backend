@@ -10,9 +10,9 @@ import jakarta.transaction.Transactional;
 
 public interface MaterialsNameRepository extends JpaRepository<MaterialName, Long> {
 
-    boolean existsByUsernameAndMaterialsName(String username, String materialsName);
+    boolean existsByMaterialsName(String materialsName);
 
-    List<MaterialName> getMaterialsNameByUsername(String username);
+    List<MaterialName> findAll();
 
     List<MaterialName> findByUsernameAndMaterialsName(String username, String materialsName);
 
