@@ -570,6 +570,36 @@ public class ProductController {
         return materialsRepository.findDamagedMaterialsByStatus(username);
     }
 
+    @GetMapping("/getFancyMaterial")
+    public List<MaterialsStock> getFancyMaterial(String username) {
+        return materialsRepository.findFancyMaterialsByStatus(username);
+    }
+
+    @GetMapping("/getDatewiseFancyMaterial")
+    public List<MaterialsStock> getDatewiseFancyMaterial(String username, LocalDate startDate, LocalDate endDate) {
+        return materialsRepository.findDatewiseFancyMaterialsByUsername(username, startDate, endDate);
+    }
+
+    @GetMapping("/getPackagingMaterial")
+    public List<MaterialsStock> getPackagingMaterial(String username) {
+        return materialsRepository.findPackagingMaterialsByStatus(username);
+    }
+
+    @GetMapping("/getDatewisePackagingMaterial")
+    public List<MaterialsStock> getDatewisePackagingMaterial(String username, LocalDate startDate, LocalDate endDate) {
+        return materialsRepository.findDatewisePackagingMaterialsByUsername(username, startDate, endDate);
+    }
+
+    @GetMapping("/getStaffConsumedMaterial")
+    public List<MaterialsStock> getStaffConsumedMaterial(String username) {
+        return materialsRepository.findStaffConsumedMaterialsByStatus(username);
+    }
+
+    @GetMapping("/getDatewiseStaffConsumedMaterial")
+    public List<MaterialsStock> getDatewiseStaffConsumedMaterial(String username, LocalDate startDate, LocalDate endDate) {
+        return materialsRepository.findDatewiseStaffConsumedMaterialsByUsername(username, startDate, endDate);
+    }
+
     @GetMapping("/getMaterialsStock")
     public List<MaterialsStock> getMaterialsStock(String username) {
         return materialsRepository.findLatestMaterialsStockByUsername(username);
