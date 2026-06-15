@@ -21,6 +21,7 @@ import com.example.bake_boss_backend.entity.RawMaterialStock;
 import com.example.bake_boss_backend.entity.SalesStock;
 import com.example.bake_boss_backend.entity.ShopInfo;
 import com.example.bake_boss_backend.repository.CustomerInfoRepository;
+import com.example.bake_boss_backend.repository.MaterialsRepository;
 import com.example.bake_boss_backend.repository.RawMaterialRepository;
 import com.example.bake_boss_backend.repository.ProductStockrepository;
 import com.example.bake_boss_backend.repository.SalesStockRepository;
@@ -34,15 +35,17 @@ public class InvoiceController {
     private final ShopInfoService shopInfoService;
     private final ProductStockrepository productStockrepository;
     private final RawMaterialRepository rawMaterialsRepository;
+    private final MaterialsRepository materialsRepository;
     
 
     @Autowired
     public InvoiceController(SalesStockRepository salesStockRepository, CustomerInfoRepository customerInfoRepository,
-           ProductStockrepository productStockrepository, RawMaterialRepository rawMaterialsRepository, ShopInfoService shopInfoService) {
+           ProductStockrepository productStockrepository, RawMaterialRepository rawMaterialsRepository, MaterialsRepository materialsRepository, ShopInfoService shopInfoService) {
         this.salesStockRepository = salesStockRepository;
         this.customerInfoRepository = customerInfoRepository;
         this.productStockrepository = productStockrepository;
         this.rawMaterialsRepository = rawMaterialsRepository;
+        this.materialsRepository = materialsRepository;
         this.shopInfoService = shopInfoService;
     }
 
@@ -54,6 +57,11 @@ public class InvoiceController {
    @GetMapping("/getMaterialsInvoiceData")
     public List<RawMaterialStock> getMaterialsInvoiceData(String invoiceNo) {
         return rawMaterialsRepository.findBySupplierInvoice(invoiceNo);
+    }
+
+   @GetMapping("/getFactoryMaterialsInvoiceData")
+    public List<MaterialsStock> getFactoryMaterialsInvoiceData(String invoiceNo) {
+        return materialsRepository.findBySupplierInvoice(invoiceNo);
     }
 
     @GetMapping("/outletInvoice")

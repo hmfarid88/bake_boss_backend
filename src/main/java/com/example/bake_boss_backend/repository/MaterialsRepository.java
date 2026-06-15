@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.example.bake_boss_backend.dto.DetailsSupplierDTO;
 import com.example.bake_boss_backend.entity.MaterialsStock;
+import com.example.bake_boss_backend.entity.RawMaterialStock;
 
 import jakarta.transaction.Transactional;
 
@@ -74,12 +75,12 @@ public interface MaterialsRepository extends JpaRepository<MaterialsStock, Long>
         @Query("SELECT ms FROM MaterialsStock ms WHERE ms.username=:username AND ms.status='damaged'")
         List<MaterialsStock> findDamagedMaterialsByStatus(String username);
 
-        @Query("SELECT ms FROM MaterialsStock ms WHERE ms.username=:username AND ms.status='fancy' AND MONTH(ms.date) = MONTH(CURRENT_DATE) AND YEAR(ms.date) = YEAR(CURRENT_DATE)")
+        @Query("SELECT ms FROM MaterialsStock ms WHERE ms.username=:username AND ms.status='fancy goods' AND MONTH(ms.date) = MONTH(CURRENT_DATE) AND YEAR(ms.date) = YEAR(CURRENT_DATE)")
         List<MaterialsStock> findFancyMaterialsByStatus(String username);
 
         List<MaterialsStock> findByUsernameAndMaterialsName(String username, String oldMaterialsName);
 
-        @Query("SELECT ms FROM MaterialsStock ms WHERE ms.username=:username AND ms.status='fancy' AND ms.date BETWEEN :startDate AND :endDate")
+        @Query("SELECT ms FROM MaterialsStock ms WHERE ms.username=:username AND ms.status='fancy goods' AND ms.date BETWEEN :startDate AND :endDate")
         List<MaterialsStock> findDatewiseFancyMaterialsByUsername(String username, LocalDate startDate,
                         LocalDate endDate);
 
@@ -87,13 +88,20 @@ public interface MaterialsRepository extends JpaRepository<MaterialsStock, Long>
         List<MaterialsStock> findPackagingMaterialsByStatus(String username);
 
         @Query("SELECT ms FROM MaterialsStock ms WHERE ms.username=:username AND ms.status='packaging' AND ms.date BETWEEN :startDate AND :endDate")
-        List<MaterialsStock> findDatewisePackagingMaterialsByUsername(String username, LocalDate startDate,
-                LocalDate endDate);
+        List<MaterialsStock> findDatewisePackagingMaterialsByUsername(String username, LocalDate startDate, LocalDate endDate);
 
-                 @Query("SELECT ms FROM MaterialsStock ms WHERE ms.username=:username AND ms.status='staff consumed' AND MONTH(ms.date) = MONTH(CURRENT_DATE) AND YEAR(ms.date) = YEAR(CURRENT_DATE)")
+        @Query("SELECT ms FROM MaterialsStock ms WHERE ms.username=:username AND ms.status='staff consumed' AND MONTH(ms.date) = MONTH(CURRENT_DATE) AND YEAR(ms.date) = YEAR(CURRENT_DATE)")
         List<MaterialsStock> findStaffConsumedMaterialsByStatus(String username);
 
-              @Query("SELECT ms FROM MaterialsStock ms WHERE ms.username=:username AND ms.status='staff consumed' AND ms.date BETWEEN :startDate AND :endDate")    
+        @Query("SELECT ms FROM MaterialsStock ms WHERE ms.username=:username AND ms.status='staff consumed' AND ms.date BETWEEN :startDate AND :endDate")
         List<MaterialsStock> findDatewiseStaffConsumedMaterialsByUsername(String username, LocalDate startDate, LocalDate endDate);
+
+        List<MaterialsStock> findBySupplierInvoice(String invoiceNo);
+
+        @Query("SELECT ms FROM MaterialsStock ms WHERE status='sold' AND YEAR(ms.date) = :year AND MONTH(ms.date) = :month AND ms.username=:username")
+        List<MaterialsStock> findSoldMaterialsByUsername(@Param("year") int year, @Param("month") int month, @Param("username") String username);
+
+        @Query("SELECT ms FROM MaterialsStock ms WHERE status='sold' AND ms.username=:username AND ms.date BETWEEN :startDate AND :endDate")
+        List<MaterialsStock> findDatewiseSoldMaterialsByUsername(String username, LocalDate startDate, LocalDate endDate);
 
 }

@@ -660,6 +660,16 @@ public class ProductController {
         return productStockService.getAllSoldRawMaterialsStock(username);
     }
 
+    @GetMapping("/getMonthlySoldMaterials")
+    public List<MaterialsStock> getMonthlySoldMaterials(String username) {
+        return productStockService.getMonthlySoldMaterialsStock(username);
+    }
+
+    @GetMapping("/getDatewiseSoldMaterials")
+    public List<MaterialsStock> getDatewiseSoldMaterials(String username, LocalDate startDate, LocalDate endDate) {
+        return productStockService.getDatewiseSoldMaterials(username, startDate, endDate);
+    }
+
     @GetMapping("/datewiseMaterialsLedger")
     public List<MaterialsStock> getDatewiseMaterials(String username, LocalDate startDate, LocalDate endDate) {
         return productStockService.getDatewiseMaterialsStock(username, startDate, endDate);

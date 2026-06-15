@@ -177,6 +177,13 @@ public class ProductStockService {
         return rawMaterialsRepository.findSoldRawMaterialsByUsername(year, month, username);
     }
 
+    public List<MaterialsStock> getMonthlySoldMaterialsStock(String username) {
+        LocalDate now = LocalDate.now();
+        int year = now.getYear();
+        int month = now.getMonthValue();
+        return materialsRepository.findSoldMaterialsByUsername(year, month, username);
+    }
+
     public List<MaterialsStock> getDatewiseMaterialsStock(String username, LocalDate startDate, LocalDate endDate) {
         return materialsRepository.findDatewiseMaterialsByUsername(username, startDate, endDate);
     }
@@ -187,6 +194,10 @@ public class ProductStockService {
 
     public List<RawMaterialStock> getDatewiseSoldRawMaterials(String username, LocalDate startDate, LocalDate endDate) {
         return rawMaterialsRepository.findDatewiseSoldRawMaterialsByUsername(username, startDate, endDate); 
+    }
+
+    public List<MaterialsStock> getDatewiseSoldMaterials(String username, LocalDate startDate, LocalDate endDate) {
+        return materialsRepository.findDatewiseSoldMaterialsByUsername(username, startDate, endDate); 
     }
 
     public List<MaterialsStock> getDatewiseStoredMaterialsStock(String username, LocalDate startDate, LocalDate endDate) {
