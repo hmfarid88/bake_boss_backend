@@ -81,8 +81,7 @@ public interface MaterialsRepository extends JpaRepository<MaterialsStock, Long>
         List<MaterialsStock> findByUsernameAndMaterialsName(String username, String oldMaterialsName);
 
         @Query("SELECT ms FROM MaterialsStock ms WHERE ms.username=:username AND ms.status='fancy goods' AND ms.date BETWEEN :startDate AND :endDate")
-        List<MaterialsStock> findDatewiseFancyMaterialsByUsername(String username, LocalDate startDate,
-                        LocalDate endDate);
+        List<MaterialsStock> findDatewiseFancyMaterialsByUsername(String username, LocalDate startDate, LocalDate endDate);
 
         @Query("SELECT ms FROM MaterialsStock ms WHERE ms.username=:username AND ms.status='packaging' AND MONTH(ms.date) = MONTH(CURRENT_DATE) AND YEAR(ms.date) = YEAR(CURRENT_DATE)")
         List<MaterialsStock> findPackagingMaterialsByStatus(String username);

@@ -379,11 +379,11 @@ public class ProductController {
                     .findLatestProductStockByProductNameAndUsername(newItem.getProductName(), newItem.getUsername());
 
             if (latestProductStockOpt.isPresent()) {
-                newItem.setRemainingQty(0.0);
+                newItem.setRemainingQty(newItem.getProductQty() + latestProductStockOpt.get().getRemainingQty());
                 ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
                 newItem.setTime(dhakaTime.toLocalTime());
             } else {
-                newItem.setRemainingQty(0.0);
+                newItem.setRemainingQty(newItem.getProductQty());
                 newItem.setCostPrice(newItem.getCostPrice());
                 ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
                 newItem.setTime(dhakaTime.toLocalTime());
@@ -440,7 +440,7 @@ public class ProductController {
                 Double totalValue = (latestProductStock.getRemainingQty() * latestProductStock.getCostPrice()) +
                         (newItem.getProductQty() * newItem.getCostPrice());
                 Double newCostPrice = totalValue / newTotalQty;
-                newItem.setRemainingQty(latestProductStock.getRemainingQty());
+                newItem.setRemainingQty(latestProductStock.getRemainingQty()- newItem.getProductQty());
                 newItem.setCostPrice(newCostPrice);
                 ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
                 newItem.setTime(dhakaTime.toLocalTime());
@@ -458,31 +458,38 @@ public class ProductController {
     @PostMapping("/updateMaterialsStock")
     List<MaterialsStock> updateMaterials(@RequestBody List<MaterialsStock> allItems) {
         List<MaterialsStock> savedMaterialsStock = materialsRepository.saveAll(allItems);
+        return savedMaterialsStock;
+  
+    }
+    
+@PostMapping("/updateProductionStock")
+public ResponseEntity<String> updateProductionStock(@RequestBody List<ProductionStock> allItems) {
 
-        for (MaterialsStock newItem : allItems) {
-            Optional<ProductionStock> latestProductionStockOpt = productionStockRepository
-                    .findLatestByMaterialsNameAndUsername(newItem.getMaterialsName(), newItem.getUsername());
+    for (ProductionStock newItem : allItems) {
+        Optional<ProductionStock> latestProductionStockOpt =
+                productionStockRepository.findLatestByMaterialsNameAndUsername(newItem.getMaterialsName(), newItem.getUsername());
 
-            ProductionStock productionStock = new ProductionStock();
-            productionStock.setDate(newItem.getDate());
-            productionStock.setMaterialsName(newItem.getMaterialsName());
-            productionStock.setUsername(newItem.getUsername());
-            productionStock.setStatus("used");
-            productionStock.setMadeItem(newItem.getMadeItem());
-            productionStock.setMaterialsQty(newItem.getMaterialsQty());
+        ProductionStock productionStock = new ProductionStock();
+        productionStock.setDate(newItem.getDate());
+        productionStock.setMaterialsName(newItem.getMaterialsName());
+        productionStock.setUsername(newItem.getUsername());
+        productionStock.setStatus("used");
+        productionStock.setMadeItem(newItem.getMadeItem());
+        productionStock.setMaterialsQty(newItem.getMaterialsQty());
 
-            if (latestProductionStockOpt.isPresent()) {
-                ProductionStock latestProductionStock = latestProductionStockOpt.get();
-                productionStock.setRemainingQty(latestProductionStock.getRemainingQty() - newItem.getMaterialsQty());
-            } else {
-                productionStock.setRemainingQty(newItem.getMaterialsQty());
-            }
-
-            productionStockRepository.save(productionStock);
+        if (latestProductionStockOpt.isPresent()) {
+            ProductionStock latestProductionStock = latestProductionStockOpt.get();
+            productionStock.setRemainingQty(
+                    latestProductionStock.getRemainingQty() - newItem.getMaterialsQty());
+        } else {
+            productionStock.setRemainingQty(newItem.getMaterialsQty());
         }
 
-        return savedMaterialsStock;
+        productionStockRepository.save(productionStock);
     }
+
+    return ResponseEntity.ok("Updated successfully");
+}
 
     @PostMapping("/rawMaterialSale")
     @Transactional
