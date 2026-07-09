@@ -58,7 +58,7 @@ public class ProductStockService {
 
     @Transactional
     public ProductRate upsertProductRate(String username, String productName, Double saleRate, Double unitRate, Double qty) {
-        Optional<ProductRate> existingSetup = productRateRepository.findByProductName(productName);
+        Optional<ProductRate> existingSetup = productRateRepository.findTopByProductNameOrderByIdDesc(productName);
         if (existingSetup.isPresent()) {
             ProductRate productRate = existingSetup.get();
             productRate.setSaleRate(saleRate);

@@ -55,7 +55,7 @@ public class SalesStockService {
         List<SalesStock> salesStocks = salesStockRepository.findLastByProductNameAndUsername(username);
         return salesStocks.stream().map(salesStock -> {
             Optional<ProductRate> productRateOpt = productRateRepository
-                    .findByProductName(salesStock.getProductName());
+                    .findTopByProductNameOrderByIdDesc(salesStock.getProductName());
             Double saleRate = productRateOpt.map(ProductRate::getSaleRate).orElse((double) 0);
             Double unitRate = productRateOpt.map(ProductRate::getUnitRate).orElse((double) 0);
             Double qty = productRateOpt.map(ProductRate::getQty).orElse((double) 0);
@@ -77,7 +77,7 @@ public class SalesStockService {
         List<SalesStock> salesStocks = salesStockRepository.findByProductIdAndUsername(productId, username);
         return salesStocks.stream().map(salesStock -> {
             Optional<ProductRate> productRateOpt = productRateRepository
-                    .findByProductName(salesStock.getProductName());
+                    .findTopByProductNameOrderByIdDesc(salesStock.getProductName());
             Double saleRate = productRateOpt.map(ProductRate::getSaleRate).orElse((double) 0);
             Double unitRate = productRateOpt.map(ProductRate::getUnitRate).orElse((double) 0);
             Double qty = productRateOpt.map(ProductRate::getQty).orElse((double) 0);

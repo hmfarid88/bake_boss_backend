@@ -428,32 +428,65 @@ public class ProductController {
         return allItems;
     }
 
+    // @PostMapping("/productDistribution")
+    // public List<ProductStock> saveDistribution(@RequestBody List<ProductStock> allItems) {
+    //     for (ProductStock newItem : allItems) {
+    //         Optional<ProductStock> latestProductStockOpt = productStockrepository
+    //                 .findLatestProductStockByProductNameAndUsername(newItem.getProductName(), newItem.getUsername());
+
+    //         if (latestProductStockOpt.isPresent()) {
+    //             ProductStock latestProductStock = latestProductStockOpt.get();
+    //             Double newTotalQty = latestProductStock.getRemainingQty() + newItem.getProductQty();
+    //             Double totalValue = (latestProductStock.getRemainingQty() * latestProductStock.getCostPrice()) +
+    //                     (newItem.getProductQty() * newItem.getCostPrice());
+    //             Double newCostPrice = totalValue / newTotalQty;
+    //             newItem.setRemainingQty(latestProductStock.getRemainingQty()- newItem.getProductQty());
+    //             newItem.setCostPrice(newCostPrice);
+    //             ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+    //             newItem.setTime(dhakaTime.toLocalTime());
+    //         } else {
+    //             newItem.setRemainingQty(newItem.getProductQty());
+    //             newItem.setCostPrice(newItem.getCostPrice());
+    //             ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+    //             newItem.setTime(dhakaTime.toLocalTime());
+    //         }
+    //         productStockrepository.save(newItem);
+    //     }
+    //     return allItems;
+    // }
+
     @PostMapping("/productDistribution")
     public List<ProductStock> saveDistribution(@RequestBody List<ProductStock> allItems) {
-        for (ProductStock newItem : allItems) {
-            Optional<ProductStock> latestProductStockOpt = productStockrepository
-                    .findLatestProductStockByProductNameAndUsername(newItem.getProductName(), newItem.getUsername());
-
-            if (latestProductStockOpt.isPresent()) {
-                ProductStock latestProductStock = latestProductStockOpt.get();
-                Double newTotalQty = latestProductStock.getRemainingQty() + newItem.getProductQty();
-                Double totalValue = (latestProductStock.getRemainingQty() * latestProductStock.getCostPrice()) +
-                        (newItem.getProductQty() * newItem.getCostPrice());
-                Double newCostPrice = totalValue / newTotalQty;
-                newItem.setRemainingQty(latestProductStock.getRemainingQty()- newItem.getProductQty());
-                newItem.setCostPrice(newCostPrice);
-                ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
-                newItem.setTime(dhakaTime.toLocalTime());
+    for (ProductStock newItem : allItems) {
+        Optional<ProductStock> latestProductStockOpt = productStockrepository
+                .findLatestProductStockByProductNameAndUsername(newItem.getProductName(), newItem.getUsername());
+        if (latestProductStockOpt.isPresent()) {
+            ProductStock latestProductStock = latestProductStockOpt.get();
+            Double newTotalQty = latestProductStock.getRemainingQty() + newItem.getProductQty();
+            Double totalValue =
+                    (latestProductStock.getRemainingQty() * latestProductStock.getCostPrice()) +
+                    (newItem.getProductQty() * newItem.getCostPrice());
+            Double newCostPrice = totalValue / newTotalQty;
+            Double lastRemainingQty = latestProductStock.getRemainingQty();
+                if (lastRemainingQty <= 0) {
+                newItem.setRemainingQty(0.0);
             } else {
-                newItem.setRemainingQty(newItem.getProductQty());
-                newItem.setCostPrice(newItem.getCostPrice());
-                ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
-                newItem.setTime(dhakaTime.toLocalTime());
+                Double updatedQty = lastRemainingQty - newItem.getProductQty();
+                newItem.setRemainingQty(Math.max(0.0, updatedQty));
             }
-            productStockrepository.save(newItem);
+            newItem.setCostPrice(newCostPrice);
+
+        } else {
+            newItem.setRemainingQty(0.0);
+            newItem.setCostPrice(newItem.getCostPrice());
         }
-        return allItems;
+        ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+        newItem.setTime(dhakaTime.toLocalTime());
+        productStockrepository.save(newItem);
     }
+
+    return allItems;
+}
 
     @PostMapping("/updateMaterialsStock")
     List<MaterialsStock> updateMaterials(@RequestBody List<MaterialsStock> allItems) {

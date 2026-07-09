@@ -8,7 +8,7 @@ import com.example.bake_boss_backend.entity.ProductRate;
 
 public interface ProductRateRepository extends JpaRepository<ProductRate, Long> {
 
-    Optional<ProductRate> findByProductName(String productName);
+    Optional<ProductRate> findTopByProductNameOrderByIdDesc(String productName);
 
     // List<ProductRate> findByProductName(String oldItemName);
 }
