@@ -1,6 +1,7 @@
 package com.example.bake_boss_backend.controller;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -37,10 +38,14 @@ import com.example.bake_boss_backend.dto.SixMonthSaleDTO;
 import com.example.bake_boss_backend.dto.StockLedgerDTO;
 import com.example.bake_boss_backend.dto.SupplierSalesStockDTO;
 import com.example.bake_boss_backend.entity.CustomerInfo;
+import com.example.bake_boss_backend.entity.ItemMake;
 import com.example.bake_boss_backend.entity.SalesStock;
 import com.example.bake_boss_backend.repository.CustomerInfoRepository;
+import com.example.bake_boss_backend.repository.ItemMakeRepository;
 import com.example.bake_boss_backend.repository.SalesStockRepository;
 import com.example.bake_boss_backend.service.SalesStockService;
+
+import jakarta.transaction.Transactional;
 
 @RestController
 @RequestMapping("/sales")
@@ -53,6 +58,9 @@ public class SalesController {
 
     @Autowired
     private CustomerInfoRepository customerInfoRepository;
+    
+    @Autowired
+    private ItemMakeRepository itemMakeRepository;
 
     @GetMapping("/getSalesStock")
     public List<SalesStockDTO> getAllSalesStockWithRate(String username) {
@@ -117,53 +125,160 @@ public class SalesController {
     // }
     // }
 
-    @PostMapping("/outletSale")
-    public ResponseEntity<?> handleSale(@RequestBody SalesRequest saleRequest) {
-        try {
-            // Save customer info
-            CustomerInfo savedCustomer = customerInfoRepository.save(saleRequest.getCustomer());
-            List<SalesStock> savedSalesItems = new ArrayList<>();
-            for (SalesStock salesItem : saleRequest.getSalesItems()) {
-                // Check category
-                if ("Ready Goods".equalsIgnoreCase(salesItem.getCategory())) {
-                    // Fixed remaining quantity for Ready Goods
-                    salesItem.setRemainingQty(100.0);
-                } else {
-                    // Get latest stock for this product and user
-                    Optional<SalesStock> lastSalesStock = salesStockRepository
-                            .findLatestSalesStockByProductNameAndUsername(salesItem.getProductName(), salesItem.getUsername());
-                    if (lastSalesStock.isPresent()) {
-                        SalesStock lastStock = lastSalesStock.get();
-                        double updatedRemainingQty = lastStock.getRemainingQty() - salesItem.getProductQty();
-                        // Prevent negative stock (optional)
+    // @PostMapping("/outletSale")
+    // public ResponseEntity<?> handleSale(@RequestBody SalesRequest saleRequest) {
+    //     try {
+    //         // Save customer info
+    //         CustomerInfo savedCustomer = customerInfoRepository.save(saleRequest.getCustomer());
+    //         List<SalesStock> savedSalesItems = new ArrayList<>();
+    //         for (SalesStock salesItem : saleRequest.getSalesItems()) {
+    //             // Check category
+    //             if ("Ready Goods".equalsIgnoreCase(salesItem.getCategory())) {
+    //                 // Fixed remaining quantity for Ready Goods
+    //                 salesItem.setRemainingQty(100.0);
+    //             } else {
+    //                 // Get latest stock for this product and user
+    //                 Optional<SalesStock> lastSalesStock = salesStockRepository
+    //                         .findLatestSalesStockByProductNameAndUsername(salesItem.getProductName(), salesItem.getUsername());
+    //                 if (lastSalesStock.isPresent()) {
+    //                     SalesStock lastStock = lastSalesStock.get();
+    //                     double updatedRemainingQty = lastStock.getRemainingQty() - salesItem.getProductQty();
+    //                     // Prevent negative stock (optional)
+    //                     if (updatedRemainingQty < 0) {
+    //                         updatedRemainingQty = 0;
+    //                     }
+    //                     salesItem.setRemainingQty(updatedRemainingQty);
+    //                 } else {
+    //                     // If no previous stock exists
+    //                     salesItem.setRemainingQty(0.0);
+    //                 }
+    //             }
+    //             // Set current Dhaka time
+    //             ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+    //             salesItem.setTime(dhakaTime.toLocalTime());
+    //             // Save sales item
+    //             savedSalesItems.add(salesStockRepository.save(salesItem));
+    //         }
+    //         // Prepare response
+    //         Map<String, Object> response = new HashMap<>();
+    //         response.put("customer", savedCustomer);
+    //         response.put("salesItems", savedSalesItems);
+    //         return ResponseEntity.ok(response);
+    //     } catch (Exception e) {
+    //         e.printStackTrace();
+    //         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    //                 .body(Collections.singletonMap(
+    //                         "message",
+    //                         "An error occurred while processing the sale"));
+    //     }
+    // }
+
+@PostMapping("/outletSale")
+@Transactional
+public ResponseEntity<?> handleSale(@RequestBody SalesRequest saleRequest) {
+    try {
+        // Save customer info
+        CustomerInfo savedCustomer = customerInfoRepository.save(saleRequest.getCustomer());
+
+        List<SalesStock> savedSalesItems = new ArrayList<>();
+
+        for (SalesStock salesItem : saleRequest.getSalesItems()) {
+
+            if ("Ready Goods".equalsIgnoreCase(salesItem.getCategory())) {
+
+                // Find recipe/materials for this ready goods item
+                List<ItemMake> materials = itemMakeRepository
+                        .findByUsernameAndItemName(salesItem.getUsername(), salesItem.getProductName());
+                for (ItemMake itemMake : materials) {
+                    // Total material consumption
+                    double usedQty = itemMake.getQty() * salesItem.getProductQty();
+                    // Get latest stock of the material
+                    Optional<SalesStock> materialStockOpt = salesStockRepository
+                            .findLatestSalesStockByProductNameAndUsername(
+                                    itemMake.getMaterialsName(),
+                                    salesItem.getUsername());
+                    if (materialStockOpt.isPresent()) {
+                        SalesStock lastMaterialStock = materialStockOpt.get();
+                       double updatedRemainingQty =
+                                lastMaterialStock.getRemainingQty() - usedQty;
                         if (updatedRemainingQty < 0) {
                             updatedRemainingQty = 0;
                         }
-                        salesItem.setRemainingQty(updatedRemainingQty);
-                    } else {
-                        // If no previous stock exists
-                        salesItem.setRemainingQty(0.0);
+                        // Insert new stock entry for material consumption
+                        SalesStock materialOut = new SalesStock();
+                        materialOut.setDate(salesItem.getDate());
+                        materialOut.setTime(LocalTime.now(ZoneId.of("Asia/Dhaka")));
+                        materialOut.setCategory(lastMaterialStock.getCategory());
+                        materialOut.setProductName(itemMake.getMaterialsName());
+                        materialOut.setCostPrice(lastMaterialStock.getCostPrice());
+                        materialOut.setSaleRate(lastMaterialStock.getSaleRate());
+                        materialOut.setProductQty(usedQty); // consumed qty
+                        materialOut.setRemainingQty(updatedRemainingQty);
+                        materialOut.setStatus("Material Used");
+                        materialOut.setUsername(salesItem.getUsername());
+                        materialOut.setSupplier(salesItem.getProductName());
+                  
+                        salesStockRepository.save(materialOut);
                     }
                 }
-                // Set current Dhaka time
-                ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
-                salesItem.setTime(dhakaTime.toLocalTime());
-                // Save sales item
-                savedSalesItems.add(salesStockRepository.save(salesItem));
+
+                // Ready goods remaining qty (your current logic)
+                salesItem.setRemainingQty(100.0);
+
+            } else {
+
+                // =========================
+                // NORMAL PRODUCT LOGIC
+                // =========================
+                Optional<SalesStock> lastSalesStock = salesStockRepository
+                        .findLatestSalesStockByProductNameAndUsername(
+                                salesItem.getProductName(),
+                                salesItem.getUsername());
+
+                if (lastSalesStock.isPresent()) {
+
+                    SalesStock lastStock = lastSalesStock.get();
+
+                    double updatedRemainingQty =
+                            lastStock.getRemainingQty() - salesItem.getProductQty();
+
+                    if (updatedRemainingQty < 0) {
+                        updatedRemainingQty = 0;
+                    }
+
+                    salesItem.setRemainingQty(updatedRemainingQty);
+
+                } else {
+                    salesItem.setRemainingQty(0.0);
+                }
             }
-            // Prepare response
-            Map<String, Object> response = new HashMap<>();
-            response.put("customer", savedCustomer);
-            response.put("salesItems", savedSalesItems);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Collections.singletonMap(
-                            "message",
-                            "An error occurred while processing the sale"));
+
+            // Set current Dhaka time
+            ZonedDateTime dhakaTime =
+                    ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+
+            salesItem.setTime(dhakaTime.toLocalTime());
+
+            // Save sold item
+            savedSalesItems.add(salesStockRepository.save(salesItem));
         }
+
+        // Response
+        Map<String, Object> response = new HashMap<>();
+        response.put("customer", savedCustomer);
+        response.put("salesItems", savedSalesItems);
+
+        return ResponseEntity.ok(response);
+
+    } catch (Exception e) {
+        e.printStackTrace();
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Collections.singletonMap(
+                        "message",
+                        "An error occurred while processing the sale"));
     }
+}
 
     @PostMapping("/outlet-return-pending")
     public ResponseEntity<List<SalesStock>> addReturnPending(@RequestBody List<SalesStock> salesStockList) {
