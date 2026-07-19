@@ -1,8 +1,10 @@
 package com.example.bake_boss_backend.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -17,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.example.bake_boss_backend.dto.ApiResponse;
 import com.example.bake_boss_backend.dto.LossProfitAnalysis;
 import com.example.bake_boss_backend.dto.PendingStockDto;
 import com.example.bake_boss_backend.dto.PendingVendorDto;
@@ -51,14 +54,92 @@ public class SalesStockService {
     @Autowired
     private RawMaterialRepository rawMaterialsRepository;
 
+    // public List<SalesStockDTO> getAllSalesStockWithRate(String username) {
+    // List<SalesStock> salesStocks =
+    // salesStockRepository.findLastByProductNameAndUsername(username);
+    // return salesStocks.stream().map(salesStock -> {
+    // Optional<ProductRate> productRateOpt = productRateRepository
+    // .findTopByProductNameOrderByIdDesc(salesStock.getProductName());
+    // Double saleRate =
+    // productRateOpt.map(ProductRate::getSaleRate).orElse((double) 0);
+    // Double unitRate =
+    // productRateOpt.map(ProductRate::getUnitRate).orElse((double) 0);
+    // Double qty = productRateOpt.map(ProductRate::getQty).orElse((double) 0);
+    // return new SalesStockDTO(
+    // salesStock.getProductId(),
+    // salesStock.getDate(),
+    // salesStock.getCategory(),
+    // salesStock.getProductName(),
+    // salesStock.getCostPrice(),
+    // salesStock.getRemainingQty(),
+    // salesStock.getInvoiceNo(),
+    // saleRate,
+    // unitRate,
+    // qty);
+    // }).collect(Collectors.toList());
+    // }
+
+    // public List<SalesStockDTO> getAllSalesStockWithRate(String username) {
+    // List<SalesStock> salesStocks =
+    // salesStockRepository.findLastByProductNameAndUsername(username);
+    // return salesStocks.stream().map(salesStock -> {
+    // Double saleRate;
+    // Double unitRate = 0.0;
+    // Double qty = 0.0;
+    // if ("Ready Goods".equalsIgnoreCase(salesStock.getCategory())) {
+    // // Use SaleRate from SalesStock
+    // saleRate = salesStock.getSaleRate() != null ? salesStock.getSaleRate() : 0.0;
+    // } else {
+    // // Use ProductRate for other categories
+    // Optional<ProductRate> productRateOpt = productRateRepository
+    // .findTopByProductNameOrderByIdDesc(salesStock.getProductName());
+    // saleRate = productRateOpt.map(ProductRate::getSaleRate).orElse(0.0);
+    // unitRate = productRateOpt.map(ProductRate::getUnitRate).orElse(0.0);
+    // qty = productRateOpt.map(ProductRate::getQty).orElse(0.0);
+    // }
+    // return new SalesStockDTO(
+    // salesStock.getProductId(),
+    // salesStock.getDate(),
+    // salesStock.getCategory(),
+    // salesStock.getProductName(),
+    // salesStock.getCostPrice(),
+    // salesStock.getRemainingQty(),
+    // salesStock.getInvoiceNo(),
+    // saleRate,
+    // unitRate,
+    // qty
+    // );
+    // }).collect(Collectors.toList());
+    // }
+
     public List<SalesStockDTO> getAllSalesStockWithRate(String username) {
         List<SalesStock> salesStocks = salesStockRepository.findLastByProductNameAndUsername(username);
         return salesStocks.stream().map(salesStock -> {
-            Optional<ProductRate> productRateOpt = productRateRepository
-                    .findTopByProductNameOrderByIdDesc(salesStock.getProductName());
-            Double saleRate = productRateOpt.map(ProductRate::getSaleRate).orElse((double) 0);
-            Double unitRate = productRateOpt.map(ProductRate::getUnitRate).orElse((double) 0);
-            Double qty = productRateOpt.map(ProductRate::getQty).orElse((double) 0);
+            Double saleRate;
+            Double unitRate = 0.0;
+            Double qty = 0.0;
+            if ("Ready Goods".equalsIgnoreCase(salesStock.getCategory())) {
+                // Get maximum sale rate for this product from SalesStock
+                saleRate = salesStockRepository
+                        .findMaxSaleRateByProductNameAndUsername(salesStock.getProductName(), username);
+                if (saleRate == null) {
+                    saleRate = 0.0;
+                }
+            } else {
+                // Use ProductRate for other categories
+                Optional<ProductRate> productRateOpt = productRateRepository
+                        .findTopByProductNameOrderByIdDesc(
+                                salesStock.getProductName());
+                saleRate = productRateOpt
+                        .map(ProductRate::getSaleRate)
+                        .orElse(0.0);
+                unitRate = productRateOpt
+                        .map(ProductRate::getUnitRate)
+                        .orElse(0.0);
+                qty = productRateOpt
+                        .map(ProductRate::getQty)
+                        .orElse(0.0);
+            }
             return new SalesStockDTO(
                     salesStock.getProductId(),
                     salesStock.getDate(),
@@ -70,17 +151,118 @@ public class SalesStockService {
                     saleRate,
                     unitRate,
                     qty);
+
         }).collect(Collectors.toList());
     }
 
+    // public List<SalesStockDTO> getSingleSalesStockWithRate(Long productId, String
+    // username) {
+    // List<SalesStock> salesStocks =
+    // salesStockRepository.findByProductIdAndUsername(productId, username);
+    // return salesStocks.stream().map(salesStock -> {
+    // Optional<ProductRate> productRateOpt = productRateRepository
+    // .findTopByProductNameOrderByIdDesc(salesStock.getProductName());
+    // Double saleRate =
+    // productRateOpt.map(ProductRate::getSaleRate).orElse((double) 0);
+    // Double unitRate =
+    // productRateOpt.map(ProductRate::getUnitRate).orElse((double) 0);
+    // Double qty = productRateOpt.map(ProductRate::getQty).orElse((double) 0);
+    // return new SalesStockDTO(
+    // salesStock.getProductId(),
+    // salesStock.getDate(),
+    // salesStock.getCategory(),
+    // salesStock.getProductName(),
+    // salesStock.getCostPrice(),
+    // salesStock.getRemainingQty(),
+    // salesStock.getInvoiceNo(),
+    // saleRate,
+    // unitRate,
+    // qty);
+    // }).collect(Collectors.toList());
+    // }
+
+    // public List<SalesStockDTO> getSingleSalesStockWithRate(Long productId, String
+    // username) {
+    // List<SalesStock> salesStocks =
+    // salesStockRepository.findByProductIdAndUsername(productId, username);
+    // return salesStocks.stream().map(salesStock -> {
+
+    // Double saleRate;
+    // Double unitRate = 0.0;
+    // Double qty = 0.0;
+
+    // if ("Ready Goods".equalsIgnoreCase(salesStock.getCategory())) {
+    // // Use sale rate from SalesStock
+    // saleRate = salesStock.getSaleRate() != null
+    // ? salesStock.getSaleRate()
+    // : 0.0;
+    // } else {
+    // // Use ProductRate for other categories
+    // Optional<ProductRate> productRateOpt = productRateRepository
+    // .findTopByProductNameOrderByIdDesc(salesStock.getProductName());
+
+    // saleRate = productRateOpt.map(ProductRate::getSaleRate).orElse(0.0);
+    // unitRate = productRateOpt.map(ProductRate::getUnitRate).orElse(0.0);
+    // qty = productRateOpt.map(ProductRate::getQty).orElse(0.0);
+    // }
+
+    // return new SalesStockDTO(
+    // salesStock.getProductId(),
+    // salesStock.getDate(),
+    // salesStock.getCategory(),
+    // salesStock.getProductName(),
+    // salesStock.getCostPrice(),
+    // salesStock.getRemainingQty(),
+    // salesStock.getInvoiceNo(),
+    // saleRate,
+    // unitRate,
+    // qty
+    // );
+    // }).collect(Collectors.toList());
+    // }
+
     public List<SalesStockDTO> getSingleSalesStockWithRate(Long productId, String username) {
+
         List<SalesStock> salesStocks = salesStockRepository.findByProductIdAndUsername(productId, username);
+
         return salesStocks.stream().map(salesStock -> {
-            Optional<ProductRate> productRateOpt = productRateRepository
-                    .findTopByProductNameOrderByIdDesc(salesStock.getProductName());
-            Double saleRate = productRateOpt.map(ProductRate::getSaleRate).orElse((double) 0);
-            Double unitRate = productRateOpt.map(ProductRate::getUnitRate).orElse((double) 0);
-            Double qty = productRateOpt.map(ProductRate::getQty).orElse((double) 0);
+
+            Double saleRate;
+            Double unitRate = 0.0;
+            Double qty = 0.0;
+
+            if ("Ready Goods".equalsIgnoreCase(salesStock.getCategory())) {
+
+                // Use maximum sale rate from SalesStock
+                saleRate = salesStockRepository
+                        .findMaxSaleRateByProductNameAndUsername(
+                                salesStock.getProductName(),
+                                username);
+
+                if (saleRate == null) {
+                    saleRate = 0.0;
+                }
+
+            } else {
+
+                // Use ProductRate for other categories
+                Optional<ProductRate> productRateOpt = productRateRepository
+                        .findTopByProductNameOrderByIdDesc(
+                                salesStock.getProductName());
+
+                saleRate = productRateOpt
+                        .map(ProductRate::getSaleRate)
+                        .orElse(0.0);
+
+                unitRate = productRateOpt
+                        .map(ProductRate::getUnitRate)
+                        .orElse(0.0);
+
+                qty = productRateOpt
+                        .map(ProductRate::getQty)
+                        .orElse(0.0);
+            }
+
             return new SalesStockDTO(
                     salesStock.getProductId(),
                     salesStock.getDate(),
@@ -92,13 +274,15 @@ public class SalesStockService {
                     saleRate,
                     unitRate,
                     qty);
+
         }).collect(Collectors.toList());
     }
 
     @Transactional
     public void insertOrUpdateProductStockInSalesStock(String customer, String invoiceNo) {
         // Fetch ProductStock entries for the specific customer and invoice number
-        List<ProductStock> productStocks = productStockService.getProductStockByUsernameAndInvoiceNo(customer, invoiceNo);
+        List<ProductStock> productStocks = productStockService.getProductStockByUsernameAndInvoiceNo(customer,
+                invoiceNo);
         for (ProductStock productStock : productStocks) {
             Optional<SalesStock> existingSalesStock = salesStockRepository
                     .findLatestSalesStockByProductNameAndUsername(productStock.getProductName(), customer);
@@ -132,21 +316,46 @@ public class SalesStockService {
     }
 
     @Transactional
+    public ApiResponse insertOrUpdateReadyGoodsInSalesStock(SalesStock salesStock) {
+        Optional<SalesStock> existingSalesStock = salesStockRepository
+                .findLatestSalesStockByProductNameAndUsername(salesStock.getProductName(), salesStock.getUsername());
+        if (existingSalesStock.isPresent()) {
+            return new ApiResponse(false, "Ready goods already exist.");
+        }
+        SalesStock newSalesStock = new SalesStock();
+        newSalesStock.setDate(LocalDate.now());
+        ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+        newSalesStock.setTime(dhakaTime.toLocalTime());
+        newSalesStock.setCategory("Ready Goods");
+        newSalesStock.setProductName(salesStock.getProductName());
+        newSalesStock.setCostPrice(salesStock.getCostPrice());
+        newSalesStock.setSaleRate(salesStock.getSaleRate());
+        newSalesStock.setStockRate(salesStock.getStockRate());
+        newSalesStock.setProductQty(100.0);
+        newSalesStock.setRemainingQty(100.0);
+        newSalesStock.setStatus("stored");
+        newSalesStock.setUsername(salesStock.getUsername());
+        newSalesStock.setInvoiceNo(salesStock.getInvoiceNo());
+        newSalesStock.setSupplier("Ready Goods");
+        salesStockRepository.save(newSalesStock);
+
+        return new ApiResponse(true, "Ready goods added successfully.");
+
+    }
+
+    @Transactional
     public void insertOrUpdateSalesStockInSalesStock(String username, String soldInvoice) {
         // Fetch ProductStock entries for the specific customer and invoice number
         List<SalesStock> salesStocks = salesStockRepository.findBySoldInvoice(soldInvoice);
-
         for (SalesStock salesStock : salesStocks) {
             Optional<SalesStock> existingSalesStock = salesStockRepository
                     .findLatestSalesStockByProductNameAndUsername(salesStock.getProductName(), username);
-
             SalesStock newSalesStock = new SalesStock();
             newSalesStock.setDate(LocalDate.now());
             ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
             newSalesStock.setTime(dhakaTime.toLocalTime());
             newSalesStock.setCategory(salesStock.getCategory());
             newSalesStock.setProductName(salesStock.getProductName());
-
             if (existingSalesStock.isPresent()) {
                 SalesStock latestSalesStock = existingSalesStock.get();
                 double newCostPrice = (latestSalesStock.getCostPrice() * latestSalesStock.getProductQty()
@@ -158,12 +367,10 @@ public class SalesStockService {
                 newSalesStock.setCostPrice(salesStock.getCostPrice());
                 newSalesStock.setRemainingQty(salesStock.getProductQty());
             }
-
             newSalesStock.setProductQty(salesStock.getProductQty());
             newSalesStock.setStatus("stored");
             newSalesStock.setUsername(username);
             newSalesStock.setInvoiceNo(soldInvoice);
-
             salesStockRepository.save(newSalesStock);
         }
     }
@@ -222,9 +429,11 @@ public class SalesStockService {
     public List<SalesStock> getPendingStockReturned(String username) {
         return salesStockRepository.findPendingReturnedStocksByUsername(username);
     }
+
     public List<SalesStock> getAllPendingStockReturned() {
         return salesStockRepository.findAllPendingReturnedStocksByUsername();
     }
+
     public List<SalesStock> getCurrentMonthStockReturned(String username) {
         return salesStockRepository.findCurrentMonthReturnedStocksByUsername(username);
     }
@@ -416,7 +625,7 @@ public class SalesStockService {
     public List<PendingVendorDto> getVendorStockByUsernameAndInvoiceNo(String username) {
         return salesStockRepository.findPendingVendorData(username);
     }
-    
+
     public List<PendingStockDto> getAdditionalStockByUsernameAndInvoiceNo(String customer) {
         return rawMaterialsRepository.findPendingSalesStock(customer);
     }
@@ -425,39 +634,65 @@ public class SalesStockService {
         return salesStockRepository.findBySoldInvoiceNotInStock(soldInvoice);
     }
 
-    @Transactional
-    public ResponseEntity<Map<String, String>> updateProductQty(Long productId, String username, Double newQty) {
-        Optional<SalesStock> optionalStock = salesStockRepository.findById(productId);
+    // @Transactional
+    // public ResponseEntity<Map<String, String>> updateProductQty(Long productId,
+    // String username, Double newQty) {
+    // Optional<SalesStock> optionalStock =
+    // salesStockRepository.findById(productId);
+    // Map<String, String> response = new HashMap<>();
 
+    // if (optionalStock.isPresent()) {
+    // SalesStock existingStock = optionalStock.get();
+    // Double oldQty = existingStock.getProductQty();
+    // Double qtyDifference = newQty - oldQty;
+    // // Fetch the remainingQty from the database
+    // Double remainingQty =
+    // salesStockRepository.getRemainingQty(existingStock.getProductName(),
+    // username);
+    // // Check if newQty exceeds available remainingQty
+    // if (qtyDifference > 0 && remainingQty < qtyDifference) {
+    // response.put("status", "error");
+    // response.put("message", "Insufficient remaining quantity. Update failed.");
+    // return ResponseEntity.badRequest().body(response);
+    // }
+
+    // existingStock.setProductQty(newQty);
+
+    // if (qtyDifference > 0) {
+    // salesStockRepository.reduceRemainingQty(existingStock.getProductName(),
+    // username, productId,
+    // qtyDifference);
+    // } else if (qtyDifference < 0) {
+    // salesStockRepository.increaseRemainingQty(existingStock.getProductName(),
+    // username, productId,
+    // Math.abs(qtyDifference));
+    // }
+
+    // salesStockRepository.save(existingStock);
+
+    // response.put("status", "success");
+    // response.put("message", "Product quantity updated successfully.");
+    // return ResponseEntity.ok(response);
+    // } else {
+    // response.put("status", "error");
+    // response.put("message", "SalesStock not found for productId: " + productId);
+    // return ResponseEntity.badRequest().body(response);
+    // }
+    // }
+
+    @Transactional
+    public ResponseEntity<Map<String, String>> updateProductQty(Long productId,
+            String username, Double newQty) {
+        Optional<SalesStock> optionalStock = salesStockRepository.findById(productId);
         Map<String, String> response = new HashMap<>();
 
         if (optionalStock.isPresent()) {
             SalesStock existingStock = optionalStock.get();
-            Double oldQty = existingStock.getProductQty();
-            Double qtyDifference = newQty - oldQty;
-
-            // Fetch the remainingQty from the database
-            Double remainingQty = salesStockRepository.getRemainingQty(existingStock.getProductName(), username);
-
-            // Check if newQty exceeds available remainingQty
-            if (qtyDifference > 0 && remainingQty < qtyDifference) {
-                response.put("status", "error");
-                response.put("message", "Insufficient remaining quantity. Update failed.");
-                return ResponseEntity.badRequest().body(response);
-            }
-
-            existingStock.setProductQty(newQty);
-
-            if (qtyDifference > 0) {
-                salesStockRepository.reduceRemainingQty(existingStock.getProductName(), username, productId,
-                        qtyDifference);
-            } else if (qtyDifference < 0) {
-                salesStockRepository.increaseRemainingQty(existingStock.getProductName(), username, productId,
-                        Math.abs(qtyDifference));
-            }
-
+            existingStock.setRemainingQty(newQty);
+            String editDateTime = LocalDateTime.now()
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            existingStock.setNote("edited (" + editDateTime + ")");
             salesStockRepository.save(existingStock);
-
             response.put("status", "success");
             response.put("message", "Product quantity updated successfully.");
             return ResponseEntity.ok(response);

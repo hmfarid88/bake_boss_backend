@@ -38,11 +38,13 @@ public class ItemMakeService {
     @Autowired
     private SalesStockRepository salesStockrepository;
 
-    @Autowired
-    private ProductRateRepository productRateRepository;
-
+    
     public List<Object[]> getMaterialsAndQtyGroupedByItemName(String username) {
         return itemMakeRepository.findMaterialsAndQtyGroupedByItemName(username);
+    }
+
+    public List<Object[]> getMaterialsAndQtyGoodsByItemName(String username) {
+        return itemMakeRepository.findMaterialsAndQtyGoodsByItemName(username);
     }
 
     @Transactional

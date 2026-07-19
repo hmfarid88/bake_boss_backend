@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.bake_boss_backend.dto.TopSalesDTO;
 import com.example.bake_boss_backend.dto.VendorSaleReportDTO;
+import com.example.bake_boss_backend.dto.ApiResponse;
 import com.example.bake_boss_backend.dto.LossProfitAnalysis;
 import com.example.bake_boss_backend.dto.PendingStockDto;
 import com.example.bake_boss_backend.dto.PendingVendorDto;
@@ -81,35 +82,86 @@ public class SalesController {
         return ResponseEntity.ok("Products added successfully");
     }
 
+    // @PostMapping("/outletSale")
+    // public ResponseEntity<?> handleSale(@RequestBody SalesRequest saleRequest) {
+    // try {
+    // CustomerInfo savedCustomer =
+    // customerInfoRepository.save(saleRequest.getCustomer());
+    // List<SalesStock> savedSalesItems = new ArrayList<>();
+
+    // for (SalesStock salesItem : saleRequest.getSalesItems()) {
+    // Optional<SalesStock> lastSalesStock = salesStockRepository
+    // .findLatestSalesStockByProductNameAndUsername(salesItem.getProductName(),
+    // salesItem.getUsername());
+
+    // if (lastSalesStock.isPresent()) {
+    // SalesStock lastStock = lastSalesStock.get();
+    // double updatedRemainingQty = lastStock.getRemainingQty() -
+    // salesItem.getProductQty();
+    // salesItem.setRemainingQty(updatedRemainingQty);
+    // }
+    // ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+    // salesItem.setTime(dhakaTime.toLocalTime());
+    // savedSalesItems.add(salesStockRepository.save(salesItem));
+    // }
+
+    // Map<String, Object> response = new HashMap<>();
+    // response.put("customer", savedCustomer);
+    // response.put("salesItems", savedSalesItems);
+
+    // return ResponseEntity.ok(response);
+    // } catch (Exception e) {
+    // return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    // .body(Collections.singletonMap("message", "An error occurred while processing
+    // the sale"));
+    // }
+    // }
+
     @PostMapping("/outletSale")
     public ResponseEntity<?> handleSale(@RequestBody SalesRequest saleRequest) {
         try {
+            // Save customer info
             CustomerInfo savedCustomer = customerInfoRepository.save(saleRequest.getCustomer());
             List<SalesStock> savedSalesItems = new ArrayList<>();
-
             for (SalesStock salesItem : saleRequest.getSalesItems()) {
-                Optional<SalesStock> lastSalesStock = salesStockRepository
-                        .findLatestSalesStockByProductNameAndUsername(salesItem.getProductName(),
-                                salesItem.getUsername());
-
-                if (lastSalesStock.isPresent()) {
-                    SalesStock lastStock = lastSalesStock.get();
-                    double updatedRemainingQty = lastStock.getRemainingQty() - salesItem.getProductQty();
-                    salesItem.setRemainingQty(updatedRemainingQty);
+                // Check category
+                if ("Ready Goods".equalsIgnoreCase(salesItem.getCategory())) {
+                    // Fixed remaining quantity for Ready Goods
+                    salesItem.setRemainingQty(100.0);
+                } else {
+                    // Get latest stock for this product and user
+                    Optional<SalesStock> lastSalesStock = salesStockRepository
+                            .findLatestSalesStockByProductNameAndUsername(salesItem.getProductName(), salesItem.getUsername());
+                    if (lastSalesStock.isPresent()) {
+                        SalesStock lastStock = lastSalesStock.get();
+                        double updatedRemainingQty = lastStock.getRemainingQty() - salesItem.getProductQty();
+                        // Prevent negative stock (optional)
+                        if (updatedRemainingQty < 0) {
+                            updatedRemainingQty = 0;
+                        }
+                        salesItem.setRemainingQty(updatedRemainingQty);
+                    } else {
+                        // If no previous stock exists
+                        salesItem.setRemainingQty(0.0);
+                    }
                 }
+                // Set current Dhaka time
                 ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
                 salesItem.setTime(dhakaTime.toLocalTime());
+                // Save sales item
                 savedSalesItems.add(salesStockRepository.save(salesItem));
             }
-
+            // Prepare response
             Map<String, Object> response = new HashMap<>();
             response.put("customer", savedCustomer);
             response.put("salesItems", savedSalesItems);
-
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Collections.singletonMap("message", "An error occurred while processing the sale"));
+                    .body(Collections.singletonMap(
+                            "message",
+                            "An error occurred while processing the sale"));
         }
     }
 
@@ -422,6 +474,23 @@ public class SalesController {
     public ResponseEntity<List<LossProfitAnalysis>> getLastTwelveMonthsProfitLoss(@RequestParam String username) {
         List<LossProfitAnalysis> profitLossData = salesStockService.getLastTwelveMonthsProfitLoss(username);
         return ResponseEntity.ok(profitLossData);
+    }
+
+    @PostMapping("/addReadyGoods")
+    public ResponseEntity<ApiResponse> addReadyGoods(@RequestBody List<SalesStock> salesStocks) {
+
+        if (salesStocks == null || salesStocks.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse(false, "No data received."));
+        }
+
+        ApiResponse response = salesStockService.insertOrUpdateReadyGoodsInSalesStock(salesStocks.get(0));
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        }
+
+        return ResponseEntity.badRequest().body(response);
     }
 
 }

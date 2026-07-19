@@ -168,7 +168,7 @@ public class ProductController {
             }
         }
 
-        return ResponseEntity.ok(itemMakeRepository.findAll());
+        return ResponseEntity.ok(allItems);
     }
 
     @PostMapping("/itemMakeNewAdd")
@@ -291,18 +291,14 @@ public class ProductController {
 
         return materialsRepository.saveAll(toSave);
     }
-
+    
     @PostMapping("/materialsToSalesStock")
     @Transactional
-    public List<SalesStock> mateialsToSalesStock(
-            @RequestParam String madeItem,
-            @RequestParam String supplierInvoice) {
-        List<RawMaterialStock> rawMaterials = rawMaterialRepository
-                .findByMadeItemAndSupplierInvoice(madeItem, supplierInvoice);
-        List<SalesStock> toSave = new ArrayList<>();
+    public List<SalesStock> mateialsToSalesStock(@RequestParam String madeItem, @RequestParam String supplierInvoice) {
+        List<RawMaterialStock> rawMaterials = rawMaterialRepository.findByMadeItemAndSupplierInvoice(madeItem, supplierInvoice);
+        List<SalesStock> savedItems = new ArrayList<>();
         for (RawMaterialStock raw : rawMaterials) {
             SalesStock newItem = new SalesStock();
-            // 🔁 Mapping fields
             newItem.setDate(LocalDate.now());
             newItem.setTime(ZonedDateTime.now(ZoneId.of("Asia/Dhaka")).toLocalTime());
             newItem.setCategory("Additional");
@@ -314,32 +310,25 @@ public class ProductController {
             newItem.setInvoiceNo(raw.getSupplierInvoice());
             newItem.setSupplier(raw.getUsername());
             newItem.setStatus("stored");
-
-            // 🔥 Your existing average logic
             Optional<SalesStock> existingMaterialOpt = salesStockRepository
-                    .findLatestSalesStockByProductNameAndUsername(raw.getMaterialsName(), raw.getUsername());
-
+                    .findLatestSalesStockByProductNameAndUsername(raw.getMaterialsName(), raw.getMadeItem());
             if (existingMaterialOpt.isPresent()) {
                 SalesStock existing = existingMaterialOpt.get();
-
                 double newTotalQty = existing.getRemainingQty() + raw.getMaterialsQty();
                 double newTotalValue = (existing.getRemainingQty() * existing.getCostPrice()) +
                         (raw.getMaterialsQty() * raw.getMaterialsRate());
-
                 double newAvgRate = newTotalValue / newTotalQty;
-
                 newItem.setCostPrice(newAvgRate);
                 newItem.setRemainingQty(newTotalQty);
-
             } else {
                 newItem.setCostPrice(raw.getMaterialsRate());
                 newItem.setRemainingQty(raw.getMaterialsQty());
             }
-
-            toSave.add(newItem);
+            SalesStock saved = salesStockRepository.save(newItem);
+            savedItems.add(saved);
         }
 
-        return salesStockRepository.saveAll(toSave);
+        return savedItems;
     }
 
     @PostMapping("/addRawMaterials")
@@ -429,100 +418,103 @@ public class ProductController {
     }
 
     // @PostMapping("/productDistribution")
-    // public List<ProductStock> saveDistribution(@RequestBody List<ProductStock> allItems) {
-    //     for (ProductStock newItem : allItems) {
-    //         Optional<ProductStock> latestProductStockOpt = productStockrepository
-    //                 .findLatestProductStockByProductNameAndUsername(newItem.getProductName(), newItem.getUsername());
+    // public List<ProductStock> saveDistribution(@RequestBody List<ProductStock>
+    // allItems) {
+    // for (ProductStock newItem : allItems) {
+    // Optional<ProductStock> latestProductStockOpt = productStockrepository
+    // .findLatestProductStockByProductNameAndUsername(newItem.getProductName(),
+    // newItem.getUsername());
 
-    //         if (latestProductStockOpt.isPresent()) {
-    //             ProductStock latestProductStock = latestProductStockOpt.get();
-    //             Double newTotalQty = latestProductStock.getRemainingQty() + newItem.getProductQty();
-    //             Double totalValue = (latestProductStock.getRemainingQty() * latestProductStock.getCostPrice()) +
-    //                     (newItem.getProductQty() * newItem.getCostPrice());
-    //             Double newCostPrice = totalValue / newTotalQty;
-    //             newItem.setRemainingQty(latestProductStock.getRemainingQty()- newItem.getProductQty());
-    //             newItem.setCostPrice(newCostPrice);
-    //             ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
-    //             newItem.setTime(dhakaTime.toLocalTime());
-    //         } else {
-    //             newItem.setRemainingQty(newItem.getProductQty());
-    //             newItem.setCostPrice(newItem.getCostPrice());
-    //             ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
-    //             newItem.setTime(dhakaTime.toLocalTime());
-    //         }
-    //         productStockrepository.save(newItem);
-    //     }
-    //     return allItems;
+    // if (latestProductStockOpt.isPresent()) {
+    // ProductStock latestProductStock = latestProductStockOpt.get();
+    // Double newTotalQty = latestProductStock.getRemainingQty() +
+    // newItem.getProductQty();
+    // Double totalValue = (latestProductStock.getRemainingQty() *
+    // latestProductStock.getCostPrice()) +
+    // (newItem.getProductQty() * newItem.getCostPrice());
+    // Double newCostPrice = totalValue / newTotalQty;
+    // newItem.setRemainingQty(latestProductStock.getRemainingQty()-
+    // newItem.getProductQty());
+    // newItem.setCostPrice(newCostPrice);
+    // ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+    // newItem.setTime(dhakaTime.toLocalTime());
+    // } else {
+    // newItem.setRemainingQty(newItem.getProductQty());
+    // newItem.setCostPrice(newItem.getCostPrice());
+    // ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+    // newItem.setTime(dhakaTime.toLocalTime());
+    // }
+    // productStockrepository.save(newItem);
+    // }
+    // return allItems;
     // }
 
     @PostMapping("/productDistribution")
     public List<ProductStock> saveDistribution(@RequestBody List<ProductStock> allItems) {
-    for (ProductStock newItem : allItems) {
-        Optional<ProductStock> latestProductStockOpt = productStockrepository
-                .findLatestProductStockByProductNameAndUsername(newItem.getProductName(), newItem.getUsername());
-        if (latestProductStockOpt.isPresent()) {
-            ProductStock latestProductStock = latestProductStockOpt.get();
-            Double newTotalQty = latestProductStock.getRemainingQty() + newItem.getProductQty();
-            Double totalValue =
-                    (latestProductStock.getRemainingQty() * latestProductStock.getCostPrice()) +
-                    (newItem.getProductQty() * newItem.getCostPrice());
-            Double newCostPrice = totalValue / newTotalQty;
-            Double lastRemainingQty = latestProductStock.getRemainingQty();
+        for (ProductStock newItem : allItems) {
+            Optional<ProductStock> latestProductStockOpt = productStockrepository
+                    .findLatestProductStockByProductNameAndUsername(newItem.getProductName(), newItem.getUsername());
+            if (latestProductStockOpt.isPresent()) {
+                ProductStock latestProductStock = latestProductStockOpt.get();
+                Double newTotalQty = latestProductStock.getRemainingQty() + newItem.getProductQty();
+                Double totalValue = (latestProductStock.getRemainingQty() * latestProductStock.getCostPrice()) +
+                        (newItem.getProductQty() * newItem.getCostPrice());
+                Double newCostPrice = totalValue / newTotalQty;
+                Double lastRemainingQty = latestProductStock.getRemainingQty();
                 if (lastRemainingQty <= 0) {
-                newItem.setRemainingQty(0.0);
+                    newItem.setRemainingQty(0.0);
+                } else {
+                    Double updatedQty = lastRemainingQty - newItem.getProductQty();
+                    newItem.setRemainingQty(Math.max(0.0, updatedQty));
+                }
+                newItem.setCostPrice(newCostPrice);
+
             } else {
-                Double updatedQty = lastRemainingQty - newItem.getProductQty();
-                newItem.setRemainingQty(Math.max(0.0, updatedQty));
+                newItem.setRemainingQty(0.0);
+                newItem.setCostPrice(newItem.getCostPrice());
             }
-            newItem.setCostPrice(newCostPrice);
-
-        } else {
-            newItem.setRemainingQty(0.0);
-            newItem.setCostPrice(newItem.getCostPrice());
+            ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+            newItem.setTime(dhakaTime.toLocalTime());
+            productStockrepository.save(newItem);
         }
-        ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
-        newItem.setTime(dhakaTime.toLocalTime());
-        productStockrepository.save(newItem);
-    }
 
-    return allItems;
-}
+        return allItems;
+    }
 
     @PostMapping("/updateMaterialsStock")
     List<MaterialsStock> updateMaterials(@RequestBody List<MaterialsStock> allItems) {
         List<MaterialsStock> savedMaterialsStock = materialsRepository.saveAll(allItems);
         return savedMaterialsStock;
-  
+
     }
-    
-@PostMapping("/updateProductionStock")
-public ResponseEntity<String> updateProductionStock(@RequestBody List<ProductionStock> allItems) {
 
-    for (ProductionStock newItem : allItems) {
-        Optional<ProductionStock> latestProductionStockOpt =
-                productionStockRepository.findLatestByMaterialsNameAndUsername(newItem.getMaterialsName(), newItem.getUsername());
+    @PostMapping("/updateProductionStock")
+    public ResponseEntity<String> updateProductionStock(@RequestBody List<ProductionStock> allItems) {
 
-        ProductionStock productionStock = new ProductionStock();
-        productionStock.setDate(newItem.getDate());
-        productionStock.setMaterialsName(newItem.getMaterialsName());
-        productionStock.setUsername(newItem.getUsername());
-        productionStock.setStatus("used");
-        productionStock.setMadeItem(newItem.getMadeItem());
-        productionStock.setMaterialsQty(newItem.getMaterialsQty());
+        for (ProductionStock newItem : allItems) {
+            Optional<ProductionStock> latestProductionStockOpt = productionStockRepository
+                    .findLatestByMaterialsNameAndUsername(newItem.getMaterialsName(), newItem.getUsername());
+            ProductionStock productionStock = new ProductionStock();
+            productionStock.setDate(newItem.getDate());
+            productionStock.setMaterialsName(newItem.getMaterialsName());
+            productionStock.setUsername(newItem.getUsername());
+            productionStock.setStatus("used");
+            productionStock.setMadeItem(newItem.getMadeItem());
+            productionStock.setMaterialsQty(newItem.getMaterialsQty());
 
-        if (latestProductionStockOpt.isPresent()) {
-            ProductionStock latestProductionStock = latestProductionStockOpt.get();
-            productionStock.setRemainingQty(
-                    latestProductionStock.getRemainingQty() - newItem.getMaterialsQty());
-        } else {
-            productionStock.setRemainingQty(newItem.getMaterialsQty());
+            if (latestProductionStockOpt.isPresent()) {
+                ProductionStock latestProductionStock = latestProductionStockOpt.get();
+                productionStock.setRemainingQty(
+                        latestProductionStock.getRemainingQty() - newItem.getMaterialsQty());
+            } else {
+                productionStock.setRemainingQty(newItem.getMaterialsQty());
+            }
+
+            productionStockRepository.save(productionStock);
         }
 
-        productionStockRepository.save(productionStock);
+        return ResponseEntity.ok("Updated successfully");
     }
-
-    return ResponseEntity.ok("Updated successfully");
-}
 
     @PostMapping("/rawMaterialSale")
     @Transactional
@@ -586,13 +578,18 @@ public ResponseEntity<String> updateProductionStock(@RequestBody List<Production
     }
 
     @GetMapping("/getMadeProducts")
-    public List<String> getMadeProductsByUsername() {
-        return itemMakeRepository.findDistinctItems();
+    public List<String> getMadeProductsByUsername(@RequestParam String username) {
+        return itemMakeRepository.findDistinctItems(username);
     }
 
     @GetMapping("/getItemList")
     public List<MadeItemDTO> getItemListByUsername(@RequestParam String username, String itemName) {
         return itemMakeRepository.findByUsernameGrouped(username, itemName);
+    }
+
+    @GetMapping("/getReadyGoodsList")
+    public List<MadeItemDTO> getReadyGoodsListByUsername(@RequestParam String username, String itemName) {
+        return itemMakeRepository.findReadyGoodsMaterials(username, itemName);
     }
 
     @GetMapping("/getProductStock")
@@ -636,7 +633,8 @@ public ResponseEntity<String> updateProductionStock(@RequestBody List<Production
     }
 
     @GetMapping("/getDatewiseStaffConsumedMaterial")
-    public List<MaterialsStock> getDatewiseStaffConsumedMaterial(String username, LocalDate startDate, LocalDate endDate) {
+    public List<MaterialsStock> getDatewiseStaffConsumedMaterial(String username, LocalDate startDate,
+            LocalDate endDate) {
         return materialsRepository.findDatewiseStaffConsumedMaterialsByUsername(username, startDate, endDate);
     }
 
@@ -798,6 +796,14 @@ public ResponseEntity<String> updateProductionStock(@RequestBody List<Production
     @GetMapping("/getMaterials/grouped")
     public List<MaterialGroupedDto> getMaterialsGrouped(@RequestParam String username) {
         List<Object[]> results = itemMakeService.getMaterialsAndQtyGroupedByItemName(username);
+        return results.stream()
+                .map(result -> new MaterialGroupedDto((String) result[0], (String) result[1], (Double) result[2],
+                        (Double) result[3]))
+                .collect(Collectors.toList());
+    }
+    @GetMapping("/getReadyGoods/grouped")
+    public List<MaterialGroupedDto> getReadyGoodsGrouped(@RequestParam String username) {
+        List<Object[]> results = itemMakeService.getMaterialsAndQtyGoodsByItemName(username);
         return results.stream()
                 .map(result -> new MaterialGroupedDto((String) result[0], (String) result[1], (Double) result[2],
                         (Double) result[3]))

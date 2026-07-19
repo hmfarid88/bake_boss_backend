@@ -40,4 +40,5 @@ public class SalesStock {
     private String invoiceNo;
     private String soldInvoice;
     private String supplier;
+    private String note;
 }
