@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -294,7 +295,15 @@ public class ProductController {
     
     @PostMapping("/materialsToSalesStock")
     @Transactional
-    public List<SalesStock> mateialsToSalesStock(@RequestParam String madeItem, @RequestParam String supplierInvoice) {
+    public ResponseEntity<?> mateialsToSalesStock(@RequestParam String madeItem, @RequestParam String supplierInvoice) {
+        boolean exists = salesStockRepository.existsByUsernameAndInvoiceNo(madeItem, supplierInvoice);
+
+    if (exists) {
+    Map<String, String> errorResponse = new HashMap<>();
+    errorResponse.put("message", "Sorry, This Product Already Added !");
+         
+    return ResponseEntity.badRequest().body(errorResponse);
+    }
         List<RawMaterialStock> rawMaterials = rawMaterialRepository.findByMadeItemAndSupplierInvoice(madeItem, supplierInvoice);
         List<SalesStock> savedItems = new ArrayList<>();
         for (RawMaterialStock raw : rawMaterials) {
@@ -328,7 +337,7 @@ public class ProductController {
             savedItems.add(saved);
         }
 
-        return savedItems;
+        return ResponseEntity.ok(savedItems);
     }
 
     @PostMapping("/addRawMaterials")

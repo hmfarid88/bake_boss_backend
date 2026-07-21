@@ -343,36 +343,117 @@ public class SalesStockService {
 
     }
 
+    // @Transactional
+    // public ResponseEntity<?> insertOrUpdateSalesStockInSalesStock(String
+    // username, String soldInvoice) {
+    // // Fetch ProductStock entries for the specific customer and invoice number
+    // boolean exists = salesStockRepository.existsByUsernameAndInvoiceNo(username,
+    // soldInvoice);
+    // if (exists) {
+    // Map<String, String> errorResponse = new HashMap<>();
+    // errorResponse.put("message", "Sorry, This Product Already Added !");
+
+    // return ResponseEntity.badRequest().body(errorResponse);
+    // }
+    // List<SalesStock> salesStocks =
+    // salesStockRepository.findBySoldInvoice(soldInvoice);
+    // for (SalesStock salesStock : salesStocks) {
+    // Optional<SalesStock> existingSalesStock = salesStockRepository
+    // .findLatestSalesStockByProductNameAndUsername(salesStock.getProductName(),
+    // username);
+    // SalesStock newSalesStock = new SalesStock();
+    // newSalesStock.setDate(LocalDate.now());
+    // ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+    // newSalesStock.setTime(dhakaTime.toLocalTime());
+    // newSalesStock.setCategory(salesStock.getCategory());
+    // newSalesStock.setProductName(salesStock.getProductName());
+    // if (existingSalesStock.isPresent()) {
+    // SalesStock latestSalesStock = existingSalesStock.get();
+    // double newCostPrice = (latestSalesStock.getCostPrice() *
+    // latestSalesStock.getProductQty()
+    // + salesStock.getCostPrice() * salesStock.getProductQty()) /
+    // (latestSalesStock.getProductQty() + salesStock.getProductQty());
+    // newSalesStock.setCostPrice(newCostPrice);
+    // newSalesStock.setRemainingQty(latestSalesStock.getRemainingQty() +
+    // salesStock.getProductQty());
+    // } else {
+    // newSalesStock.setCostPrice(salesStock.getCostPrice());
+    // newSalesStock.setRemainingQty(salesStock.getProductQty());
+    // }
+    // newSalesStock.setProductQty(salesStock.getProductQty());
+    // newSalesStock.setStatus("stored");
+    // newSalesStock.setUsername(username);
+    // newSalesStock.setInvoiceNo(soldInvoice);
+    // salesStockRepository.save(newSalesStock);
+    // }
+    // return ResponseEntity.ok("Succeccfully added");
+    // }
+
     @Transactional
-    public void insertOrUpdateSalesStockInSalesStock(String username, String soldInvoice) {
-        // Fetch ProductStock entries for the specific customer and invoice number
+    public ResponseEntity<?> insertOrUpdateSalesStockInSalesStock(String username, String soldInvoice) {
+
+        // Check duplicate invoice
+        boolean exists = salesStockRepository.existsByUsernameAndInvoiceNo(username, soldInvoice);
+
+        if (exists) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("message", "Sorry, This Product Already Added!");
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+
+        // Fetch source sales stock
         List<SalesStock> salesStocks = salesStockRepository.findBySoldInvoice(soldInvoice);
+
+        if (salesStocks.isEmpty()) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("message", "No product found for this invoice!");
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+
+        ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
+
         for (SalesStock salesStock : salesStocks) {
-            Optional<SalesStock> existingSalesStock = salesStockRepository
-                    .findLatestSalesStockByProductNameAndUsername(salesStock.getProductName(), username);
+
+            Optional<SalesStock> existingSalesStock = salesStockRepository.findLatestSalesStockByProductNameAndUsername(
+                    salesStock.getProductName(), username);
+
             SalesStock newSalesStock = new SalesStock();
+
             newSalesStock.setDate(LocalDate.now());
-            ZonedDateTime dhakaTime = ZonedDateTime.now(ZoneId.of("Asia/Dhaka"));
             newSalesStock.setTime(dhakaTime.toLocalTime());
             newSalesStock.setCategory(salesStock.getCategory());
             newSalesStock.setProductName(salesStock.getProductName());
+
             if (existingSalesStock.isPresent()) {
-                SalesStock latestSalesStock = existingSalesStock.get();
-                double newCostPrice = (latestSalesStock.getCostPrice() * latestSalesStock.getProductQty()
-                        + salesStock.getCostPrice() * salesStock.getProductQty()) /
-                        (latestSalesStock.getProductQty() + salesStock.getProductQty());
+
+                SalesStock latest = existingSalesStock.get();
+
+                double oldQty = latest.getProductQty();
+                double newQty = salesStock.getProductQty();
+                double totalQty = oldQty + newQty;
+
+                double newCostPrice = totalQty == 0 ? 0
+                        : ((latest.getCostPrice() * oldQty)
+                                + (salesStock.getCostPrice() * newQty)) / totalQty;
+
                 newSalesStock.setCostPrice(newCostPrice);
-                newSalesStock.setRemainingQty(latestSalesStock.getRemainingQty() + salesStock.getProductQty());
+                newSalesStock.setRemainingQty(latest.getRemainingQty() + newQty);
+
             } else {
+
                 newSalesStock.setCostPrice(salesStock.getCostPrice());
                 newSalesStock.setRemainingQty(salesStock.getProductQty());
             }
+
             newSalesStock.setProductQty(salesStock.getProductQty());
             newSalesStock.setStatus("stored");
             newSalesStock.setUsername(username);
             newSalesStock.setInvoiceNo(soldInvoice);
+
             salesStockRepository.save(newSalesStock);
         }
+
+        return ResponseEntity.ok(Map.of("message", "Successfully added"));
     }
 
     // public List<SaleReportDTO> getCurrentMonthSoldStocks(String username) {
