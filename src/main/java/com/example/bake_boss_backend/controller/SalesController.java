@@ -402,8 +402,7 @@ public class SalesController {
     }
 
     @GetMapping("/getVendorSale")
-    public List<VendorSaleReportDTO> getCurrentMonthVendorSale(@RequestParam String username,
-            @RequestParam int percent) {
+    public List<VendorSaleReportDTO> getCurrentMonthVendorSale(@RequestParam String username, @RequestParam int percent) {
         return salesStockService.getCurrentMonthVendorsale(username, percent);
     }
 
@@ -607,5 +606,11 @@ public class SalesController {
 
         return ResponseEntity.badRequest().body(response);
     }
+@GetMapping("/getMaterialProducts")
+public ResponseEntity<List<String>> getMaterialProducts() {
 
+    return ResponseEntity.ok(
+        salesStockRepository.findUniqueMaterialProductNames()
+    );
+}
 }

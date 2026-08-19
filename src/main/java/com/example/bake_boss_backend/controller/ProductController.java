@@ -292,19 +292,20 @@ public class ProductController {
 
         return materialsRepository.saveAll(toSave);
     }
-    
+
     @PostMapping("/materialsToSalesStock")
     @Transactional
     public ResponseEntity<?> mateialsToSalesStock(@RequestParam String madeItem, @RequestParam String supplierInvoice) {
         boolean exists = salesStockRepository.existsByUsernameAndInvoiceNo(madeItem, supplierInvoice);
 
-    if (exists) {
-    Map<String, String> errorResponse = new HashMap<>();
-    errorResponse.put("message", "Sorry, This Product Already Added !");
-         
-    return ResponseEntity.badRequest().body(errorResponse);
-    }
-        List<RawMaterialStock> rawMaterials = rawMaterialRepository.findByMadeItemAndSupplierInvoice(madeItem, supplierInvoice);
+        if (exists) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("message", "Sorry, This Product Already Added !");
+
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+        List<RawMaterialStock> rawMaterials = rawMaterialRepository.findByMadeItemAndSupplierInvoice(madeItem,
+                supplierInvoice);
         List<SalesStock> savedItems = new ArrayList<>();
         for (RawMaterialStock raw : rawMaterials) {
             SalesStock newItem = new SalesStock();
@@ -810,6 +811,7 @@ public class ProductController {
                         (Double) result[3]))
                 .collect(Collectors.toList());
     }
+
     @GetMapping("/getReadyGoods/grouped")
     public List<MaterialGroupedDto> getReadyGoodsGrouped(@RequestParam String username) {
         List<Object[]> results = itemMakeService.getMaterialsAndQtyGoodsByItemName(username);
@@ -938,6 +940,17 @@ public class ProductController {
         Double materialsQty = body.get("materialsQty");
         productStockService.updateMaterialsQty(materialsId, materialsQty);
         return ResponseEntity.ok("Materials Qty updated successfully");
+    }
+
+    @GetMapping("/getProductRate")
+    public ResponseEntity<?> getProductRate(
+            @RequestParam String productName,
+            @RequestParam String username) {
+
+        return productRateRepository
+                .findByProductNameAndUsername(productName, username)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
 }

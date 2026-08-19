@@ -93,8 +93,7 @@ public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
     List<SalesStock> findDatewiseReturnedStocks(LocalDate startDate, LocalDate endDate);
 
     @Query("SELECT s FROM SalesStock s WHERE s.status = 'return-pending' AND s.username = :username AND s.invoiceNo = :invoiceNo")
-    List<SalesStock> findReturnedStocksByInvoice(@Param("username") String username,
-            @Param("invoiceNo") String invoiceNo);
+    List<SalesStock> findReturnedStocksByInvoice(@Param("username") String username, @Param("invoiceNo") String invoiceNo);
 
     List<SalesStock> findByProductName(String oldItemName);
 
@@ -232,5 +231,14 @@ public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
 
   boolean existsByUsernameAndInvoiceNo(String username, String invoiceNo);
 
+  @Query("""
+    SELECT DISTINCT s.productName
+    FROM SalesStock s
+    WHERE s.supplier = 'materials section'
+      AND s.productName IS NOT NULL
+      AND s.productName <> ''
+    ORDER BY s.productName ASC
+""")
+List<String> findUniqueMaterialProductNames();
 
 }
