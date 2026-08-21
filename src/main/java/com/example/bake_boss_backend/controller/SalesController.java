@@ -208,7 +208,7 @@ public class SalesController {
                             }
                             // Insert new stock entry for material consumption
                             SalesStock materialOut = new SalesStock();
-                            materialOut.setDate(salesItem.getDate());
+                            materialOut.setDate(LocalDate.now(ZoneId.of("Asia/Dhaka")));
                             materialOut.setTime(LocalTime.now(ZoneId.of("Asia/Dhaka")));
                             materialOut.setCategory(lastMaterialStock.getCategory());
                             materialOut.setProductName(itemMake.getMaterialsName());

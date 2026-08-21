@@ -1,5 +1,6 @@
 package com.example.bake_boss_backend.controller;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -951,6 +952,12 @@ public class ProductController {
                 .findByProductNameAndUsername(productName, username)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/server-time")
+    public ResponseEntity<Map<String, String>> getServerTime() {
+        return ResponseEntity.ok(
+                Map.of("time", Instant.now().toString()));
     }
 
 }
