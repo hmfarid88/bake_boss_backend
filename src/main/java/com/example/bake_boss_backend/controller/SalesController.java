@@ -30,6 +30,7 @@ import com.example.bake_boss_backend.dto.ApiResponse;
 import com.example.bake_boss_backend.dto.LossProfitAnalysis;
 import com.example.bake_boss_backend.dto.PendingStockDto;
 import com.example.bake_boss_backend.dto.PendingVendorDto;
+import com.example.bake_boss_backend.dto.ProductRateDTO;
 import com.example.bake_boss_backend.dto.SaleReportDTO;
 import com.example.bake_boss_backend.dto.SalesProfitDto;
 import com.example.bake_boss_backend.dto.SalesRequest;
@@ -43,6 +44,7 @@ import com.example.bake_boss_backend.entity.SalesStock;
 import com.example.bake_boss_backend.repository.CustomerInfoRepository;
 import com.example.bake_boss_backend.repository.ItemMakeRepository;
 import com.example.bake_boss_backend.repository.SalesStockRepository;
+import com.example.bake_boss_backend.service.ProductStockService;
 import com.example.bake_boss_backend.service.SalesStockService;
 
 import jakarta.transaction.Transactional;
@@ -61,6 +63,9 @@ public class SalesController {
 
     @Autowired
     private ItemMakeRepository itemMakeRepository;
+
+    @Autowired
+    private ProductStockService productStockService;
 
     @GetMapping("/getSalesStock")
     public List<SalesStockDTO> getAllSalesStockWithRate(String username) {
@@ -402,7 +407,8 @@ public class SalesController {
     }
 
     @GetMapping("/getVendorSale")
-    public List<VendorSaleReportDTO> getCurrentMonthVendorSale(@RequestParam String username, @RequestParam int percent) {
+    public List<VendorSaleReportDTO> getCurrentMonthVendorSale(@RequestParam String username,
+            @RequestParam int percent) {
         return salesStockService.getCurrentMonthVendorsale(username, percent);
     }
 
@@ -606,11 +612,16 @@ public class SalesController {
 
         return ResponseEntity.badRequest().body(response);
     }
-@GetMapping("/getMaterialProducts")
-public ResponseEntity<List<String>> getMaterialProducts() {
 
-    return ResponseEntity.ok(
-        salesStockRepository.findUniqueMaterialProductNames()
-    );
-}
+    @GetMapping("/getMaterialProducts")
+    public ResponseEntity<List<String>> getMaterialProducts() {
+        return ResponseEntity.ok(
+                salesStockRepository.findUniqueMaterialProductNames());
+    }
+
+    @GetMapping("/product-rates")
+    public ResponseEntity<List<ProductRateDTO>> getProductRates() {
+        return ResponseEntity.ok(
+                productStockService.getProductRates());
+    }
 }

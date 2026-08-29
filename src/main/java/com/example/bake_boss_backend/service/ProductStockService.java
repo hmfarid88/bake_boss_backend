@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.example.bake_boss_backend.dto.DistProductDto;
 import com.example.bake_boss_backend.dto.FactoryInvoiceDTO;
 import com.example.bake_boss_backend.dto.PendingStockDto;
+import com.example.bake_boss_backend.dto.ProductRateDTO;
 import com.example.bake_boss_backend.dto.RequisitionSummaryDTO;
 import com.example.bake_boss_backend.entity.MaterialsStock;
 import com.example.bake_boss_backend.entity.ProductRate;
@@ -48,6 +49,11 @@ public class ProductStockService {
     @Autowired
     private RawMaterialRepository rawMaterialsRepository;
 
+   
+    public List<ProductRateDTO> getProductRates() {
+        return productRateRepository.findTopRatesByUsername();
+    }
+    
     public List<PendingStockDto> getProductStockWithInvoiceNotInSalesStock(String customer) {
         return productStockRepository.findProductStockWithInvoiceNotInSalesStock(customer);
     }

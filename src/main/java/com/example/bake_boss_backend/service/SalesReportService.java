@@ -29,10 +29,13 @@ public class SalesReportService {
             for (Object[] row : data) {
                 String username = (String) row[0];
                 Double totalSale = (Double) row[1];
+                Double totalDiscount = (Double) row[2];
 
                   report.append(username)
                         .append(" | Total Sale: ")
                         .append(String.format("%.2f", totalSale))
+                        .append(" | Total Discount: ")
+                        .append(String.format("%.2f", totalDiscount))
                         .append("\n");
             }
         }

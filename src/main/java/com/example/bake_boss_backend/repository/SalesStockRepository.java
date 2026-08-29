@@ -210,7 +210,7 @@ public interface SalesStockRepository extends JpaRepository<SalesStock, Long> {
 
     @Query("""
                 SELECT s.username,
-                       SUM((s.saleRate - s.discount) * s.productQty) AS totalSale
+                       SUM(s.saleRate * s.productQty) AS totalSale, sum(s.discount) AS totalDiscount 
                 FROM SalesStock s
                 WHERE s.date = :today
                   AND s.status = 'sold'
