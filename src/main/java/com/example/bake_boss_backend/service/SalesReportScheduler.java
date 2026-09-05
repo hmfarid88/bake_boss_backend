@@ -11,7 +11,7 @@ public class SalesReportScheduler {
     private final SalesReportService salesReportService;
 
     // Runs every day at 2 PM, 6 PM, and 9 PM Bangladesh time
-    @Scheduled(cron = "0 0 14,18,21 * * *", zone = "Asia/Dhaka")
+    @Scheduled(cron = "0 0 1,14,18,21 * * *", zone = "Asia/Dhaka")
     public void sendScheduledSaleReports() {
         String email = "aurora.salesreport2025@gmail.com"; 
         
